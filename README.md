@@ -1,5 +1,22 @@
 # TangoNest Beta83 Library Refine Patch
 
+## Learning UX patch - 2026-07-04
+
+### Added
+- Listening Quiz mode: users hear the target word and type the answer.
+- Listening controls for answer target, replay limit, timer length, and optional pronunciation hint.
+- Mistake Notebook: wrong answers from Quiz, Typing, Listening, and Hard flashcards are saved for review.
+- Home and Library now show Mistake Notebook access and Review Mistakes actions.
+
+### Fixed / improved
+- Typing Quiz auto-focuses the answer input and does not submit empty Enter presses.
+- Quiz choice highlights are cleared between questions to prevent stale blue/correct/wrong states.
+- Quiz answer card has a fixed height so feedback does not jump the layout.
+- Continue Learning now prioritizes mistakes, due words, weak words, saved words, and recent additions.
+- Cloud/local merge preserves `mistakes` alongside words and playlists.
+- `/` in speech text becomes a short pause instead of being read aloud.
+- Cache version bumped to `20260704-learningux8`.
+
 ## Emergency stability patch - 2026-06-14
 
 This build prioritizes stability over preserving corrupted local word data.

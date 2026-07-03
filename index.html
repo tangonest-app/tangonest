@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style.css?v=20260619-learningux7">
+<link rel="stylesheet" href="./style.css?v=20260704-learningux8">
 
 <script>
 (function(){
@@ -155,6 +155,7 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
       <div class="progress-grid"><div class="progress-card"><b id="dashTotal">0</b><span>Total</span></div><div class="progress-card"><b id="dashLearned">0%</b><span>Learned</span></div><div class="progress-card"><b id="dashDue">0</b><span>Due</span></div><div class="progress-card"><b id="dashHard">0</b><span>Hard</span></div></div>
       <div class="actions"><button class="btn primary" onclick="appShow('add')">＋ Add Word</button><button class="btn blue" onclick="appShow('quiz')">Start Quiz</button><button class="btn purple" onclick="go('study')">Flashcards</button><button class="btn green" onclick="appShow('audio')">Listen</button></div>
     </div>
+    <div class="card tn-mistake-card"><h2>英単語ミスノート</h2><p class="desc">間違えた単語だけを集めて、次の復習で優先的に出します。</p><div id="mistakeNotebookHome"></div></div>
     <div class="card"><h2>Playlists</h2><div id="homeLists" class="quick-list"></div></div>
   </section>
 
@@ -163,16 +164,15 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
       <div class="card"><h2>Add Word</h2><p class="desc">Add words to the selected playlist. POS, gender, tags, and examples are optional.</p>
         <div class="row"><div><label>Front</label><input id="front" placeholder="word" oninput="autoDetectFront()"></div><div><label>Back</label><input id="back" placeholder="meaning" oninput="autoDetectBack()"></div></div>
         <div class="row3"><div><label>Front language</label><select id="frontLang"></select></div><div><label>Back language</label><select id="backLang"></select></div><div><label>Save to list</label><select id="addList"></select></div></div>
-        <div class="row3"><div><label>POS <span class="optional">optional</span></label><select id="pos"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label>Gender <span class="optional">optional</span></label><select id="gender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label>Pronunciation <span class="optional">optional</span></label><input id="pronunciation" placeholder="kànjiàn / əˈbaʊt"></div></div>
-        <label>Tags</label><input id="tags" placeholder="A1, food">
+        <div class="row3"><div><label>POS <span class="optional">optional</span></label><select id="pos"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label>Gender <span class="optional">optional</span></label><select id="gender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label>Tags</label><input id="tags" placeholder="A1, food"></div></div>
         <label>Memo / Example</label><textarea id="memo" placeholder="Example sentence or memo"></textarea>
         <div class="actions"><button id="addWordBtn" class="btn primary"  type="button" onclick="tnRegisterWordCritical(event)">＋ Register</button><button class="btn blue" onclick="speak($('front').value,$('frontLang').value)">▶ Front</button><button class="btn" onclick="clearForm()">Clear</button></div>
       </div>
       <div class="card"><h2>Playlist</h2><label>New list name</label><input id="newList" placeholder="English A1"><div class="actions"><button class="btn primary full" onclick="createList()">Create</button></div><label>Rename list</label><select id="renameListSelect"></select><input id="renameListInput" placeholder="New name"><div class="actions"><button class="btn blue full" onclick="renameList()">Rename</button></div></div>
     </div>
-    <div class="card"><h2>Bulk Add</h2><p class="desc">Paste columns from notes or spreadsheets: Front / Back / POS / Gender / Example / Pronunciation.</p>
+    <div class="card"><h2>Bulk Add</h2><p class="desc">Paste up to five columns from notes or spreadsheets: Front / Back / POS / Gender / Example.</p>
       <div class="row3"><div><label>Front language</label><select id="bulkFrontLang"></select></div><div><label>Back language</label><select id="bulkBackLang"></select></div><div><label>Save to list</label><select id="bulkList"></select></div></div>
-      <textarea id="bulkText" placeholder="front word	back meaning	POS	gender	example sentence	pronunciation"></textarea>
+      <textarea id="bulkText" placeholder="front word	back meaning	POS	gender	example sentence"></textarea>
       <div class="actions"><button class="btn blue" onclick="previewBulk()">Preview</button><button class="btn primary" onclick="bulkImport()">Bulk Register</button><button class="btn" onclick="$('bulkText').value='';clearBulkPreview()">Clear</button></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel"></div>
     </div>
   </section>
@@ -186,6 +186,7 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
       <div class="mobile-sticky-search"><label>Search</label><input id="wordSearch" oninput="renderWords()" placeholder="Search"></div>
       <div class="actions"><button class="btn red" onclick="deleteSelected()">Delete selected</button><button class="btn" onclick="toggleSelectAll()">Select all / Clear</button></div>
       <div id="wordsBox"></div>
+      <div id="mistakeNotebookLibrary" class="tn-mistake-card"></div>
     </div>
   </section>
 
@@ -201,16 +202,17 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
   <section id="pageQuiz" class="page">
     <div class="quiz-card"><div class="card"><h2>Quiz Mode</h2><p class="desc">Practice your vocabulary with clear answer feedback before moving on.</p>
       <div id="quizSetup">
-        <div class="row3"><div><label>Library</label><select id="quizList"></select></div><div><label>Quiz Type</label><select id="quizType"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option></select></div><div><label>Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
+        <div class="row3"><div><label>Library</label><select id="quizList"></select></div><div><label>Quiz Type</label><select id="quizType"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div><label>Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
         <div class="row3"><div><label>Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div><label>Feedback speed</label><select id="quizAutoAdvance"><option value="1">Fast · 1.0s</option><option value="1.5" selected>Normal · 1.5s</option><option value="2.5">Slow · 2.5s</option><option value="manual">Manual Next</option></select></div><div><label>Custom delay</label><input id="quizNextDelay" type="number" min="1" max="10" step="0.1" value="1.5"></div></div>
         <div class="row3"><div><label>After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div><label>Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div><label>Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
-        <div class="row"><div><label>Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option></select></div><div><label>Exact count rule</label><p class="desc" style="margin:8px 0 0">If fewer words are available, the quiz clearly uses the available count.</p></div></div>
-        <label class="inline-check"><input type="checkbox" id="quizAllowDuplicates"> Allow duplicate questions</label>
-        <div class="actions"><button class="btn primary" onclick="tnFinalStartQuiz()">Start Quiz</button></div>
+        <div class="row4"><div><label>Listening target</label><select id="listeningAnswerTarget"><option value="front" selected>Front word</option><option value="back">Back meaning</option></select></div><div><label>Replay limit</label><select id="listeningReplayLimit"><option value="1" selected>Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option><option value="unlimited">Unlimited</option></select></div><div><label>Listening timer</label><select id="listeningTimerMode"><option value="10" selected>Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option><option value="off">Off</option></select></div><div><label>Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
+        <div class="row"><div><label>Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div><div><label>Exact count rule</label><p class="desc" style="margin:8px 0 0">If fewer words are available, the quiz clearly uses the available count.</p></div></div>
+        <div class="actions"><button class="btn primary" onclick="startQuiz()">Start Quiz</button></div>
       </div>
       <div id="quizRun" style="display:none">
         <div class="quiz-top"><div class="quiz-count" id="quizProgress">1 / 10</div><div class="quiz-count" id="quizScore">0 / 10</div></div>
         <div class="quiz-question"><div><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div></div></div>
+        <div id="listeningPanel" class="listening-panel" style="display:none"></div>
         <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel">Time limit: Off</span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
         <div id="typingArea"><input id="quizAnswer" placeholder="Type answer" onkeydown="if(event.key==='Enter')checkTypingAnswer()"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()">Check</button><button class="btn blue" onclick="speakQuizQuestion()">▶ Question</button></div></div>
         <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box"></div>
@@ -281,7 +283,7 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
   </div></section>
 </div>
 <div class="mobile-tabbar"><button id="mnavHome" class="active" onclick="go('home')">Home</button><button id="mnavAdd" onclick="appShow('add')">Create</button><button id="mnavWords" onclick="go('words')">Library</button><button id="mnavStudy" onclick="go('study')">Cards</button><button id="mnavQuiz" onclick="appShow('quiz')">Quiz</button><button id="mnavAudio" onclick="appShow('audio')">Listen</button><button id="mnavManage" onclick="go('manage')">Settings</button></div>
-<div id="editModal" class="modal-backdrop"><div class="modal"><h2>Edit Word</h2><input type="hidden" id="editId"><div class="row"><div><label>Front</label><input id="editFront"></div><div><label>Back</label><input id="editBack"></div></div><div class="row3"><div><label>Front language</label><select id="editFrontLang"></select></div><div><label>Back language</label><select id="editBackLang"></select></div><div><label>Library</label><select id="editList"></select></div></div><div class="row3"><div><label>POS</label><select id="editPOS"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label>Gender</label><select id="editGender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label>Pronunciation</label><input id="editPronunciation"></div></div><div class="row3"><div><label>Status</label><select id="editStatus"><option value="new">new</option><option value="learned">learned</option><option value="hard">hard</option></select></div><div><label>Memory Level</label><select id="editLevel"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div><label>Tags</label><input id="editTags"></div></div><label>Memo / Example</label><textarea id="editMemo"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Save</button><button class="btn" onclick="closeEdit()">Cancel</button></div></div></div>
+<div id="editModal" class="modal-backdrop"><div class="modal"><h2>Edit Word</h2><input type="hidden" id="editId"><div class="row"><div><label>Front</label><input id="editFront"></div><div><label>Back</label><input id="editBack"></div></div><div class="row3"><div><label>Front language</label><select id="editFrontLang"></select></div><div><label>Back language</label><select id="editBackLang"></select></div><div><label>Library</label><select id="editList"></select></div></div><div class="row3"><div><label>POS</label><select id="editPOS"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label>Gender</label><select id="editGender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label>Tags</label><input id="editTags"></div></div><div class="row"><div><label>Status</label><select id="editStatus"><option value="new">new</option><option value="learned">learned</option><option value="hard">hard</option></select></div><div><label>Memory Level</label><select id="editLevel"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div></div><label>Memo / Example</label><textarea id="editMemo"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Save</button><button class="btn" onclick="closeEdit()">Cancel</button></div></div></div>
 <div id="detailModal" class="modal-backdrop"><div class="modal"><div class="actions" style="justify-content:flex-end;margin-top:0"><button class="btn" onclick="closeDetail()">Close</button></div><div id="detailContent"></div></div></div><div id="toast" class="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -333,9 +335,9 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
 })();
 </script>
 
-<script src="./tn-emergency-guard.js?v=20260619-learningux7"></script>
-<script src="./app.js?v=20260619-learningux7"></script>
-<script src="./tn-fixes.js?v=20260619-learningux7"></script>
+<script src="./tn-emergency-guard.js?v=20260704-learningux8"></script>
+<script src="./app.js?v=20260704-learningux8"></script>
+<script src="./tn-fixes.js?v=20260704-learningux8"></script>
 
 
 <script id="tn73EmergencyScript">
@@ -364,11 +366,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 })();
 </script>
 
-<script src="./tn-cloud-first.js?v=20260619-learningux7"></script>
-<script src="./tn-library-management.js?v=20260619-learningux7"></script>
-<script src="./tn-emergency-stability.js?v=20260619-learningux7"></script>
-<script src="./tn-learning-flow.js?v=20260619-learningux7"></script>
-<script src="./tn-final-doublecheck.js?v=20260627-finalqa"></script>
-<script src="./tn-critical-bugfix.js?v=20260627-critical"></script>
+<script src="./tn-cloud-first.js?v=20260704-learningux8"></script>
+<script src="./tn-library-management.js?v=20260704-learningux8"></script>
+<script src="./tn-emergency-stability.js?v=20260704-learningux8"></script>
+<script src="./tn-learning-flow.js?v=20260704-learningux8"></script>
 </body>
 </html>

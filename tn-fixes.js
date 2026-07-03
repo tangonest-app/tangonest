@@ -49,16 +49,16 @@
     data.words = Array.isArray(data.words) ? data.words : [];
     data.prefs = data.prefs || {};
     data.meta = data.meta || {};
-    data.prefs.frontLang = data.prefs.frontLang || "en-US";
-    data.prefs.backLang = data.prefs.backLang || "ja-JP";
+    data.prefs.frontLang = "en-US";
+    data.prefs.backLang = "ja-JP";
     if(!data.lists.length){
       data.lists.push({id:"starter",name:"New Playlist",createdAt:new Date().toISOString()});
     }
     data.words = data.words.filter(Boolean).map(word => {
       word.id = word.id || id("w");
       word.listId = word.listId || data.lists[0].id;
-      word.frontLang = word.frontLang || data.prefs.frontLang || "en-US";
-      word.backLang = word.backLang || data.prefs.backLang || "ja-JP";
+      word.frontLang = "en-US";
+      word.backLang = "ja-JP";
       word.status = word.status || "new";
       word.level = word.level || 1;
       word.createdAt = word.createdAt || new Date().toISOString();
@@ -293,11 +293,10 @@
       front,
       back,
       listId,
-      frontLang:$("frontLang")?.value || data.prefs?.frontLang || "en-US",
-      backLang:$("backLang")?.value || data.prefs?.backLang || "ja-JP",
+      frontLang:"en-US",
+      backLang:"ja-JP",
       pos:$("pos")?.value || "",
       gender:$("gender")?.value || "",
-      pronunciation:String($("pronunciation")?.value || "").trim(),
       tags:String($("tags")?.value || "").trim(),
       memo:String($("memo")?.value || "").trim(),
       saved:false,
@@ -308,7 +307,7 @@
       createdAt:new Date().toISOString()
     });
     touch();
-    ["front","back","memo","tags","pronunciation"].forEach(id => { if($(id))$(id).value = ""; });
+    ["front","back","memo","tags"].forEach(id => { if($(id))$(id).value = ""; });
     ["pos","gender"].forEach(id => { if($(id))$(id).value = ""; });
     renderAll();
     saveSoon();

@@ -331,7 +331,6 @@
       backLang:$("backLang")?.value || data.prefs.backLang || "ja-JP",
       pos:$("pos")?.value || "",
       gender:$("gender")?.value || "",
-      pronunciation:String($("pronunciation")?.value || "").trim(),
       tags:String($("tags")?.value || "").trim(),
       memo:String($("memo")?.value || "").trim(),
       status:"new",
@@ -342,7 +341,7 @@
       createdAt:now,
       updatedAt:now
     });
-    ["front","back","memo","tags","pronunciation"].forEach(inputId => { if($(inputId))$(inputId).value = ""; });
+    ["front","back","memo","tags"].forEach(inputId => { if($(inputId))$(inputId).value = ""; });
     ["pos","gender"].forEach(inputId => { if($(inputId))$(inputId).value = ""; });
     saveLocalChange();
     toast("1 word added");

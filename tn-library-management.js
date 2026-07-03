@@ -176,7 +176,7 @@
     const state = filterState();
     let words = [...data.words];
     if(state.query){
-      words = words.filter(word => [word.front,word.back,word.pronunciation,word.memo,word.tags,word.pos,word.gender,listName(word.listId),languageLabel(word.frontLang),languageLabel(word.backLang)].join(" ").toLowerCase().includes(state.query));
+      words = words.filter(word => [word.front,word.back,word.memo,word.tags,word.pos,word.gender,listName(word.listId)].join(" ").toLowerCase().includes(state.query));
     }
     if(state.language !== "all")words = words.filter(word => word.frontLang === state.language || word.backLang === state.language);
     if(state.letter !== "all")words = words.filter(word => firstLatinLetter(word) === state.letter);
@@ -271,7 +271,6 @@
             <div class="tn82-word-main">
               <div class="tn82-front">${esc(word.front)}</div>
               <div class="tn82-back">${esc(word.back)}</div>
-              ${word.pronunciation ? `<div class="tn-word-example">${esc(word.pronunciation)}</div>` : ""}
               ${word.memo ? `<div class="tn-word-example">${esc(word.memo)}</div>` : ""}
             </div>
             <div class="tn82-word-meta">
@@ -560,7 +559,6 @@
           <div><span>Playlist</span><strong>${esc(listName(word.listId))}</strong></div>
           <div><span>Front language</span><strong>${esc(languageLabel(word.frontLang))}</strong></div>
           <div><span>Back language</span><strong>${esc(languageLabel(word.backLang))}</strong></div>
-          <div><span>Pronunciation</span><strong>${esc(word.pronunciation || "-")}</strong></div>
           <div><span>POS</span><strong>${esc(word.pos || "-")}</strong></div>
           <div><span>Gender</span><strong>${esc(word.gender || "-")}</strong></div>
           <div><span>Level</span><strong class="tn-detail-level ${levelClass(word)}">${esc(wordLevelLabel(word))}</strong></div>

@@ -66,8 +66,8 @@
     current.words = words;
     current.lists = lists.length ? lists : [{id:"starter",name:"New Playlist",createdAt:new Date().toISOString()}];
     current.prefs = current.prefs || {};
-    current.prefs.frontLang = current.prefs.frontLang || "en-US";
-    current.prefs.backLang = current.prefs.backLang || "ja-JP";
+    current.prefs.frontLang = "en-US";
+    current.prefs.backLang = "ja-JP";
     current.meta = current.meta || {};
     const validLists = new Set(current.lists.map(list => list.id));
     current.words.forEach(word => {

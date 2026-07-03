@@ -690,16 +690,6 @@ tr:hover td{background:#fbfcff}
   cursor:pointer;
 }
 .quiz-question.has-long-answer .quiz-answer-actions{justify-content:flex-start}
-.inline-check{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:10px;
-  color:var(--sub);
-  font-size:14px;
-  font-weight:760;
-}
-.inline-check input{width:auto}
 .choice-grid,#choiceArea{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -4483,5 +4473,196 @@ html.tn73-ready .login-gate,
   .tn-voice-controls select{
     min-width:0;
     width:100%;
+  }
+}
+
+/* =========================================================
+   Learning UX: Listening Quiz + Mistake Notebook
+========================================================= */
+#pageQuiz .quiz-question{
+  height:286px;
+  min-height:286px;
+  overflow:hidden;
+}
+
+#pageQuiz .quiz-question.is-answered{
+  animation:none;
+}
+
+#pageQuiz .quiz-question>div{
+  max-height:100%;
+  overflow:auto;
+  scrollbar-width:thin;
+}
+
+#pageQuiz .quiz-question.is-listening .quiz-word{
+  color:var(--sub);
+  font-size:24px;
+  letter-spacing:0;
+}
+
+.choice:focus{
+  outline:none;
+}
+
+.choice:focus:not(.selected):not(.correct):not(.wrong){
+  box-shadow:none;
+}
+
+.listening-panel{
+  display:grid;
+  gap:8px;
+  margin:12px 0;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+  box-shadow:var(--shadow-soft);
+}
+
+.listening-main{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+
+.listening-play,
+.mistake-head button,
+.mistake-actions button{
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fff;
+  color:var(--text);
+  padding:0 14px;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.listening-play{
+  background:var(--brand);
+  border-color:var(--brand);
+  color:#fff;
+}
+
+.listening-main span,
+.listening-panel p{
+  color:var(--sub);
+  font-size:13px;
+  font-weight:760;
+}
+
+.listening-panel p{
+  margin:0;
+}
+
+.listening-hint{
+  color:var(--brand-dark)!important;
+}
+
+.tn-mistake-card{
+  margin-top:14px;
+}
+
+.mistake-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.mistake-head span{
+  color:var(--sub);
+  font-size:13px;
+  font-weight:820;
+}
+
+.mistake-head div,
+.mistake-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.mistake-list{
+  display:grid;
+  gap:8px;
+}
+
+.mistake-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fff;
+}
+
+.mistake-word{
+  min-width:0;
+  border:0;
+  background:transparent;
+  color:var(--text);
+  padding:0;
+  text-align:left;
+  cursor:pointer;
+}
+
+.mistake-word b,
+.mistake-word span,
+.mistake-meta span,
+.mistake-meta small{
+  display:block;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.mistake-word b{
+  font-size:16px;
+  font-weight:880;
+}
+
+.mistake-word span,
+.mistake-meta span,
+.mistake-meta small{
+  color:var(--sub);
+  font-size:13px;
+  font-weight:720;
+}
+
+.mistake-meta{
+  min-width:0;
+}
+
+@media(max-width:860px){
+  #pageQuiz .quiz-question{
+    height:310px;
+    min-height:310px;
+    padding:20px;
+  }
+
+  .listening-main{
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .listening-play{
+    width:100%;
+  }
+
+  .mistake-head,
+  .mistake-row{
+    align-items:stretch;
+    grid-template-columns:1fr;
+  }
+
+  .mistake-head{
+    display:grid;
   }
 }

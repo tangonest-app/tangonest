@@ -27,6 +27,7 @@
     const data = dbRef();
     data.words = Array.isArray(data.words) ? data.words : [];
     data.lists = Array.isArray(data.lists) && data.lists.length ? data.lists : [{id:"starter",name:"New Playlist"}];
+    data.mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
     data.words.forEach(word => {
       word.level = Math.min(5,Math.max(1,Number(word.level || 3)));
       word.correctCount = Number(word.correctCount || 0);
@@ -49,7 +50,7 @@
       front:"word",
       back:"meaning",
       memo:"Example sentence or memo.",
-      bulkText:"front word\tback meaning\tPOS\tgender\texample sentence\tpronunciation"
+      bulkText:"front word\tback meaning\tPOS\tgender\texample sentence"
     };
     Object.entries(replacements).forEach(([id,placeholder]) => {
       const el = $(id);
@@ -72,8 +73,9 @@
 
   function weakWords(){
     const words = dbRef().words || [];
+    const mistakes = new Set((dbRef().mistakes || []).map(entry => entry.wordId));
     return words
-      .filter(word => (word.level || 3) <= 2 || word.status === "hard" || !!word.lastWrongAt)
+      .filter(word => mistakes.has(word.id) || (word.level || 3) <= 2 || word.status === "hard" || !!word.lastWrongAt)
       .sort((a,b) => learningWeight(b) - learningWeight(a));
   }
 
@@ -87,11 +89,16 @@
 
   function learningWeight(word){
     const level = Math.min(5,Math.max(1,Number(word.level || 3)));
+    const data = dbRef();
+    const mistake = (data.mistakes || []).find(entry => entry.wordId === word.id);
     const base = {1:12,2:8,3:5,4:2.5,5:1}[level] || 5;
     const wrongBoost = Math.min(8,Number(word.wrongCount || 0) * 1.4);
     const recentWrong = word.lastWrongAt ? 4 : 0;
     const hard = word.status === "hard" ? 5 : 0;
-    return base + wrongBoost + recentWrong + hard;
+    const mistakeBoost = mistake ? Math.min(12,Number(mistake.wrongCount || 1) * 2.2) : 0;
+    const savedBoost = word.saved ? 1 : 0;
+    const recentAdd = word.createdAt && Date.now() - new Date(word.createdAt).getTime() < 86400000 * 3 ? 1.5 : 0;
+    return base + wrongBoost + recentWrong + hard + mistakeBoost + savedBoost + recentAdd;
   }
 
   function weightedOrder(words){
@@ -124,8 +131,17 @@
     const words = data.words || [];
     const due = dueWordsLearning();
     const weak = weakWords();
+    const mistakeIds = new Set((data.mistakes || []).map(entry => entry.wordId));
+    const mistakeWords = weightedOrder(words.filter(word => mistakeIds.has(word.id)));
+    const saved = weightedOrder(words.filter(word => word.saved));
+    const recentAdded = [...words].sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    const priorityMap = new Map();
+    [...mistakeWords,...due,...weak,...saved,...recentAdded].forEach(word => {
+      if(word?.id && !priorityMap.has(word.id))priorityMap.set(word.id,word);
+    });
+    const priorityQueue = [...priorityMap.values()];
     const levelCounts = [1,2,3,4,5].map(level => words.filter(word => Number(word.level || 3) === level).length);
-    const last = words
+    const last = priorityQueue[0] || words
       .filter(word => word.lastAnsweredAt || word.lastReviewed || word.createdAt)
       .sort((a,b) => String(b.lastAnsweredAt || b.lastReviewed || b.createdAt || "").localeCompare(String(a.lastAnsweredAt || a.lastReviewed || a.createdAt || "")))[0];
     const lastList = data.lists.find(list => list.id === last?.listId) || data.lists[0];
@@ -138,21 +154,21 @@
         <span class="tn-learn-kicker">Today's Review</span>
         <strong>${due.length}</strong>
         <p>${due.length ? "words need attention today." : "No urgent reviews. Keep the rhythm going."}</p>
-        <div class="tn-learn-hero-stats"><span><b>${weak.length}</b> review words</span><span><b>${words.length}</b> total words</span></div>
+        <div class="tn-learn-hero-stats"><span><b>${priorityQueue.length}</b> review words</span><span><b>${data.mistakes.length}</b> mistakes</span></div>
         <button type="button" data-tn-start-review="today">Start Review</button>
       </div>
       <div class="tn-learn-grid">
         <section>
           <div class="tn-learn-section-head"><h2>Review Queue</h2><button type="button" data-tn-start-review="weak">Review Words</button></div>
           <div class="tn-learn-word-strip">
-            ${weak.slice(0,5).map(word => `<button type="button" data-open-word="${esc(word.id)}"><b>${esc(word.front)}</b><span>${esc(word.back)} · ${esc(levelLabel(word.level))}</span></button>`).join("") || `<p>No review words yet.</p>`}
+            ${priorityQueue.slice(0,5).map(word => `<button type="button" data-open-word="${esc(word.id)}"><b>${esc(word.front)}</b><span>${esc(word.back)} · ${mistakeIds.has(word.id) ? "Mistake · " : ""}${esc(levelLabel(word.level))}</span></button>`).join("") || `<p>No review words yet.</p>`}
           </div>
         </section>
         <section>
-          <div class="tn-learn-section-head"><h2>Continue Learning</h2><button type="button" data-tn-start-review="quiz">Continue Quiz</button></div>
+          <div class="tn-learn-section-head"><h2>Continue Learning</h2><button type="button" data-tn-start-review="${data.mistakes.length ? "mistakes" : "quiz"}">Continue Quiz</button></div>
           <p class="tn-learn-muted">${recentContext}</p>
           <div class="tn-learn-session-links">
-            <button type="button" data-tn-start-review="quiz">Recent quiz</button>
+            <button type="button" data-tn-start-review="${data.mistakes.length ? "mistakes" : "quiz"}">${data.mistakes.length ? "Mistake review" : "Recent quiz"}</button>
             <button type="button" data-tn-go="listen">Recent listen</button>
             <button type="button" data-tn-go="library">${esc(lastList?.name || "New Playlist")}</button>
           </div>
@@ -178,7 +194,7 @@
     const listId = data.lists[0]?.id || "starter";
     if($("quizList"))$("quizList").value = listId;
     if($("quizScope")){
-      const scope = mode === "weak" ? "hard" : mode === "today" ? (dueWordsLearning().length ? "due" : weakWords().length ? "hard" : "all") : "all";
+      const scope = mode === "mistakes" ? "mistakes" : mode === "weak" ? "hard" : mode === "today" ? (dueWordsLearning().length ? "due" : data.mistakes?.length ? "mistakes" : weakWords().length ? "hard" : "all") : "all";
       $("quizScope").value = scope;
     }
     try{ if(typeof window.tnEmergencyStableGo === "function")window.tnEmergencyStableGo("quiz"); else if(typeof window.go === "function")window.go("quiz"); }catch(e){}
@@ -223,9 +239,14 @@
       const list = $("quizList")?.value;
       const scope = $("quizScope")?.value || "all";
       let words = (dbRef().words || []).filter(word => !list || word.listId === list);
-      if(scope === "hard")words = words.filter(word => (word.level || 3) <= 2 || word.status === "hard" || word.lastWrongAt);
-      if(scope === "due")words = words.filter(isReviewDue);
-      if(scope === "star")words = words.filter(word => word.saved);
+      if(scope === "mistakes"){
+        const ids = new Set((dbRef().mistakes || []).map(entry => entry.wordId));
+        words = (dbRef().words || []).filter(word => ids.has(word.id));
+      }else{
+        if(scope === "hard")words = words.filter(word => (word.level || 3) <= 2 || word.status === "hard" || word.lastWrongAt);
+        if(scope === "due")words = words.filter(isReviewDue);
+        if(scope === "star")words = words.filter(word => word.saved);
+      }
       return weightedOrder(words);
     };
 
@@ -275,7 +296,7 @@
   }
 
   function cleanSpeechText(text){
-    return String(text || "").replace(/\s*\/\s*/g," ").replace(/\s+/g," ").trim();
+    return String(text || "").replace(/\s*\/\s*/g,", ").replace(/\s+/g," ").trim();
   }
 
   function installAudioGuard(){
@@ -303,6 +324,12 @@
       event.preventDefault();
       const page = go.dataset.tnGo;
       try{ if(typeof window.tnEmergencyStableGo === "function")window.tnEmergencyStableGo(page); else if(typeof window.go === "function")window.go(page); }catch(e){}
+      return;
+    }
+    const word = event.target?.closest?.("[data-open-word]");
+    if(word){
+      event.preventDefault();
+      try{ if(typeof window.openDetail === "function")window.openDetail(word.dataset.openWord); }catch(e){}
     }
   },true);
 
