@@ -4479,10 +4479,22 @@ html.tn73-ready .login-gate,
 /* =========================================================
    Learning UX: Listening Quiz + Mistake Notebook
 ========================================================= */
+[data-quiz-setting][hidden]{
+  display:none!important;
+}
+
 #pageQuiz .quiz-question{
-  height:286px;
-  min-height:286px;
+  height:320px;
+  min-height:320px;
   overflow:hidden;
+}
+
+#pageQuiz .result-box{
+  min-height:76px;
+}
+
+#pageQuiz .result-box:not(.show){
+  visibility:hidden;
 }
 
 #pageQuiz .quiz-question.is-answered{
@@ -4496,9 +4508,7 @@ html.tn73-ready .login-gate,
 }
 
 #pageQuiz .quiz-question.is-listening .quiz-word{
-  color:var(--sub);
-  font-size:24px;
-  letter-spacing:0;
+  display:none;
 }
 
 .choice:focus{
@@ -4511,19 +4521,21 @@ html.tn73-ready .login-gate,
 
 .listening-panel{
   display:grid;
-  gap:8px;
-  margin:12px 0;
-  padding:14px;
-  border:1px solid var(--line);
-  border-radius:18px;
-  background:#fff;
-  box-shadow:var(--shadow-soft);
+  gap:12px;
+  margin:8px auto 0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  text-align:center;
 }
 
 .listening-main{
   display:flex;
   flex-wrap:wrap;
   align-items:center;
+  justify-content:center;
   gap:10px;
 }
 
@@ -4544,6 +4556,7 @@ html.tn73-ready .login-gate,
   background:var(--brand);
   border-color:var(--brand);
   color:#fff;
+  min-width:154px;
 }
 
 .listening-main span,
@@ -4555,10 +4568,32 @@ html.tn73-ready .login-gate,
 
 .listening-panel p{
   margin:0;
+  color:var(--text);
+  font-size:16px;
+  font-weight:820;
 }
 
 .listening-hint{
   color:var(--brand-dark)!important;
+}
+
+#listeningInputSlot{
+  width:min(100%,420px);
+  margin:0 auto;
+}
+
+#listeningInputSlot #typingArea{
+  display:grid!important;
+  gap:10px;
+}
+
+#listeningInputSlot #typingArea .actions{
+  justify-content:center;
+  margin-top:0;
+}
+
+#typingAreaHome #typingArea{
+  margin-top:12px;
 }
 
 .tn-mistake-card{
@@ -4642,8 +4677,8 @@ html.tn73-ready .login-gate,
 
 @media(max-width:860px){
   #pageQuiz .quiz-question{
-    height:310px;
-    min-height:310px;
+    height:360px;
+    min-height:360px;
     padding:20px;
   }
 
@@ -4654,6 +4689,11 @@ html.tn73-ready .login-gate,
 
   .listening-play{
     width:100%;
+  }
+
+  #listeningInputSlot #typingArea .actions{
+    display:grid;
+    grid-template-columns:1fr;
   }
 
   .mistake-head,

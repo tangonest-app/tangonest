@@ -15,7 +15,18 @@
 - Continue Learning now prioritizes mistakes, due words, weak words, saved words, and recent additions.
 - Cloud/local merge preserves `mistakes` alongside words and playlists.
 - `/` in speech text becomes a short pause instead of being read aloud.
-- Cache version bumped to `20260704-learningux8`.
+- Cache version bumped to `20260704-learningux9`.
+
+## Quiz mobile UX refinement - 2026-07-04
+
+### Improved
+- Quiz settings now show only controls relevant to Four-choice, Typing, or Listening mode.
+- Listening Quiz default is learner-friendly: no timer, unlimited replay, Front audio only, Front answer target.
+- Listening Hard mode enables timer and replay limit with 10 seconds / 1 replay defaults.
+- Listening Quiz card now centers Play Audio, answer input, replay status, and timer status.
+- Large "Audio question" text was removed.
+- Typing and Listening use Enter-only flow: Enter submits, then Enter advances after feedback.
+- Mobile layout reserves stable result space and keeps the Quiz card fixed-height to reduce jumps.
 
 ## Emergency stability patch - 2026-06-14
 

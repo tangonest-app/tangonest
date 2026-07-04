@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style.css?v=20260704-learningux8">
+<link rel="stylesheet" href="./style.css?v=20260704-learningux9">
 
 <script>
 (function(){
@@ -202,19 +202,18 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
   <section id="pageQuiz" class="page">
     <div class="quiz-card"><div class="card"><h2>Quiz Mode</h2><p class="desc">Practice your vocabulary with clear answer feedback before moving on.</p>
       <div id="quizSetup">
-        <div class="row3"><div><label>Library</label><select id="quizList"></select></div><div><label>Quiz Type</label><select id="quizType"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div><label>Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
-        <div class="row3"><div><label>Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div><label>Feedback speed</label><select id="quizAutoAdvance"><option value="1">Fast · 1.0s</option><option value="1.5" selected>Normal · 1.5s</option><option value="2.5">Slow · 2.5s</option><option value="manual">Manual Next</option></select></div><div><label>Custom delay</label><input id="quizNextDelay" type="number" min="1" max="10" step="0.1" value="1.5"></div></div>
-        <div class="row3"><div><label>After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div><label>Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div><label>Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
-        <div class="row4"><div><label>Listening target</label><select id="listeningAnswerTarget"><option value="front" selected>Front word</option><option value="back">Back meaning</option></select></div><div><label>Replay limit</label><select id="listeningReplayLimit"><option value="1" selected>Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option><option value="unlimited">Unlimited</option></select></div><div><label>Listening timer</label><select id="listeningTimerMode"><option value="10" selected>Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option><option value="off">Off</option></select></div><div><label>Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
-        <div class="row"><div><label>Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div><div><label>Exact count rule</label><p class="desc" style="margin:8px 0 0">If fewer words are available, the quiz clearly uses the available count.</p></div></div>
+        <div class="row3"><div data-quiz-setting="all"><label>Library</label><select id="quizList"></select></div><div data-quiz-setting="all"><label>Quiz Type</label><select id="quizType" onchange="updateQuizModeSettings()"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div data-quiz-setting="choice typing"><label>Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="all"><label>Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="choice"><label>Feedback speed</label><select id="quizAutoAdvance"><option value="1">Fast · 1.0s</option><option value="1.5" selected>Normal · 1.5s</option><option value="2.5">Slow · 2.5s</option><option value="manual">Manual Next</option></select></div><div data-quiz-setting="choice"><label>Custom delay</label><input id="quizNextDelay" type="number" min="1" max="10" step="0.1" value="1.5"></div></div>
+        <div class="row3"><div data-quiz-setting="choice typing"><label>After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div data-quiz-setting="choice typing"><label>Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div data-quiz-setting="choice typing"><label>Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
+        <div class="row4"><div data-quiz-setting="listening"><label>Listening mode</label><select id="listeningDifficulty" onchange="updateQuizModeSettings(true)"><option value="normal" selected>Normal · unlimited</option><option value="hard">Hard · timed</option></select></div><div data-quiz-setting="listening-hard"><label>Replay limit</label><select id="listeningReplayLimit"><option value="unlimited" selected>Unlimited</option><option value="1">Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option></select></div><div data-quiz-setting="listening-hard"><label>Listening timer</label><select id="listeningTimerMode"><option value="off" selected>Off</option><option value="10">Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option></select></div><div data-quiz-setting="listening"><label>Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
+        <div class="row"><div data-quiz-setting="all"><label>Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div></div>
         <div class="actions"><button class="btn primary" onclick="startQuiz()">Start Quiz</button></div>
       </div>
       <div id="quizRun" style="display:none">
         <div class="quiz-top"><div class="quiz-count" id="quizProgress">1 / 10</div><div class="quiz-count" id="quizScore">0 / 10</div></div>
-        <div class="quiz-question"><div><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div></div></div>
-        <div id="listeningPanel" class="listening-panel" style="display:none"></div>
+        <div class="quiz-question"><div><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div></div></div>
         <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel">Time limit: Off</span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
-        <div id="typingArea"><input id="quizAnswer" placeholder="Type answer" onkeydown="if(event.key==='Enter')checkTypingAnswer()"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()">Check</button><button class="btn blue" onclick="speakQuizQuestion()">▶ Question</button></div></div>
+        <div id="typingAreaHome"><div id="typingArea"><input id="quizAnswer" placeholder="Type answer" onkeydown="handleQuizAnswerKey(event)"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()">Check</button><button class="btn blue" onclick="speakQuizQuestion()">▶ Question</button></div></div></div>
         <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box"></div>
         <div class="actions"><button class="btn" onclick="nextQuizQuestion()">Skip / Next</button><button class="btn red" onclick="endQuiz()">End</button></div>
       </div>
@@ -335,9 +334,9 @@ html:not(.tn73-ready) #loginGate,html:not(.tn73-ready) .login-gate{display:none!
 })();
 </script>
 
-<script src="./tn-emergency-guard.js?v=20260704-learningux8"></script>
-<script src="./app.js?v=20260704-learningux8"></script>
-<script src="./tn-fixes.js?v=20260704-learningux8"></script>
+<script src="./tn-emergency-guard.js?v=20260704-learningux9"></script>
+<script src="./app.js?v=20260704-learningux9"></script>
+<script src="./tn-fixes.js?v=20260704-learningux9"></script>
 
 
 <script id="tn73EmergencyScript">
@@ -366,9 +365,9 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 })();
 </script>
 
-<script src="./tn-cloud-first.js?v=20260704-learningux8"></script>
-<script src="./tn-library-management.js?v=20260704-learningux8"></script>
-<script src="./tn-emergency-stability.js?v=20260704-learningux8"></script>
-<script src="./tn-learning-flow.js?v=20260704-learningux8"></script>
+<script src="./tn-cloud-first.js?v=20260704-learningux9"></script>
+<script src="./tn-library-management.js?v=20260704-learningux9"></script>
+<script src="./tn-emergency-stability.js?v=20260704-learningux9"></script>
+<script src="./tn-learning-flow.js?v=20260704-learningux9"></script>
 </body>
 </html>
