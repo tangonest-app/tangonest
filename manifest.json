@@ -2,12 +2,21 @@
   "name": "TangoNest",
   "short_name": "TangoNest",
   "description": "Your own language space. Build, review, quiz, and listen to your words.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f8fb",
-  "theme_color": "#2563eb",
-  "orientation": "portrait-primary",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#f6f7f9",
+  "theme_color": "#142033",
+  "lang": "en",
+  "dir": "ltr",
+  "orientation": "any",
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {"name":"Add words","short_name":"Create","url":"./?page=create","icons":[{"src":"icon-192.png","sizes":"192x192"}]},
+    {"name":"Open Library","short_name":"Library","url":"./?page=library","icons":[{"src":"icon-192.png","sizes":"192x192"}]}
+  ],
   "icons": [
     {
       "src": "icon-192.png",
