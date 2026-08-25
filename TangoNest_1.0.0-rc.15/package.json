@@ -1,0 +1,27 @@
+{
+  "name": "tangonest",
+  "version": "1.0.0-rc.15",
+  "private": true,
+  "description": "TangoNest vocabulary library and learning app",
+  "scripts": {
+    "test": "npm run test:syntax && npm run test:unit && npm run test:static",
+    "test:syntax": "node --check app.js && node --check learning-engine.js && node --check tn-learning-flow.js && node --check tn-library-management.js && node --check tn-supabase-sync.js && node --check ui/learning-presentation.js && node --check ui/runtime.js && node --check sw.js && node --check tests/integration/supabase-auth-smoke.js",
+    "test:unit": "node tests/unit/learning-engine.test.js && node tests/unit/learning-flow.test.js && node tests/unit/learning-presentation.test.js && node tests/unit/sync-regression.test.js",
+    "test:static": "node tests/static/learning-contracts.test.js && node tests/static/ui-contracts.test.js && node tests/static/accessibility-contracts.test.js && node tests/static/release-contracts.test.js && node tests/static/db-contract.test.js",
+    "test:e2e": "playwright test",
+    "test:integration:auth": "node tests/integration/supabase-auth-smoke.js",
+    "test:a11y": "playwright test tests/e2e/accessibility.spec.js",
+    "test:visual": "playwright test tests/e2e/visual.spec.js",
+    "test:performance": "node tests/performance/library-benchmark.test.js && playwright test tests/e2e/performance.spec.js --project=desktop",
+    "test:all": "npm test && npm run test:e2e && node tests/performance/library-benchmark.test.js",
+    "audit:css": "node tools/css-audit.js",
+    "audit:dependencies": "npm audit --audit-level=high",
+    "cleanup:css": "node tools/css-audit.js --write"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.62.1",
+    "postcss": "^8.5.26",
+    "postcss-selector-parser": "^7.1.5"
+  }
+}
