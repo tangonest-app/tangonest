@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TangoNest local PWA harness</title>
+</head>
+<body>
+  <iframe id="appFrame" title="TangoNest PWA test"></iframe>
+  <pre id="result" aria-live="polite">PENDING</pre>
+  <script>
+    (function(){
+      "use strict";
+      const frame=document.getElementById("appFrame");
+      const output=document.getElementById("result");
+      const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+
+      frame.addEventListener("load",async()=>{
+        try{
+          await wait(1200);
+          const registration=await frame.contentWindow.navigator.serviceWorker.getRegistration("../../");
+          const cacheNames=await frame.contentWindow.caches.keys();
+          const shellName=cacheNames.find(name=>name==="tangonest-shell-v1.0.0-rc.17-pdca3");
+          const requests=shellName?await (await frame.contentWindow.caches.open(shellName)).keys():[];
+          const urls=requests.map(request=>request.url);
+          const origin=new URL("../../",location.href).origin;
+          const unsafe=urls.filter(url=>{
+            const parsed=new URL(url);
+            return parsed.origin!==origin||/\/rest\/v1|\/auth\/v1|supabase\.co/i.test(url);
+          });
+          output.textContent=JSON.stringify({
+            registration:!!registration,
+            scope:registration?.scope||"",
+            active:registration?.active?.state||"",
+            cache:shellName||"",
+            cachedAssets:urls.length,
+            unsafe
+          },null,2);
+          document.body.dataset.done="true";
+        }catch(error){
+          output.textContent=JSON.stringify({error:error.message||String(error)});
+          document.body.dataset.done="error";
+        }
+      },{once:true});
+      frame.src="../../";
+    })();
+  </script>
+</body>
+</html>
