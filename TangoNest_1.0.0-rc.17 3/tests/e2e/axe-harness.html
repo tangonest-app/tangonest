@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TangoNest local axe harness</title>
+</head>
+<body>
+  <iframe id="appFrame" title="TangoNest accessibility test"></iframe>
+  <pre id="result" aria-live="polite">PENDING</pre>
+  <script>
+    (function(){
+      "use strict";
+      const frame=document.getElementById("appFrame");
+      const output=document.getElementById("result");
+      const params=new URLSearchParams(location.search);
+      const loginMode=params.get("mode")==="login";
+      const mobileMode=params.get("viewport")==="mobile";
+      const screens=["navHome","navAdd","navWords","navStudy","navQuiz","navAudio","navManage"];
+      const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+      frame.style.width=mobileMode?"390px":"1280px";
+      frame.style.height=mobileMode?"844px":"720px";
+      frame.style.border="0";
+
+      async function audit(label){
+        const result=await frame.contentWindow.axe.run(frame.contentDocument,{
+          runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21aa","wcag22aa"]}
+        });
+        return result.violations
+          .filter(item=>item.impact==="critical"||item.impact==="serious")
+          .map(item=>({
+            screen:label,
+            id:item.id,
+            impact:item.impact,
+            nodes:item.nodes.map(node=>({target:node.target,html:node.html,failureSummary:node.failureSummary}))
+          }));
+      }
+
+      frame.addEventListener("load",()=>{
+        const script=frame.contentDocument.createElement("script");
+        script.src=new URL("../../node_modules/axe-core/axe.min.js",location.href).href;
+        script.onload=async()=>{
+          try{
+            const violations=[];
+            if(loginMode)violations.push(...await audit("login"));
+            else{
+              for(const id of screens){
+                frame.contentDocument.getElementById(id)?.click();
+                await wait(180);
+                violations.push(...await audit(id));
+              }
+            }
+            output.textContent=JSON.stringify({mode:loginMode?"login":"app",viewport:mobileMode?"mobile":"desktop",violations},null,2);
+            document.body.dataset.done="true";
+          }catch(error){
+            output.textContent=JSON.stringify({error:error.message||String(error)});
+            document.body.dataset.done="error";
+          }
+        };
+        script.onerror=()=>{
+          output.textContent=JSON.stringify({error:"axe-core failed to load"});
+          document.body.dataset.done="error";
+        };
+        frame.contentDocument.head.appendChild(script);
+      },{once:true});
+      frame.src=loginMode?"../../":"../../?qa=1";
+    })();
+  </script>
+</body>
+</html>
