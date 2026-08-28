@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>TangoNest</title>
+<link rel="stylesheet" href="./style.css?v=1.0.0-rc.19-uihotfix1">
+<link rel="stylesheet" href="./ui/study-focus.css?v=1.0.0-rc.19-uihotfix1">
+
+<script>
+(function(){
+  document.documentElement.classList.add("tn-auth-loading");
+})();
+</script>
+
+
+<link rel="icon" type="image/png" href="./favicon.png">
+<link rel="icon" href="./favicon.ico">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="manifest" href="./manifest.json?v=1.0.0-rc.19">
+<meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
+<meta name="theme-color" content="#18263b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TangoNest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+
+<style id="authCriticalStyle">
+#authScreen{position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;padding:env(safe-area-inset-top,12px) 20px env(safe-area-inset-bottom,12px)!important;width:100%!important;min-height:100vh!important;min-height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;background:#142033!important;pointer-events:auto!important;visibility:visible!important;opacity:1!important;transform:none!important;box-sizing:border-box!important}
+html.auth-ready #authScreen{display:none!important;pointer-events:none!important;visibility:hidden!important;opacity:0!important}
+#authScreen,#authScreen *{pointer-events:auto!important;box-sizing:border-box!important;-webkit-user-select:auto!important;user-select:auto!important;touch-action:auto!important}
+.auth-card{width:min(520px,100%)!important;margin:auto!important;flex-shrink:0!important;border-radius:8px!important;background:#f8fafc!important;border:1px solid rgba(255,255,255,.35)!important;box-shadow:0 24px 70px rgba(0,0,0,.26)!important;padding:28px!important;color:#0f172a!important;position:relative!important;z-index:2147483647!important}
+.auth-brand{display:flex!important;align-items:center!important;gap:14px!important;margin-bottom:8px!important}.auth-logo{width:48px!important;height:48px!important;border-radius:8px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:url("./icon-192.png") center/cover no-repeat!important;color:transparent!important;font-size:0!important;font-weight:700!important;overflow:hidden!important}.auth-title{font-size:30px!important;line-height:1!important;font-weight:720!important;letter-spacing:0!important}.auth-subtitle{margin-top:4px!important;font-weight:560!important;color:#64748b!important}.auth-mode-label{display:inline-flex!important;border-radius:999px!important;background:white!important;padding:6px 12px!important;font-weight:650!important;color:#64748b!important;margin:6px 0 12px 62px!important}.auth-kicker{display:inline-flex!important;border-radius:999px!important;padding:7px 12px!important;color:#315f93!important;background:#edf3f8!important;font-size:12px!important;font-weight:700!important;letter-spacing:0!important;margin-bottom:12px!important}
+#authScreen h1{margin:0 0 10px!important;font-size:38px!important;line-height:1.08!important;letter-spacing:0!important;font-weight:720!important;color:#0f172a!important}#authScreen p{margin:0 0 16px!important;color:#64748b!important;line-height:1.5!important;font-size:16px!important}#authScreen label{display:block!important;margin:11px 0 6px!important;font-weight:650!important;color:#475569!important;font-size:14px!important}
+#authScreen input{display:block!important;width:100%!important;height:50px!important;border-radius:8px!important;border:1px solid rgba(148,163,184,.42)!important;background:white!important;color:#0f172a!important;font-size:16px!important;padding:0 14px!important;outline:none!important;pointer-events:auto!important;cursor:text!important;touch-action:manipulation!important;-webkit-appearance:none!important;position:relative!important;z-index:2147483647!important}
+#authScreen input:focus{border-color:#315f93!important;box-shadow:0 0 0 3px rgba(49,95,147,.14)!important}.auth-message{margin:14px 0!important;padding:11px 13px!important;border-radius:8px!important;background:#edf3f8!important;color:#315f93!important;border:1px solid #d4e0eb!important;font-weight:620!important}.auth-message.error{background:#fef2f2!important;color:#b91c1c!important}.auth-message.success{background:#ecfdf5!important;color:#047857!important}.auth-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important}
+#authScreen button{min-height:52px!important;border-radius:8px!important;border:0!important;font-size:15px!important;font-weight:680!important;cursor:pointer!important;pointer-events:auto!important;touch-action:manipulation!important;-webkit-tap-highlight-color:rgba(0,0,0,.1)!important;position:relative!important;z-index:2147483647!important}#loginButton{background:#244f7d!important;color:white!important}#signupButton{background:white!important;color:#0f172a!important;border:1px solid rgba(148,163,184,.42)!important}.guest-button{margin-top:14px!important;width:100%!important;background:transparent!important;color:#64748b!important;padding-bottom:env(safe-area-inset-bottom,8px)!important}.auth-password-field{position:relative!important}.auth-password-field input{padding-right:78px!important}#togglePasswordButton{position:absolute!important;right:6px!important;top:5px!important;z-index:2147483647!important;min-height:40px!important;height:40px!important;padding:0 10px!important;background:transparent!important;color:#315f93!important;font-size:13px!important}.auth-help-row{display:flex!important;justify-content:flex-end!important;margin:6px 0 2px!important}#forgotPasswordButton{min-height:36px!important;height:36px!important;padding:0!important;background:transparent!important;color:#315f93!important;font-size:13px!important;font-weight:650!important}.auth-actions button:disabled,#forgotPasswordButton:disabled{cursor:wait!important;opacity:.68!important}
+html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none!important;pointer-events:none!important;visibility:hidden!important;opacity:0!important;z-index:-1!important}
+@media(max-height:700px){#authScreen{padding:8px 16px env(safe-area-inset-bottom,8px)!important}.auth-card{border-radius:20px!important;padding:18px!important}#authScreen h1{font-size:26px!important}.auth-kicker{display:none!important}.auth-mode-label{margin:4px 0 8px 62px!important}}
+@media(max-width:520px){.auth-actions{grid-template-columns:1fr!important}#authScreen h1{font-size:30px!important}.auth-card{padding:22px!important}}
+@media(max-width:380px){.auth-card{padding:18px!important}#authScreen h1{font-size:26px!important}}
+</style>
+
+</head>
+<body>
+
+<section id="authScreen" class="auth-screen" aria-labelledby="authTitle">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="auth-logo">TN</div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Your own language space.</div></div></div>
+    <div id="authModeLabel" class="auth-mode-label">Local</div>
+    <div class="auth-kicker">WELCOME BACK</div>
+    <h1 id="authTitle">You're already halfway there.</h1>
+    <p>Login once to keep your words, playlists, and study space synced across PC and phone.</p>
+    <form id="authForm" novalidate>
+      <label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+      <label for="authPassword">Password</label><div class="auth-password-field"><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters"><button id="togglePasswordButton" type="button" aria-pressed="false" aria-label="Show password">Show</button></div>
+      <div class="auth-help-row"><button id="forgotPasswordButton" type="button">Forgot password?</button></div>
+      <div id="authMessage" class="auth-message" role="status" aria-live="polite">Enter your existing account details, or create a new account.</div>
+      <div class="auth-actions"><button id="loginButton" type="submit">Login</button><button id="signupButton" type="button">Create account</button><button id="updatePasswordButton" type="button" hidden>Update password</button></div>
+    </form>
+    <button id="guestButton" type="button" class="guest-button">Continue as guest</button>
+  </div>
+</section>
+
+<div class="app" inert aria-hidden="true">
+  <aside class="app-sidebar">
+    <div class="brand"><div class="brand-mark">TN</div><div><h1>TangoNest</h1><p>Study Focus</p></div></div>
+    <nav class="nav" aria-label="Primary navigation">
+      <button id="navAdd" class="sidebar-add" onclick="appShow('add')"><span aria-hidden="true">+</span> Add Words</button>
+      <span class="nav-section-label">Workspace</span>
+      <button id="navHome" class="active" onclick="go('home')">Home</button>
+      <button id="navWords" onclick="go('words')">Library</button>
+      <span class="nav-section-label">Practice</span>
+      <button id="navStudy" onclick="go('study')">Cards</button>
+      <button id="navQuiz" onclick="appShow('quiz')">Quiz</button>
+      <button id="navAudio" onclick="appShow('audio')">Listen</button>
+      <button id="navManage" class="nav-settings" onclick="go('manage')">Settings</button>
+    </nav>
+    <div class="sidebar-note"><span>Words stay yours.</span><small>Synced securely across devices.</small></div>
+  </aside>
+  <div class="app-workspace">
+    <header class="header">
+      <div class="mobile-brand" aria-label="TangoNest"><span class="brand-mark">TN</span></div>
+      <div class="page-heading"><span id="appPageEyebrow">Study Focus</span><strong id="appPageTitle">Home</strong></div>
+      <div class="stats" aria-label="Library summary">
+        <div class="stat"><b id="wc">0</b><span>Words</span></div><div class="stat"><b id="listCount">0</b><span>Lists</span></div><div class="stat"><b id="lc">0</b><span>Learned</span></div><div class="stat"><b id="hc">0</b><span>Hard</span></div>
+        <button id="tn80HeaderCloud" class="tn80-header-cloud" type="button" onclick="go('manage')" aria-label="Open account and sync settings">Cloud</button>
+      </div>
+    </header>
+    <main class="app-main">
+
+  <section id="pageHome" class="page active" aria-labelledby="homeTitle">
+    <section class="home-focus">
+      <div class="home-focus-copy">
+        <span class="section-eyebrow">TODAY'S FOCUS</span>
+        <h2 id="homeTitle">Let's study.</h2>
+        <p>Review what matters today, or add the next word to your collection.</p>
+        <div class="home-focus-actions">
+          <button class="btn primary" onclick="appShow('add')">+ Add Words</button>
+          <button class="btn" onclick="appShow('quiz')">Start Quiz</button>
+        </div>
+      </div>
+      <div class="home-summary" aria-label="Learning overview">
+        <div><b id="totalWords">0</b><span>Words</span></div>
+        <div><b id="totalLists">0</b><span>Lists</span></div>
+        <div><b id="totalLearned">0</b><span>Learned</span></div>
+        <div><b id="totalHard">0</b><span>Hard</span></div>
+      </div>
+    </section>
+    <div class="home-dashboard-grid">
+      <section class="card tn-today-card"><div class="section-heading"><div><span class="section-eyebrow">DAILY REVIEW</span><h2>Today’s Session</h2></div></div><p class="desc">A focused mix of due, weak, and new words.</p><div id="todayPlan" class="tn-today-plan"></div></section>
+      <section class="card quick-start"><div class="section-heading"><div><span class="section-eyebrow">QUICK START</span><h2>Continue learning</h2></div></div><p class="desc">Choose the mode that fits the moment.</p>
+        <div class="progress-grid"><div class="progress-card"><b id="dashTotal">0</b><span>Total</span></div><div class="progress-card"><b id="dashLearned">0%</b><span>Learned</span></div><div class="progress-card"><b id="dashDue">0</b><span>Due</span></div><div class="progress-card"><b id="dashHard">0</b><span>Hard</span></div></div>
+        <div class="quick-actions"><button class="btn" onclick="go('study')">Cards</button><button class="btn" onclick="appShow('quiz')">Quiz</button><button class="btn" onclick="appShow('audio')">Listen</button></div>
+      </section>
+    </div>
+    <div class="home-lower-grid">
+      <section class="card tn-mistake-card"><div class="section-heading"><div><span class="section-eyebrow">REVIEW</span><h2>Mistake Review</h2></div></div><p class="desc">Words you missed stay here until your answers become stable.</p><div id="mistakeNotebookHome"></div></section>
+      <section class="card"><div class="section-heading"><div><span class="section-eyebrow">COLLECTIONS</span><h2>My Lists</h2></div><button class="text-action" type="button" onclick="appShow('add')">New list</button></div><div id="homeLists" class="quick-list"></div></section>
+    </div>
+  </section>
+
+  <section id="pageAdd" class="page">
+    <div class="grid2">
+      <div class="card"><h2>Add Word</h2><p class="desc">Add words quickly. Enter moves forward, Cmd/Ctrl + Enter saves, then Front is focused again.</p>
+        <div class="row"><div><label for="front">Front</label><input id="front" placeholder="word" oninput="autoDetectFront()"></div><div><label for="back">Back</label><input id="back" placeholder="meaning" oninput="autoDetectBack()"></div></div>
+        <div class="row3"><div><label for="frontLang">Front language</label><select id="frontLang"></select></div><div><label for="backLang">Back language</label><select id="backLang"></select></div><div><label for="addList">Save to list</label><select id="addList"></select></div></div>
+        <div class="row3"><div><label for="pos">POS <span class="optional">optional</span></label><select id="pos"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label for="gender">Gender <span class="optional">optional</span></label><select id="gender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label for="tags">Tags</label><input id="tags" placeholder="A1, food"></div></div>
+        <label for="memo">Memo / Example</label><textarea id="memo" placeholder="Example sentence or memo"></textarea>
+        <div class="actions tn-create-actions"><button id="addWordBtn" class="btn primary" type="button" onclick="tnRegisterWordCritical(event)">Save Word</button><button class="btn blue" type="button" onclick="speak($('front').value,$('frontLang').value)">Play Front</button><button class="btn" type="button" onclick="clearForm()">Clear</button><span class="tn-key-hint">⌘ / Ctrl + Enter</span></div>
+      </div>
+      <div class="card"><h2>Playlist</h2><label for="newList">New list name</label><input id="newList" placeholder="English A1"><div class="actions"><button class="btn primary full" onclick="createList()">Create</button></div><label for="renameListSelect">Rename list</label><select id="renameListSelect"></select><label class="sr-only" for="renameListInput">New playlist name</label><input id="renameListInput" placeholder="New name"><div class="actions"><button id="renameListButton" class="btn blue full" onclick="tnRenamePlaylist(document.getElementById('renameListSelect').value,document.getElementById('renameListInput').value)">Rename</button></div></div>
+    </div>
+    <div class="card"><h2>Bulk Add</h2><p class="desc">Paste, preview, validate, then import. Use tabs, commas, or multi-space columns: Front / Back / POS / Gender / Example.</p>
+      <div class="tn-bulk-flow"><span>1 Paste</span><span>2 Preview</span><span>3 Validate</span><span>4 Import</span></div>
+      <div class="row3"><div><label for="bulkFrontLang">Front language</label><select id="bulkFrontLang"></select></div><div><label for="bulkBackLang">Back language</label><select id="bulkBackLang"></select></div><div><label for="bulkList">Save to list</label><select id="bulkList"></select></div></div>
+      <label class="sr-only" for="bulkText">Words to import</label><textarea id="bulkText" placeholder="front word	back meaning	POS	gender	example sentence"></textarea>
+      <div class="actions"><button class="btn blue" onclick="previewBulk()">Preview</button><button class="btn primary" onclick="bulkImport()">Bulk Register</button><button class="btn" onclick="$('bulkText').value='';clearBulkPreview()">Clear</button></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel"></div>
+    </div>
+  </section>
+
+  <section id="pageWords" class="page">
+    <div class="card"><h2>Word List</h2>
+<div id="tn82LibraryMount" class="tn82-library-mount"></div>
+      <div class="mobile-list-actions"><button onclick="appShow('quiz')">Quiz</button><button onclick="go('study')">Cards</button><button onclick="appShow('audio')">Listen</button></div>
+      <div id="mistakeNotebookLibrary" class="tn-mistake-card"></div>
+    </div>
+  </section>
+
+  <section id="pageStudy" class="page">
+    <div class="card"><h2>Flashcards</h2><p class="desc">Tap card to flip. Auto mode plays Front → flips → Back → next.</p>
+      <div class="row"><div><label for="studyList">Library</label><select id="studyList" onchange="resetCard()"></select></div><div><label for="studyMode">Mode</label><select id="studyMode" onchange="resetCard()"><option value="front">Front → Back</option><option value="back">Back → Front</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option></select></div></div>
+      <details class="study-options"><summary>Session options</summary><div class="row3"><div><label for="flashAutoMode">Flash Auto</label><select id="flashAutoMode"><option value="off">Off</option><option value="on">On</option></select></div><div><label for="flashFlipDelay">Flip after</label><select id="flashFlipDelay"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="3500">3.5s</option><option value="5000">5s</option></select></div><div><label for="flashNextDelay">Next after</label><select id="flashNextDelay"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="3500">3.5s</option><option value="5000">5s</option></select></div></div></details>
+      <div id="studyProgress" class="tn-study-progress">Choose a library and press Next.</div>
+      <div class="flip-scene"><div id="flash" class="flash" onclick="flipCard()"><div class="face front"><div><div class="flabel">Front</div><div id="frontWord" class="fword">---</div><div id="frontMemo" class="fmemo"></div></div></div><div class="face back"><div><div class="flabel">Back</div><div id="backWord" class="fword">---</div><div id="backMemo" class="fmemo"></div></div></div></div></div>
+      <div class="tn-card-controls">
+        <div class="actions tn-card-main-actions"><button class="btn primary" onclick="nextCard()">Next Card</button><button class="btn" onclick="flipCard()">Reveal <span class="tn-key-hint">Space</span></button><button class="btn blue" onclick="speakCard()">Play Audio</button><button id="studyStar" class="btn" onclick="toggleCardStar()">☆ Save</button></div>
+        <div class="tn-card-rating" aria-label="Rate this card"><button class="btn red" onclick="markCard('again',true)"><b>Again</b><span>1</span></button><button class="btn" onclick="markCard('hard',true)"><b>Hard</b><span>2</span></button><button class="btn green" onclick="markCard('good',true)"><b>Good</b><span>3</span></button><button class="btn" onclick="markCard('easy',true)"><b>Easy</b><span>4</span></button></div>
+        <details class="tn-card-auto"><summary>Auto play</summary><div class="actions"><button class="btn" onclick="startFlashAuto()">Start Auto</button><button class="btn" onclick="stopFlashAuto()">Stop</button></div></details>
+      </div>
+    </div>
+  </section>
+
+  <section id="pageQuiz" class="page">
+    <div class="quiz-card"><div class="card"><h2>Quiz Mode</h2><p class="desc">Practice your vocabulary with clear answer feedback before moving on.</p>
+      <div id="quizSetup">
+        <div class="row3"><div data-quiz-setting="all"><label for="quizList">Library</label><select id="quizList"></select></div><div data-quiz-setting="all"><label for="quizType">Quiz Type</label><select id="quizType" onchange="updateQuizModeSettings()"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div data-quiz-setting="choice typing"><label for="quizDirection">Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="all"><label for="quizCount">Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode">Question order</label><select id="quizOrderMode"><option value="random" selected>Random mix</option><option value="playlist">Playlist order</option><option value="weak">Needs practice first</option><option value="due">Due reviews first</option><option value="newest">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance">After answering</label><select id="quizAutoAdvance"><option value="auto" selected>Auto · smart timing</option><option value="manual">Wait for Next</option><option value="2.5">Slow · 2.5s</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="choice typing"><label for="quizAudioAfter">After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div data-quiz-setting="choice typing"><label for="quizHardMode">Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div data-quiz-setting="choice typing"><label for="quizTimeLimit">Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
+        <div class="row4"><div data-quiz-setting="listening"><label for="listeningDifficulty">Listening mode</label><select id="listeningDifficulty" onchange="updateQuizModeSettings(true)"><option value="normal" selected>Normal · unlimited</option><option value="hard">Hard · timed</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningReplayLimit">Replay limit</label><select id="listeningReplayLimit"><option value="unlimited" selected>Unlimited</option><option value="1">Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningTimerMode">Listening timer</label><select id="listeningTimerMode"><option value="off" selected>Off</option><option value="10">Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option></select></div><div data-quiz-setting="listening"><label for="listeningHintMode">Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
+        <div class="row"><div data-quiz-setting="all"><label for="quizScope">Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div></div>
+        <div class="actions"><button class="btn primary" onclick="startQuiz()">Start Quiz</button></div>
+      </div>
+      <div id="quizRun" style="display:none">
+        <div class="quiz-top"><div class="quiz-count" id="quizProgress">1 / 10</div><div class="quiz-count" id="quizScore">0 / 10</div></div>
+        <div class="quiz-question"><div><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div></div></div>
+        <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel">Time limit: Off</span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
+        <div id="typingAreaHome"><div id="typingArea"><label class="sr-only" for="quizAnswer">Your answer</label><input id="quizAnswer" placeholder="Type answer" onkeydown="handleQuizAnswerKey(event)"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()">Check</button><button class="btn blue" onclick="speakQuizQuestion()">▶ Question</button></div></div></div>
+        <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box" role="status" aria-live="polite"></div>
+        <div class="actions quiz-run-actions"><button id="quizSkipButton" class="btn" onclick="nextQuizQuestion()">Skip question</button><button class="btn red" onclick="endQuiz()">End</button></div>
+      </div>
+      <div id="quizEnd" style="display:none"><h2>Result</h2><p class="desc" id="quizEndText"></p><div id="quizResultSummary" class="tn-quiz-summary"></div><div id="quizWrongList" class="quiz-wrong-list"></div><div class="actions"><button class="btn primary" onclick="restartWrongQuiz()">Retry wrong</button><button class="btn blue" onclick="startMistakeReview()">Review weak words</button><button class="btn" onclick="go('home')">Home</button><button class="btn" onclick="resetQuiz()">Back to setup</button></div></div>
+    </div></div>
+  </section>
+
+  <section id="pageAudio" class="page"><div class="audio-player"><h2>Audio Mode</h2><p class="desc">Listening practice mode.</p>
+    <div class="row3"><div><label for="audioList">Library</label><select id="audioList"></select></div><div><label for="audioPattern">Pattern</label><select id="audioPattern"><option value="frontBack">Front → Back</option><option value="backFront">Back → Front</option><option value="front">Front only</option><option value="back">Back only</option></select></div><div><label for="audioOrder">Order</label><select id="audioOrder"><option value="random">Random</option><option value="normal">Normal</option><option value="hard">Hard first</option><option value="due">Due first</option><option value="star">★ Saved only</option></select></div></div>
+    <div class="row3"><div><label for="audioIntervalCustom">Word interval</label><input id="audioIntervalCustom" type="number" min="0.5" max="30" step="0.1" value="5"></div><div><label for="pairGapCustom">Pair gap</label><input id="pairGapCustom" type="number" min="0.1" max="10" step="0.1" value="1.8"></div><div><label for="audioRate">Voice speed</label><select id="audioRate"><option value="0.82">Slow</option><option value="0.92" selected>Normal</option><option value="1.05">Fast</option></select></div></div>
+    <div class="now-playing"><div class="flabel">Now Playing</div><div id="audioNow" class="now-title">---</div><div id="audioSub" class="now-sub">Start</div></div>
+    <div class="actions tn-player-controls"><button class="btn" onclick="previousAudio()">Previous</button><button class="btn primary" onclick="startAudio()">Play</button><button class="btn" onclick="pauseAudio()">Pause</button><button class="btn blue" onclick="nextAudio()">Next</button><button class="btn" onclick="stopAudio()">Stop</button><button class="btn" onclick="playAudioOnce()">Play One</button></div>
+  </div></section>
+
+  <section id="pageManage" class="page">
+    <div class="card">
+      <h2>Settings</h2>
+      <p class="desc">Account, learning, audio, sync, backup, and data safety.</p>
+      <div class="progress-grid">
+        <div class="progress-card"><b id="mgNew">0</b><span>New</span></div>
+        <div class="progress-card"><b id="mgDue">0</b><span>Due</span></div>
+        <div class="progress-card"><b id="mgNoPOS">0</b><span>No POS</span></div>
+        <div class="progress-card"><b id="mgSaved">0</b><span>Saved</span></div>
+      </div>
+
+      <div class="tn-settings-section-title"><span>Account & Sync</span><em>Keep PC and phone aligned automatically.</em></div>
+      <div class="tn-account-summary">
+        <div><span>Account</span><strong id="tn80Account">Not logged in</strong></div>
+        <div><span>Status</span><strong id="tn80StatusPill" class="tn80-status-pill local">Offline</strong></div>
+        <div><span>Last sync</span><strong id="tn80CloudUpdated">-</strong></div>
+        <div class="tn80-cloud-actions"><button type="button" id="tn80CheckCloudBtn" onclick="tnSyncNow()">Sync now</button><button type="button" id="tn80LogoutBtn" onclick="tnLogout()">Log out</button></div>
+      </div>
+      <details id="tn80CloudPanel" class="tn80-cloud-panel tn81-compact-cloud tn-advanced-panel">
+        <summary class="tn81-cloud-summary">Advanced sync details</summary>
+        <div class="tn80-panel-head">
+          <div>
+            <div class="tn80-kicker">ACCOUNT / CLOUD SYNC</div>
+            <h2>Cloud Status</h2>
+            <p>PCとスマホが同じクラウドにいるか、ここで確認できます。</p>
+          </div>
+        </div>
+
+        <div class="tn80-cloud-grid">
+          <div class="tn80-cloud-item"><span>This device</span><strong id="tn80Device">-</strong></div>
+          <div class="tn80-cloud-item"><span>Local words</span><strong id="tn80LocalWords">0</strong></div>
+          <div class="tn80-cloud-item"><span>Actual cloud words</span><strong id="tn80CloudWords">-</strong></div>
+          <div class="tn80-cloud-item"><span>Local lists</span><strong id="tn80LocalLists">0</strong></div>
+          <div class="tn80-cloud-item"><span>Actual cloud lists</span><strong id="tn80CloudLists">-</strong></div>
+          <div class="tn80-cloud-item"><span>Pending sync</span><strong id="tn80PendingMutations">0</strong></div>
+          <div class="tn80-cloud-item"><span>Realtime</span><strong id="tn80RealtimeStatus">-</strong></div>
+          <div class="tn80-cloud-item wide"><span>Connection</span><strong id="tn80Connection">Not checked</strong></div>
+          <div class="tn80-cloud-item wide"><span>User ID</span><strong id="tn80UserId">-</strong></div>
+        </div>
+
+        <div class="tn80-cloud-actions">
+          <button type="button" id="tn80LoadCloudBtn" onclick="tnSyncNow()">Load latest</button>
+        </div>
+
+        <div class="tn80-note">
+          Cloud totals update after a successful sync. Device totals are this browser's offline copy.
+        </div>
+      </details>
+
+      <div class="tn-settings-section-title"><span>Data & Backup</span><em>Export safely or import to the cloud source of truth.</em></div>
+      <div class="tn-settings-panel">
+        <h2>Data Transfer</h2>
+        <p class="desc">Export is a safe backup. Import replaces the signed-in account's cloud vocabulary, then refreshes this device.</p>
+        <div class="actions">
+          <button class="btn blue" onclick="exportDataText()">Export / Copy Data</button>
+          <button class="btn yellow" onclick="downloadBackupFile()">Download Backup</button>
+          <button class="btn green" onclick="importDataText()">Import to Cloud</button>
+        </div>
+        <div class="sync-box">
+          <label for="syncDataBox">Export / Import Text</label>
+          <textarea id="syncDataBox" placeholder="Exported data will appear here. Paste TangoNest backup JSON here to import."></textarea>
+        </div>
+      </div>
+
+      <div class="tn-settings-section-title"><span>Audio</span><em>Voice choices for Listen, Cards, and Quiz.</em></div>
+      <div class="tn-settings-panel">
+        <h2>Audio / Voice</h2>
+        <p class="desc">Choose the voice used for each language. TangoNest will use the registered word language for playback.</p>
+        <div id="voiceSettingsBox" class="tn-voice-settings"></div>
+        <div class="actions">
+          <button class="btn blue" onclick="showVoiceStatus()">Refresh Voices</button>
+          <button class="btn green" onclick="testAllMainVoices()">Test Main Voices</button>
+        </div>
+        <div id="voiceStatusBox" class="sync-box" style="display:none"></div>
+      </div>
+
+      <div class="tn-settings-section-title danger"><span>Danger Zone</span><em>Use only when you mean it.</em></div>
+      <div class="danger-zone">
+        <h2>Danger Zone</h2>
+        <p class="desc">Clear this browser's cache or permanently delete the logged-in account's TangoNest cloud data.</p>
+        <div class="actions">
+          <button class="btn blue" onclick="go('words')">Edit Words</button>
+          <button class="btn yellow" onclick="clearLocalCache()">Clear Local Cache</button>
+          <button class="btn red" onclick="deleteAllAccountData()">Delete All Account Data</button>
+        </div>
+      </div>
+    </div>
+  </section>
+    </main>
+  </div>
+</div>
+<button id="mnavAdd" class="mobile-add-button" type="button" onclick="appShow('add')" aria-label="Add words" hidden><span aria-hidden="true">+</span></button>
+<nav class="mobile-tabbar" aria-label="Mobile navigation"><button id="mnavHome" class="active" onclick="go('home')">Home</button><button id="mnavWords" onclick="go('words')">Library</button><button id="mnavStudy" onclick="go('study')">Cards</button><button id="mnavQuiz" onclick="appShow('quiz')">Quiz</button><button id="mnavAudio" onclick="appShow('audio')">Listen</button><button id="mnavManage" class="mobile-settings-link" onclick="go('manage')">Settings</button></nav>
+<div id="editModal" class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="editWordTitle"><h2 id="editWordTitle">Edit Word</h2><input type="hidden" id="editId"><div class="row"><div><label for="editFront">Front</label><input id="editFront"></div><div><label for="editBack">Back</label><input id="editBack"></div></div><div class="row3"><div><label for="editFrontLang">Front language</label><select id="editFrontLang"></select></div><div><label for="editBackLang">Back language</label><select id="editBackLang"></select></div><div><label for="editList">Library</label><select id="editList"></select></div></div><div class="row3"><div><label for="editPOS">POS</label><select id="editPOS"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label for="editGender">Gender</label><select id="editGender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label for="editTags">Tags</label><input id="editTags"></div></div><label for="editMemo">Memo / Example</label><textarea id="editMemo"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Save</button><button class="btn" onclick="closeEdit()">Cancel</button></div></div></div>
+<div id="detailModal" class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-label="Word details"><div class="actions" style="justify-content:flex-end;margin-top:0"><button class="btn" onclick="closeDetail()">Close</button></div><div id="detailContent"></div></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="networkStatus" class="network-status" role="status" aria-live="polite" hidden>
+  <span id="networkStatusText">You are offline. Saved data remains available on this device.</span>
+  <button id="appUpdateButton" type="button" hidden>Update</button>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./default-playlist.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./learning-engine.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./ui/learning-presentation.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./app.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./tn-supabase-sync.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./tn-library-management.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./tn-learning-flow.js?v=1.0.0-rc.19-uihotfix1"></script>
+<script src="./ui/runtime.js?v=1.0.0-rc.19-uihotfix1"></script>
+</body>
+</html>
