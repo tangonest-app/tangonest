@@ -1,20 +1,22 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.11";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-uihotfix2";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
   "./index.html",
-  "./config.js",
-  "./style.css",
-  "./app.js",
-  "./learning-engine.js",
-  "./tn-supabase-sync.js",
-  "./tn-library-management.js",
-  "./tn-learning-flow.js",
-  "./ui/learning-presentation.js",
-  "./ui/runtime.js",
-  "./manifest.json",
+  "./config-rc19-hotfix2.js",
+  "./default-playlist-rc19-hotfix2.js",
+  "./style-rc19-hotfix2.css",
+  "./ui/study-focus-rc19-hotfix2.css",
+  "./app-rc19-hotfix2.js",
+  "./learning-engine-rc19-hotfix2.js",
+  "./tn-supabase-sync-rc19-hotfix2.js",
+  "./tn-library-management-rc19-hotfix2.js",
+  "./tn-learning-flow-rc19-hotfix2.js",
+  "./ui/learning-presentation-rc19-hotfix2.js",
+  "./ui/runtime-rc19-hotfix2.js",
+  "./manifest-rc19-hotfix2.json",
   "./favicon.png",
   "./favicon.ico",
   "./apple-touch-icon.png",
@@ -55,14 +57,16 @@ async function navigationResponse(request){
 
 async function staticResponse(request){
   const cached=await caches.match(request,{ignoreSearch:true});
-  const network=fetch(request).then(async response=>{
+  try{
+    const response=await fetch(request);
     if(response.ok){
       const cache=await caches.open(CACHE_VERSION);
       await cache.put(request,response.clone());
     }
     return response;
-  }).catch(()=>cached);
-  return cached||network;
+  }catch(error){
+    return cached||Response.error();
+  }
 }
 
 self.addEventListener("fetch",event=>{
