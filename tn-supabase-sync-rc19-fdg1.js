@@ -1242,10 +1242,12 @@
         showApp();
         navigate(mode==="login"?"home":savedPage());
         if(mode==="login"){
-          requestAnimationFrame(() => {
+          const focusHome=() => {
             const homeNav=window.matchMedia?.("(max-width: 900px)").matches ? $("mnavHome") : $("navHome");
             homeNav?.focus({preventScroll:true});
-          });
+          };
+          if(typeof requestAnimationFrame==="function")requestAnimationFrame(focusHome);
+          else setTimeout(focusHome,0);
         }
         if(!initializationError)subscribeRealtime();
         initializedUserId=incomingUser.id;
