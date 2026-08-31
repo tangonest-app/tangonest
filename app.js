@@ -655,7 +655,7 @@ function renderSelect(id){
   const hasRendered=el.dataset.tnSelectionReady==="1";
   const unfiled=["addList","bulkList","editList"].includes(id);
   const allWords=["studyList","quizList","audioList"].includes(id);
-  const availableLists=id==="renameListSelect"?db.lists.filter(list=>!tnIsDefaultList(list)):db.lists;
+  const availableLists=db.lists;
   el.innerHTML="";
   if(unfiled){const option=document.createElement("option");option.value="";option.textContent="No playlist";el.appendChild(option)}
   if(allWords){const option=document.createElement("option");option.value="all";option.textContent="All words";el.appendChild(option)}
@@ -729,7 +729,7 @@ function renderManage(){
   };
   Object.entries(counts).forEach(([id,value])=>{const el=$(id);if(el)el.textContent=String(value)});
 }
-function render(){fillLangSelects();["addList","bulkList","studyList","quizList","audioList","renameListSelect","editList"].forEach(id=>renderSelect(id,false));renderHome();if(typeof window.tnLibraryRender==="function")window.tnLibraryRender();else if(!$('tn82LibraryMount')&&typeof renderWords==="function")renderWords();renderMistakeNotebook();renderManage();updateStudyStar();updateStudyProgress();try{updateQuizModeSettings()}catch(e){}}
+function render(){fillLangSelects();["addList","bulkList","studyList","quizList","audioList","renameListSelect","editList"].forEach(id=>renderSelect(id,false));renderHome();if(typeof window.tnLibraryRender==="function")window.tnLibraryRender();else if(!$('tn82LibraryMount')&&typeof renderWords==="function")renderWords();renderMistakeNotebook();renderManage();updateStudyStar();updateStudyProgress();updateBulkDestinationSummary();try{updateQuizModeSettings()}catch(e){}}
 function startSmartSession(kind="random"){
   if(!db.words.length){appShow("add");return toast("Add your first words")}
   const engine=learningEngine();
@@ -937,9 +937,65 @@ function bulkParseStats(){
   const rows=bulkRows();
   return {lines:lines.length,valid:rows.length,invalid:Math.max(0,lines.length-rows.length),rows};
 }
+let approvedBulkConfirmationKey="";
+let lastLocalBulkUndo=null;
+function bulkDestination(){
+  const listId=$("bulkList")?.value||"";
+  const list=db.lists.find(item=>item.id===listId);
+  return {
+    listId,
+    listName:list?.name||"No playlist",
+    frontLang:$("bulkFrontLang")?.value||db.prefs?.frontLang||"en-US",
+    backLang:$("bulkBackLang")?.value||db.prefs?.backLang||"ja-JP"
+  };
+}
+function bulkConfirmationKey(rows,mode){
+  const target=bulkDestination();
+  return JSON.stringify({listId:target.listId,frontLang:target.frontLang,backLang:target.backLang,mode:mode||"skip",rows:rows.map(row=>[row.front,row.back,row.pos])});
+}
+function updateBulkDestinationSummary(){
+  const box=$("bulkTargetSummary");
+  if(!box)return;
+  const target=bulkDestination();
+  box.innerHTML=`<span>Destination</span><strong>${esc(target.listName)}</strong><small>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small>`;
+}
+function hideBulkDestinationConfirmation(){
+  approvedBulkConfirmationKey="";
+  const panel=$("bulkTargetConfirm");
+  if(panel){panel.hidden=true;panel.innerHTML=""}
+}
+function requestBulkDestinationConfirmation(rows,mode){
+  const key=bulkConfirmationKey(rows,mode);
+  if(approvedBulkConfirmationKey===key){approvedBulkConfirmationKey="";const panel=$("bulkTargetConfirm");if(panel){panel.hidden=true;panel.innerHTML=""}return true}
+  const panel=$("bulkTargetConfirm");
+  if(!panel)return true;
+  const target=bulkDestination();
+  panel.hidden=false;
+  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">Confirm destination</span><strong>${esc(target.listName)}</strong><small>${rows.length} words · ${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>Go back</button><button type="button" data-bulk-approve>Import here</button></div>`;
+  panel.querySelector("[data-bulk-cancel]")?.addEventListener("click",hideBulkDestinationConfirmation);
+  panel.querySelector("[data-bulk-approve]")?.addEventListener("click",()=>{approvedBulkConfirmationKey=key;window.bulkImport(mode||undefined)});
+  return false;
+}
+function showBulkUndo(info){
+  const panel=$("bulkUndoPanel");
+  if(!panel)return;
+  panel.hidden=false;
+  panel.innerHTML=`<div><strong>${Number(info?.count||0)} words added to ${esc(info?.playlistName||"the selected playlist")}</strong><small>You can undo this import without affecting earlier words.</small></div><button type="button" onclick="undoLastBulkImport()">Undo last Bulk Add</button>`;
+}
+function clearBulkUndo(){lastLocalBulkUndo=null;const panel=$("bulkUndoPanel");if(panel){panel.hidden=true;panel.innerHTML=""}}
+async function undoLastBulkImport(){
+  if(!lastLocalBulkUndo)return toast("There is no Bulk Add to undo");
+  if(lastLocalBulkUndo.type==="snapshot")db.words=lastLocalBulkUndo.words;
+  else{const ids=new Set(lastLocalBulkUndo.ids||[]);db.words=db.words.filter(word=>!ids.has(word.id))}
+  const count=lastLocalBulkUndo.count||0;
+  clearBulkUndo();
+  save();
+  toast(`${count} imported words removed`);
+}
 function clearBulkPreview(){
   let b=$("bulkPreview");if(b){b.style.display="none";b.innerHTML=""}
   let d=$("bulkDuplicatePanel");if(d){d.classList.remove("show");d.innerHTML=""}
+  hideBulkDestinationConfirmation();
 }
 function renderDuplicatePanel(rows){
   const panel=$("bulkDuplicatePanel");
@@ -967,7 +1023,8 @@ function previewBulk(){
   box.style.display="block";
   if(!rows.length){box.innerHTML='<div class="empty"><h3>No readable words</h3><p>Each row needs at least Front and Back.</p></div>';return}
   renderDuplicatePanel(rows);
-  box.innerHTML=`<div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
+  const target=bulkDestination();
+  box.innerHTML=`<div class="tn-bulk-preview-target"><b>Import to ${esc(target.listName)}</b><span>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</span></div><div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
 }
 function bulkImport(mode){
   let rows=bulkRows();
@@ -975,7 +1032,10 @@ function bulkImport(mode){
   const hasFrontDup=rows.some(r=>r.frontDuplicate);
   if(hasFrontDup&&!mode){previewBulk();return toast("Duplicate words need confirmation");}
   let listId=$("bulkList").value,frontLang=$("bulkFrontLang").value,backLang=$("bulkBackLang").value;
+  const target=bulkDestination();
   if(mode==="replace"){
+    if(!requestBulkDestinationConfirmation(rows,mode))return;
+    const beforeWords=JSON.parse(JSON.stringify(db.words));
     rows.forEach(r=>{
       const ex=softDuplicateMatch(r,listId);
       if(ex){
@@ -984,7 +1044,8 @@ function bulkImport(mode){
         db.words.push({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()});
       }
     });
-    $("bulkText").value="";clearBulkPreview();save();return toast(`${rows.length} processed`);
+    lastLocalBulkUndo={type:"snapshot",words:beforeWords,count:rows.length};
+    $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:rows.length,playlistName:target.listName});return toast(`${rows.length} processed`);
   }
   if(mode==="skip"||!mode){
     rows=rows.filter(r=>!r.duplicate);
@@ -998,10 +1059,14 @@ function bulkImport(mode){
       return true;
     });
   }
-  db.words=[...db.words,...rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}))];
-  $("bulkText").value="";clearBulkPreview();save();toast(`${rows.length} added`);
+  if(!rows.length)return toast("No new words to add");
+  if(!requestBulkDestinationConfirmation(rows,mode))return;
+  const additions=rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}));
+  db.words=[...db.words,...additions];
+  lastLocalBulkUndo={type:"ids",ids:additions.map(word=>word.id),count:additions.length};
+  $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:additions.length,playlistName:target.listName});toast(`${additions.length} added`);
 }
-try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;}catch(e){}
+try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;window.requestBulkDestinationConfirmation=requestBulkDestinationConfirmation;window.showBulkUndo=showBulkUndo;window.clearBulkUndo=clearBulkUndo;window.undoLastBulkImport=undoLastBulkImport;window.updateBulkDestinationSummary=updateBulkDestinationSummary;}catch(e){}
 function posBadge(pos){return pos?`<span class="badge ${["noun","verb","adjective","adverb","phrase"].includes(pos)?pos:""}">${esc(pos)}</span>`:""}
 function genderBadge(g){if(!g)return"";let letter=g==="masculine"?"M":g==="feminine"?"F":g==="neutral"?"N":g==="plural"?"PL":String(g)[0].toUpperCase();let cls=g==="masculine"?"m":g==="feminine"?"f":"n";return`<span class="badge ${cls}">${esc(letter)}</span>`}
 function moveWord(id,dir){let w=db.words.find(x=>x.id===id);if(!w)return;let same=db.words.filter(x=>x.listId===w.listId),pos=same.findIndex(x=>x.id===id),target=same[pos+dir];if(!target)return toast("Cannot move further");let i1=db.words.findIndex(x=>x.id===id),i2=db.words.findIndex(x=>x.id===target.id);[db.words[i1],db.words[i2]]=[db.words[i2],db.words[i1]];save()}
@@ -1178,7 +1243,6 @@ function renderChoices(){
   };
   addFrom((db.words||[]).filter(w=>w.listId===currentList&&quizAnswerLang(w)===answerLang));
   addFrom((db.words||[]).filter(w=>quizAnswerLang(w)===answerLang));
-  addFrom((db.words||[]));
   pool.sort(()=>Math.random()-.5);
   pool.splice(3);
   let choices=shuffle([correct,...pool]);
@@ -1223,14 +1287,15 @@ function renderWrongList(){let box=$("quizWrongList"),wrong=quiz.allWrong||[];if
 function toggleQuizWrongStar(id){toggleStar(id);renderWrongList()}
 function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion()}
 function audioWords(){let list=$("audioList").value,order=$("audioOrder").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(order==="star")words=words.filter(w=>w.saved);if(order==="due")words=words.filter(isDue);if(order==="hard")words=[...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));if(order==="random")words=shuffle(words);return words}
-function startAudio(){stopAudio();audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioIndex=0;audioPaused=false;playAudioCurrent()}
-function pauseAudio(){audioPaused=true;clearTimeout(audioTimer);speechSynthesis.cancel();toast("Paused")}
-function stopAudio(){clearTimeout(audioTimer);speechSynthesis.cancel();audioPaused=false;audioIndex=0;$("audioNow").textContent="---";$("audioSub").textContent="Start"}
+function setAudioPlayerState(state){const player=$("audioNow")?.closest(".now-playing");if(player)player.dataset.state=state}
+function startAudio(){stopAudio();audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioIndex=0;audioPaused=false;setAudioPlayerState("playing");playAudioCurrent()}
+function pauseAudio(){audioPaused=true;clearTimeout(audioTimer);speechSynthesis.cancel();setAudioPlayerState("paused");toast("Paused")}
+function stopAudio(){clearTimeout(audioTimer);speechSynthesis.cancel();audioPaused=false;audioIndex=0;$("audioNow").textContent="---";$("audioSub").textContent="Choose a playlist and press Play";setAudioPlayerState("idle")}
 function playAudioOnce(){let words=audioWords();if(!words.length)return toast("No words");let w=words[Math.floor(Math.random()*words.length)];updateNow(w);speakByPattern(w)}
 function nextAudio(){clearTimeout(audioTimer);try{speechSynthesis.cancel()}catch(e){};if(!audioQueue.length)audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioPaused=false;playAudioCurrent()}
 function previousAudio(){clearTimeout(audioTimer);try{speechSynthesis.cancel()}catch(e){};if(!audioQueue.length)audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioIndex=Math.max(0,audioIndex-2);audioPaused=false;playAudioCurrent()}
 function playAudioCurrent(){if(audioPaused)return;if(audioIndex>=audioQueue.length){audioIndex=0;if($("audioOrder").value==="random")audioQueue=shuffle(audioQueue)}let w=audioQueue[audioIndex++];updateNow(w);speakByPattern(w);audioTimer=setTimeout(playAudioCurrent,Math.max(.5,parseFloat($("audioIntervalCustom").value||"5"))*1000)}
-function updateNow(w){$("audioNow").textContent=w.front;$("audioSub").textContent=`${w.front} → ${w.back}`}
+function updateNow(w){$("audioNow").textContent=w.front;$("audioSub").textContent=w.back;setAudioPlayerState("playing")}
 function speakByPattern(w){speakPair(w,$("audioPattern").value)}
 function speakPair(w,p){
   let gap=Math.max(.1,parseFloat($("pairGapCustom")?.value||"1.8"))*1000;
@@ -1713,7 +1778,8 @@ function resetAccountUiState(){
   const now=$("audioNow");
   const sub=$("audioSub");
   if(now)now.textContent="---";
-  if(sub)sub.textContent="Start";
+  if(sub)sub.textContent="Choose a playlist and press Play";
+  setAudioPlayerState("idle");
 }
 window.tnResetAccountUiState=resetAccountUiState;
 function setupCoreInteractions(){
@@ -1723,7 +1789,7 @@ function setupCoreInteractions(){
     const el=$(id);
     if(el&&!el.dataset.recentPlaylist){
       el.dataset.recentPlaylist="1";
-      el.addEventListener("change",()=>rememberRecentPlaylist(el.value));
+      el.addEventListener("change",()=>{rememberRecentPlaylist(el.value);if(id==="bulkList"){hideBulkDestinationConfirmation();updateBulkDestinationSummary()}});
     }
   });
   document.addEventListener("keydown",event=>{
@@ -1774,6 +1840,8 @@ function enhanceTangoNestApp(){
   attachSessionMemory();
   setupCoreInteractions();
   restoreRecentPlaylist();
+  updateBulkDestinationSummary();
+  ["bulkFrontLang","bulkBackLang"].forEach(id=>$(id)?.addEventListener("change",()=>{hideBulkDestinationConfirmation();updateBulkDestinationSummary()}));
   updateHeroPreview();
   if(typeof updateBrandContext==="function")updateBrandContext();
 }

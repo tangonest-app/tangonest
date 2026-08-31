@@ -1,60 +1,41 @@
 (function(){
   "use strict";
 
-  const DATA_KEY = "tangonest_production_stable_v1";
-  const SHADOW_KEY = "tangonest_last_good_data_v1";
   const WORD_RENDER_LIMIT = 100;
+  const LOCAL_DEFAULT_PLAYLIST_ID = "local-my-words";
+  const DEFAULT_PLAYLIST_NAME = "My Words";
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const engine = () => window.TangoNestLearningEngine || null;
   const presentation = () => window.TangoNestLearningPresentation || null;
   let activeView = localStorage.getItem("tangonest_library_view_v1") || "words";
-  let displaySide = localStorage.getItem("tangonest_library_side_v1") || "both";
   let audioSide = localStorage.getItem("tangonest_library_audio_side_v1") || "front";
   let renderLimit = WORD_RENDER_LIMIT;
   let pendingDeleteId = "";
   let pendingRenameId = "";
   let contextTargetId = "";
   let searchRenderTimer = null;
+  let filterPanelOpen = false;
+  let renderingLibrary = false;
   const filterValues={query:"",language:"all",letter:"all",playlist:"all",pos:"all",favorite:"all",learning:"all",sort:"newest"};
   const returnFocus = {rename:null,delete:null,detail:null};
   const selectedWordIds=new Set();
   window.__tnLibraryManagementActive = true;
 
-  function parseData(raw){
-    try{return raw ? JSON.parse(raw) : null;}catch(e){return null;}
-  }
-
   function isDefaultList(list){
+    try{if(typeof window.tnIsDefaultList==="function")return window.tnIsDefaultList(list);}catch(e){}
     const id = String(list?.id || "");
-    const name = String(list?.name || "").trim().toLowerCase();
-    return !name || name === "new playlist" || id === "starter" || id === "local-starter";
-  }
-
-  function hasUserData(data){
-    if(!data || typeof data !== "object")return false;
-    const words = Array.isArray(data.words) ? data.words : [];
-    const lists = Array.isArray(data.lists) ? data.lists : [];
-    return words.some(word => String(word?.front || "").trim() && String(word?.back || "").trim()) ||
-      lists.some(list => !isDefaultList(list));
+    return !!list?.isDefault || id === "starter" || id === "local-starter" || id === LOCAL_DEFAULT_PLAYLIST_ID;
   }
 
   function dbRef(){
     try{
       if(typeof window.tnGetDb === "function"){
         const shared = window.tnGetDb();
-        if(hasUserData(shared))return shared;
+        if(shared && typeof shared === "object")return shared;
       }
     }catch(e){}
-    try{ if(typeof db !== "undefined" && db && hasUserData(db))return db; }catch(e){}
-    try{
-      const primary = parseData(localStorage.getItem(DATA_KEY)) || {};
-      const backup = parseData(localStorage.getItem(SHADOW_KEY)) || {};
-      const chosen = hasUserData(primary) || !hasUserData(backup) ? primary : backup;
-      if(hasUserData(chosen) && typeof window.tnAdoptDb === "function")return window.tnAdoptDb(chosen);
-      return chosen;
-    }catch(e){}
-    return {ui:"en",prefs:{frontLang:"en-US",backLang:"ja-JP"},lists:[],words:[],meta:{}};
+    return {ui:"en",prefs:{frontLang:"en-US",backLang:"ja-JP"},lists:[],words:[],mistakes:[],meta:{userId:""}};
   }
 
   function persist(){
@@ -63,7 +44,6 @@
     data.meta.updatedAt = new Date().toISOString();
     try{
       if(typeof window.tnWriteData === "function")window.tnWriteData(data);
-      else localStorage.setItem(DATA_KEY,JSON.stringify(data));
     }catch(e){}
   }
 
@@ -81,17 +61,23 @@
     data.lists = Array.isArray(data.lists) ? data.lists : [];
     data.words = Array.isArray(data.words) ? data.words : [];
     data.prefs = data.prefs || {frontLang:"en-US",backLang:"ja-JP"};
-    if(!data.lists.length){
-      data.lists.push({id:"starter",name:"New Playlist",createdAt:new Date().toISOString()});
+    const legacyIds=new Set(["starter","local-starter"]);
+    if(window.TangoNestDefaultPlaylist?.enforce)window.TangoNestDefaultPlaylist.enforce(data,{clone:false});
+    else if(!data.lists.length){
+      const at=new Date().toISOString();
+      data.lists.unshift({id:LOCAL_DEFAULT_PLAYLIST_ID,name:DEFAULT_PLAYLIST_NAME,isDefault:true,createdAt:at,updatedAt:at});
     }
+    const validListIds=new Set(data.lists.map(list=>list.id));
     data.words.forEach(word => {
-      if(!data.lists.some(list => list.id === word.listId))word.listId = data.lists[0].id;
+      if(legacyIds.has(String(word.listId||""))&&validListIds.has(LOCAL_DEFAULT_PLAYLIST_ID))word.listId=LOCAL_DEFAULT_PLAYLIST_ID;
+      else if(!validListIds.has(String(word.listId||"")))word.listId = "";
     });
     return data;
   }
 
-  function listName(id){
-    return ensureData().lists.find(list => list.id === id)?.name || "New Playlist";
+  function listName(id,data){
+    const source=data||ensureData();
+    return source.lists.find(list => list.id === id)?.name || "Unfiled";
   }
 
   function wordCount(listId){
@@ -124,6 +110,8 @@
   }
 
   function languageLabel(code){
+    const shared=window.TangoNestLanguages;
+    if(shared?.label)return shared.label(code);
     const names = {
       "en-US":"English","en-GB":"English","ja-JP":"Japanese","ko-KR":"Korean",
       "zh-CN":"Chinese","zh-TW":"Chinese","fr-FR":"French","es-ES":"Spanish",
@@ -145,13 +133,14 @@
     return !!String(state.query || "").trim() || state.language !== "all" || state.letter !== "all" || state.playlist !== "all" || state.pos !== "all" || state.favorite !== "all" || state.learning !== "all" || state.sort !== "newest";
   }
 
-  function filteredWords(){
-    const data = ensureData();
+  function filteredWords(source){
+    const data = source||ensureData();
     const state = filterState();
     let words = [...data.words];
     const query=String(state.query || "").trim().toLowerCase();
     if(query){
-      words = words.filter(word => [word.front,word.back,word.memo,word.tags,word.pos,word.gender,listName(word.listId)].join(" ").toLowerCase().includes(query));
+      const listNames=new Map(data.lists.map(list=>[list.id,list.name||"Unfiled"]));
+      words = words.filter(word => [word.front,word.back,word.memo,word.tags,word.pos,word.gender,listNames.get(word.listId)||"Unfiled"].join(" ").toLowerCase().includes(query));
     }
     if(state.language !== "all")words = words.filter(word => word.frontLang === state.language || word.backLang === state.language);
     if(state.letter !== "all")words = words.filter(word => firstLatinLetter(word) === state.letter);
@@ -200,8 +189,13 @@
   function wordsTools(){
     const data = ensureData();
     const state = filterState();
+    const filtersOpen=filterPanelOpen;
     const languages = [...new Set(data.words.flatMap(word => [word.frontLang,word.backLang]).filter(Boolean))]
-      .sort((a,b) => languageLabel(a).localeCompare(languageLabel(b)));
+      .sort((a,b) => {
+        const priority=window.TangoNestLanguages?.priority;
+        const difference=(priority?priority(a):999)-(priority?priority(b):999);
+        return difference||languageLabel(a).localeCompare(languageLabel(b));
+      });
     const pos = [...new Set(data.words.map(word => word.pos).filter(Boolean))]
       .sort((a,b) => String(a).localeCompare(String(b)));
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(letter => ({value:letter,label:letter}));
@@ -209,41 +203,36 @@
       <div class="tn-library-tools">
         <label class="tn-library-search-label" for="tnLibrarySearch">Search your collection</label>
         <input id="tnLibrarySearch" type="search" placeholder="Word, meaning, tag, or playlist" value="${esc(state.query)}">
-        <div class="tn-library-filter-row">
-          <select id="tnFilterLanguage" aria-label="Filter by language">${options([{value:"all",label:"All languages"},...languages.map(value => ({value,label:languageLabel(value)}))],state.language)}</select>
-          <select id="tnFilterLetter" aria-label="Filter by first letter">${options([{value:"all",label:"All letters"},...letters],state.letter)}</select>
-          <select id="tnFilterPlaylist" aria-label="Filter by playlist">${options([{value:"all",label:"All playlists"},...data.lists.map(list => ({value:list.id,label:list.name || "New Playlist"}))],state.playlist)}</select>
-          <select id="tnFilterPos" aria-label="Filter by part of speech">${options([{value:"all",label:"All POS"},...pos.map(value => ({value,label:value}))],state.pos)}</select>
-          <select id="tnFilterFavorite" aria-label="Filter saved words">${options([{value:"all",label:"All favorites"},{value:"saved",label:"Saved only"}],state.favorite)}</select>
-          <select id="tnFilterLearning" aria-label="Filter by learning state">${options([{value:"all",label:"All learning states"},{value:"due",label:"Due today"},{value:"weak",label:"Needs practice"},{value:"new",label:"New"},{value:"strong",label:"Strong"},{value:"mastered",label:"Mastered"}],state.learning)}</select>
-          <select id="tnSortWords" aria-label="Sort words">${options([{value:"newest",label:"Newest added"},{value:"oldest",label:"Oldest added"},{value:"front",label:"Front A-Z"},{value:"back",label:"Back A-Z"},{value:"review",label:"Next review"}],state.sort)}</select>
-          <button type="button" id="tnClearFilters" class="${isFilterActive(state) ? "is-active" : ""}">Reset</button>
-        </div>
-        <div class="tn-library-secondary-tools">
-          <select id="tnDisplaySide" aria-label="Word row display"><option value="both" ${displaySide==="both"?"selected":""}>Front + Back</option><option value="front" ${displaySide==="front"?"selected":""}>Front only</option><option value="back" ${displaySide==="back"?"selected":""}>Back only</option></select>
-          <select id="tnAudioSide" aria-label="Word row audio"><option value="front" ${audioSide==="front"?"selected":""}>Play front</option><option value="back" ${audioSide==="back"?"selected":""}>Play back</option></select>
-          <button type="button" data-select-visible>Select visible</button>
-          <button type="button" data-delete-selected ${selectedWordIds.size?"":"disabled"}>Delete selected${selectedWordIds.size?` (${selectedWordIds.size})`:""}</button>
-          <span>Use Up / Down to arrange a playlist.</span>
-        </div>
+        <details class="tn-library-filter-panel" ${filtersOpen?"open":""}>
+          <summary>Filters and sort${isFilterActive(state)?" · Active":""}</summary>
+          <div class="tn-library-filter-row">
+            <select id="tnFilterLanguage" aria-label="Filter by language">${options([{value:"all",label:"All languages"},...languages.map(value => ({value,label:languageLabel(value)}))],state.language)}</select>
+            <select id="tnFilterLetter" aria-label="Filter by first letter">${options([{value:"all",label:"All letters"},...letters],state.letter)}</select>
+            <select id="tnFilterPlaylist" aria-label="Filter by playlist">${options([{value:"all",label:"All playlists"},...data.lists.map(list => ({value:list.id,label:list.name || "Untitled Playlist"}))],state.playlist)}</select>
+            <select id="tnFilterPos" aria-label="Filter by part of speech">${options([{value:"all",label:"All POS"},...pos.map(value => ({value,label:value}))],state.pos)}</select>
+            <select id="tnFilterFavorite" aria-label="Filter saved words">${options([{value:"all",label:"All favorites"},{value:"saved",label:"Saved only"}],state.favorite)}</select>
+            <select id="tnFilterLearning" aria-label="Filter by learning state">${options([{value:"all",label:"All learning states"},{value:"due",label:"Due today"},{value:"weak",label:"Needs practice"},{value:"new",label:"New"},{value:"strong",label:"Strong"},{value:"mastered",label:"Mastered"}],state.learning)}</select>
+            <select id="tnSortWords" aria-label="Sort words">${options([{value:"newest",label:"Newest added"},{value:"oldest",label:"Oldest added"},{value:"front",label:"Front A-Z"},{value:"back",label:"Back A-Z"},{value:"review",label:"Next review"}],state.sort)}</select>
+            <button type="button" id="tnClearFilters" class="${isFilterActive(state) ? "is-active" : ""}">Reset</button>
+          </div>
+          <div class="tn-library-secondary-tools">
+            <select id="tnAudioSide" aria-label="Word row audio"><option value="front" ${audioSide==="front"?"selected":""}>Play front</option><option value="back" ${audioSide==="back"?"selected":""}>Play back</option></select>
+            <button type="button" data-select-visible>Select visible</button>
+            <button type="button" data-delete-selected ${selectedWordIds.size?"":"disabled"}>Delete selected${selectedWordIds.size?` (${selectedWordIds.size})`:""}</button>
+            <span>Use Up / Down to arrange a playlist.</span>
+          </div>
+        </details>
       </div>
     `;
-  }
-
-  function learningDisplay(word){
-    return presentation()?.state(word) || {key:"learning",label:"Learning",tone:"learning"};
   }
 
   function iconAudio(){
     return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"></path><path d="M16 9.5a4 4 0 0 1 0 5"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>`;
   }
 
-  function iconTrash(){
-    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 7l1 14h10l1-14"></path><path d="M9 7V4h6v3"></path></svg>`;
-  }
-
   function wordsView(mode="words"){
-    let allWords = filteredWords();
+    const data=ensureData();
+    let allWords = filteredWords(data);
     if(mode === "due"){
       allWords = allWords.filter(word => engine()?.isDueWord(word) ?? false);
     }
@@ -257,32 +246,21 @@
     const hiddenCount = Math.max(0,allWords.length - words.length);
     const body = allWords.length ? `
       <div class="tn82-word-list">
+        <div class="tn-word-list-head" aria-hidden="true"><span></span><span>Word</span><span>Meaning</span><span>POS</span><span></span></div>
         ${words.map(word => {
-          const learning=learningDisplay(word);
-          const next=presentation()?.review(word)?.label||"Review not scheduled";
           return `
-          <article class="tn82-word-card tn-word-row" data-word-id="${esc(word.id)}">
+          <article class="tn82-word-card tn-word-row tn-word-list-row" data-word-id="${esc(word.id)}">
             <input type="checkbox" class="tn-word-select" data-select-word="${esc(word.id)}" ${selectedWordIds.has(word.id)?"checked":""} aria-label="Select ${esc(word.front)}">
-            <button type="button" class="tn82-word-main" data-open-word="${esc(word.id)}" aria-label="Open details for ${esc(word.front)}">
-              ${displaySide!=="back"?`<div class="tn82-front">${esc(word.front)}</div>`:""}
-              ${displaySide!=="front"?`<div class="tn82-back">${esc(word.back)}</div>`:""}
-              ${word.memo ? `<div class="tn-word-example">${esc(word.memo)}</div>` : ""}
+            <button type="button" class="tn82-word-main tn-word-list-main" data-open-word="${esc(word.id)}" aria-label="Open details for ${esc(word.front)}">
+              <span class="tn82-front">${esc(word.front)}</span>
+              <span class="tn82-back">${esc(word.back)}</span>
+              <span class="tn-word-list-pos">${word.pos ? esc(word.pos) : "-"}</span>
+              <span class="tn-word-list-chevron" aria-hidden="true">›</span>
             </button>
-            <div class="tn82-word-meta">
-              <span>${esc(listName(word.listId))}</span>
-              <span class="tn-learning-badge ${esc(learning.tone)}">${esc(learning.label)}</span>
-              <span class="tn-review-label">${esc(next)}</span>
-              ${word.pos ? `<span>${esc(word.pos)}</span>` : ""}
-              <button type="button" class="tn-word-action ${word.saved ? "is-saved" : ""}" data-word-fav="${esc(word.id)}" title="Favorite" aria-label="Toggle favorite">${word.saved ? "★" : "☆"}</button>
-              <button type="button" class="tn-word-action" data-word-audio="${esc(word.id)}" title="Play audio" aria-label="Play ${audioSide} word audio">${iconAudio()}</button>
-              <button type="button" class="tn-word-action" data-word-move="${esc(word.id)}" data-move-direction="-1" title="Move up" aria-label="Move ${esc(word.front)} up">Up</button>
-              <button type="button" class="tn-word-action" data-word-move="${esc(word.id)}" data-move-direction="1" title="Move down" aria-label="Move ${esc(word.front)} down">Down</button>
-              <button type="button" class="tn-word-action danger" data-word-delete="${esc(word.id)}" title="Delete word" aria-label="Delete word">${iconTrash()}</button>
-            </div>
           </article>
         `;}).join("")}
       </div>
-      ${hiddenCount ? `<div class="tn82-library-summary tn-load-more-row"><span>${hiddenCount} more word${hiddenCount === 1 ? "" : "s"} hidden for speed.</span><button type="button" class="tn-load-more-btn" data-load-more>Load more</button></div>` : ""}
+      ${hiddenCount ? `<div class="tn82-library-summary tn-load-more-row"><span>${hiddenCount} more word${hiddenCount === 1 ? "" : "s"} hidden for speed.</span><div class="tn-load-actions"><button type="button" class="tn-load-more-btn" data-load-more>Load 100 more</button><button type="button" class="tn-load-all-btn" data-load-all>Load all ${allWords.length}</button></div></div>` : ""}
     ` : `
       <div class="tn-library-empty">
         <h3>${isFilterActive() ? "No words found" : mode === "due" ? "You’re all caught up" : mode === "weak" ? "No weak words" : mode === "mastered" ? "No mastered words yet" : "No words yet"}</h3>
@@ -309,7 +287,7 @@
             <button type="button" class="tn-playlist-open" data-open-playlist="${esc(list.id)}">
               <span class="tn-playlist-art">${esc(String(list.name || "N").slice(0,2).toUpperCase())}</span>
               <span class="tn-playlist-copy">
-                <strong>${esc(list.name || "New Playlist")}</strong>
+                <strong>${esc(list.name || "Untitled Playlist")}</strong>
                 <em>${progress.total} word${progress.total === 1 ? "" : "s"} · ${esc(playlistLanguagePair(list.id))}</em>
                 <small>${progress.learned} mastered · ${progress.hard} weak · ${esc(friendlyDate(list.updatedAt || list.createdAt))}</small>
               </span>
@@ -319,8 +297,8 @@
               <button type="button" data-playlist-mode="cards" data-playlist-id="${esc(list.id)}" aria-label="Study ${esc(list.name)} with cards">Cards</button>
               <button type="button" data-playlist-mode="listen" data-playlist-id="${esc(list.id)}" aria-label="Listen to ${esc(list.name)}">Listen</button>
               <button type="button" data-rename-playlist="${esc(list.id)}" aria-label="Rename ${esc(list.name)}">Rename</button>
-              <button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>
-              <button type="button" class="tn-playlist-menu-btn" data-menu-playlist="${esc(list.id)}" aria-label="More actions for ${esc(list.name)}">...</button>
+              ${isDefaultList(list)?'<span class="tn-default-playlist-label">Default</span>':`<button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>`}
+              ${isDefaultList(list)?"":`<button type="button" class="tn-playlist-menu-btn" data-menu-playlist="${esc(list.id)}" aria-label="More actions for ${esc(list.name)}">...</button>`}
             </div>
           </article>
         `;}).join("")}
@@ -343,13 +321,18 @@
 
   function renderLibrary(){
     const mount = $("tn82LibraryMount");
-    if(!mount)return;
-    const validIds=new Set(ensureData().words.map(word=>word.id));
-    selectedWordIds.forEach(id=>{if(!validIds.has(id))selectedWordIds.delete(id)});
-    if(!["words","playlists","due","weak","mastered"].includes(activeView))activeView = "words";
-    mount.innerHTML = activeView === "playlists" ? playlistsView() : wordsView(activeView);
-    bindLibraryUi();
-    updateHeaderCounts();
+    if(!mount||renderingLibrary)return;
+    renderingLibrary=true;
+    try{
+      const data=ensureData();
+      const validIds=new Set(data.words.map(word=>word.id));
+      selectedWordIds.forEach(id=>{if(!validIds.has(id))selectedWordIds.delete(id)});
+      if(filterValues.playlist!=="all"&&!data.lists.some(list=>list.id===filterValues.playlist))filterValues.playlist="all";
+      if(!["words","playlists","due","weak","mastered"].includes(activeView))activeView = "words";
+      mount.innerHTML = activeView === "playlists" ? playlistsView() : wordsView(activeView);
+      bindLibraryUi();
+      updateHeaderCounts();
+    }finally{renderingLibrary=false}
   }
 
   function updateHeaderCounts(){
@@ -368,6 +351,23 @@
     clearTimeout(searchRenderTimer);
     Object.assign(filterValues,{query:"",language:"all",letter:"all",playlist:"all",pos:"all",favorite:"all",learning:"all",sort:"newest"});
     renderLibrary();
+  }
+
+  function resetAccountState(){
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer=null;
+    activeView="words";
+    renderLimit=WORD_RENDER_LIMIT;
+    pendingDeleteId="";
+    pendingRenameId="";
+    contextTargetId="";
+    filterPanelOpen=false;
+    selectedWordIds.clear();
+    Object.assign(filterValues,{query:"",language:"all",letter:"all",playlist:"all",pos:"all",favorite:"all",learning:"all",sort:"newest"});
+    hideContextMenu();
+    hideDeleteModal();
+    hideRenameModal();
+    hideWordDetail();
   }
 
   function switchView(view){
@@ -421,18 +421,36 @@
     const target = $(ids[page]);
     if(target)target.classList.add("active");
 
-    document.querySelectorAll(".nav button,.mobile-tabbar button").forEach(button => {
+    document.querySelectorAll(".nav button,.mobile-tabbar button,.mobile-add-button").forEach(button => {
       const textPage = normalizePage(button.textContent);
       const idPage = normalizePage((button.id || "").replace(/^m?nav/i,""));
       button.classList.toggle("active",textPage === page || idPage === page);
     });
 
-    try{ if(typeof window.render === "function")window.render(); }catch(e){}
+    let rendered=false;
+    try{ if(typeof window.render === "function"){window.render();rendered=true} }catch(e){}
     if(page === "quiz"){
       try{ if(typeof window.resetQuiz === "function")window.resetQuiz(); }catch(e){}
     }
-    if(page === "library")renderLibrary();
+    if(page === "library"&&!rendered)renderLibrary();
+    const shellLabels={
+      home:["Forest Desk","Home"],create:["Collection","Add Words"],library:["Collection","Library"],
+      cards:["Practice","Cards"],quiz:["Practice","Quiz"],listen:["Practice","Listen"],settings:["TangoNest","Settings"]
+    };
+    const labels=shellLabels[page]||shellLabels.home;
+    if($("appPageEyebrow"))$("appPageEyebrow").textContent=labels[0];
+    if($("appPageTitle"))$("appPageTitle").textContent=labels[1];
+    if($("mnavAdd"))$("mnavAdd").hidden=page!=="library";
+    document.title=`${labels[1]} · TangoNest`;
+    try{window.tnUpdateShellContext?.(page)}catch(error){}
     stabilizeHeader();
+    if(page==="create"&&window.matchMedia?.("(min-width: 901px)").matches){
+      const focusFront=()=>{
+        try{$("front")?.focus({preventScroll:true})}catch(error){}
+      };
+      if(typeof queueMicrotask==="function")queueMicrotask(focusFront);
+      else Promise.resolve().then(focusFront);
+    }
   }
 
   function installStableNavigation(){
@@ -441,6 +459,19 @@
     window.go = nav;
     window.appShow = nav;
     window.showPage = nav;
+    const navTargets={
+      navHome:"home",navWords:"library",navStudy:"cards",navQuiz:"quiz",navAudio:"listen",navManage:"settings",navAdd:"create",
+      mnavHome:"home",mnavWords:"library",mnavStudy:"cards",mnavQuiz:"quiz",mnavAudio:"listen",mnavManage:"settings",mnavAdd:"create"
+    };
+    Object.entries(navTargets).forEach(([id,page])=>{
+      const button=$(id);
+      if(!button || button.dataset.tnStableNav)return;
+      button.dataset.tnStableNav="1";
+      button.addEventListener("click",event=>{
+        event.preventDefault();
+        stableNavigate(page);
+      });
+    });
   }
 
   function goToCreate(){
@@ -542,6 +573,8 @@
           <button type="button" data-detail-audio="${esc(word.id)}">${iconAudio()} Audio</button>
           <button type="button" data-detail-fav="${esc(word.id)}">${word.saved ? "★ Saved" : "☆ Save"}</button>
           ${typeof window.openEdit === "function" ? `<button type="button" data-detail-edit="${esc(word.id)}">Edit</button>` : ""}
+          <button type="button" data-word-move="${esc(word.id)}" data-move-direction="-1">Move up</button>
+          <button type="button" data-word-move="${esc(word.id)}" data-move-direction="1">Move down</button>
           <button type="button" class="danger" data-detail-delete="${esc(word.id)}">Delete</button>
         </div>
         <div class="tn-detail-grid">
@@ -612,12 +645,14 @@
     if(!clean)return toast("Playlist name is required");
     const listId=pendingRenameId;
     if(!listId)return;
-    if(typeof window.tnRenamePlaylist==="function")await window.tnRenamePlaylist(listId,clean);
+    let renamed=true;
+    if(typeof window.tnRenamePlaylist==="function")renamed=(await window.tnRenamePlaylist(listId,clean))!==false;
     else{
       if($("renameListSelect"))$("renameListSelect").value=listId;
       if($("renameListInput"))$("renameListInput").value=clean;
       await window.renameList?.();
     }
+    if(!renamed)return;
     renderLibrary();
     hideRenameModal();
   }
@@ -655,7 +690,7 @@
       <div class="tn-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="tnDeleteTitle">
         <h2 id="tnDeleteTitle">Delete playlist?</h2>
         <p>The playlist will be deleted. Words inside it will remain in your Library.</p>
-        <strong>${esc(list.name || "New Playlist")}</strong>
+        <strong>${esc(list.name || "Untitled Playlist")}</strong>
         <div class="tn-delete-actions">
           <button type="button" data-cancel-delete>Cancel</button>
           <button type="button" data-confirm-delete>Delete playlist</button>
@@ -676,24 +711,14 @@
     returnFocus.delete=null;
   }
 
-  function fallbackPlaylist(exceptId){
-    const data = ensureData();
-    let fallback = data.lists.find(list => list.id !== exceptId);
-    if(!fallback){
-      fallback = {id:"starter",name:"New Playlist",createdAt:new Date().toISOString()};
-      data.lists.push(fallback);
-    }
-    return fallback;
-  }
-
-  async function syncPlaylistDeletion(listId,fallbackId){
+  async function syncPlaylistDeletion(listId){
     try{
       const client = typeof window.tnCloudClient === "function" ? window.tnCloudClient() : null;
       if(!client?.auth)return;
       const userResult = await client.auth.getUser();
       const userId = userResult?.data?.user?.id;
       if(!userId)return;
-      await client.from("tn_words").update({playlist_id:fallbackId}).eq("playlist_id",listId).eq("user_id",userId);
+      await client.from("tn_words").update({playlist_id:null}).eq("playlist_id",listId).eq("user_id",userId);
       await client.from("tn_playlists").delete().eq("id",listId).eq("user_id",userId);
       if(typeof window.tnCloudLoad === "function")setTimeout(() => window.tnCloudLoad(),200);
     }catch(error){
@@ -710,9 +735,8 @@
     const data = ensureData();
     const list = data.lists.find(item => item.id === listId);
     if(!list)return toast("Playlist not found");
-    const fallback = fallbackPlaylist(listId);
     data.words.forEach(word => {
-      if(word.listId === listId)word.listId = fallback.id;
+      if(word.listId === listId)word.listId = "";
     });
     data.lists = data.lists.filter(item => item.id !== listId);
     persist();
@@ -720,7 +744,7 @@
     if(filterValues.playlist === listId)filterValues.playlist = "all";
     renderLibrary();
     try{ if(typeof renderHome === "function")renderHome(); }catch(e){}
-    syncPlaylistDeletion(listId,fallback.id);
+    syncPlaylistDeletion(listId);
     hideDeleteModal();
     toast("Playlist deleted");
   }
@@ -731,8 +755,23 @@
       const el = $(id);
       if(!el)return;
       const current = el.value;
-      el.innerHTML = data.lists.map(list => `<option value="${esc(list.id)}">${esc(list.name || "New Playlist")}</option>`).join("");
-      if([...el.options].some(option => option.value === current))el.value = current;
+      const hasRendered=el.dataset.tnSelectionReady==="1";
+      const unfiled=["addList","bulkList","editList"].includes(id);
+      const allWords=["studyList","quizList","audioList"].includes(id);
+      const availableLists=data.lists;
+      const virtual=unfiled?'<option value="">No playlist</option>':allWords?'<option value="all">All words</option>':"";
+      el.innerHTML = virtual+availableLists.map(list => `<option value="${esc(list.id)}">${esc(list.name || "Untitled Playlist")}</option>`).join("");
+      const canRestore=[...el.options].some(option=>option.value===current) && (current!=="" || !unfiled || hasRendered);
+      if(canRestore)el.value = current;
+      else if(allWords)el.value="all";
+      else if(unfiled)el.value=(data.lists.find(isDefaultList)||data.lists[0])?.id||"";
+      el.dataset.tnSelectionReady="1";
+      const renameUnavailable=id==="renameListSelect"&&!availableLists.length;
+      el.disabled=renameUnavailable;
+      if(id==="renameListSelect"){
+        if($("renameListInput"))$("renameListInput").disabled=renameUnavailable;
+        if($("renameListButton"))$("renameListButton").disabled=renameUnavailable;
+      }
     });
   }
 
@@ -756,13 +795,20 @@
     if(!host)return;
     ["tn80CloudPanel","tn78CloudBox"].forEach(id => {
       const panel = $(id);
-      if(panel && panel.parentElement !== host){
+      if(panel && !settings.contains(panel)){
         host.insertBefore(panel,host.firstChild);
       }
     });
   }
 
   function bindLibraryUi(){
+    const panel=document.querySelector(".tn-library-filter-panel");
+    if(panel&&!panel.__tnToggleBound){
+      panel.addEventListener("toggle",()=>{
+        filterPanelOpen=panel.open;
+      });
+      panel.__tnToggleBound=true;
+    }
     const filterKeys={tnLibrarySearch:"query",tnFilterLanguage:"language",tnFilterLetter:"letter",tnFilterPlaylist:"playlist",tnFilterPos:"pos",tnFilterFavorite:"favorite",tnFilterLearning:"learning",tnSortWords:"sort"};
     Object.keys(filterKeys).forEach(id => {
       const el = $(id);
@@ -793,8 +839,6 @@
     });
     const clear = $("tnClearFilters");
     if(clear)clear.onclick = resetFilters;
-    const side=$("tnDisplaySide");
-    if(side)side.onchange=()=>{displaySide=side.value;localStorage.setItem("tangonest_library_side_v1",displaySide);renderLibrary()};
     const audio=$("tnAudioSide");
     if(audio)audio.onchange=()=>{audioSide=audio.value;localStorage.setItem("tangonest_library_audio_side_v1",audioSide)};
   }
@@ -825,6 +869,13 @@
     if(loadMore){
       event.preventDefault();
       renderLimit += WORD_RENDER_LIMIT;
+      renderLibrary();
+      return;
+    }
+    const loadAll = event.target?.closest?.("[data-load-all]");
+    if(loadAll){
+      event.preventDefault();
+      renderLimit = Number.MAX_SAFE_INTEGER;
       renderLibrary();
       return;
     }
@@ -1001,6 +1052,7 @@
   window.tnOpenLibraryView = switchView;
   window.tnStableHeader = stabilizeHeader;
   window.tnStableNavigate = stableNavigate;
+  window.tnLibraryResetAccountState = resetAccountState;
   installStableNavigation();
 
   function boot(){
@@ -1009,6 +1061,8 @@
     renderLibrary();
     stabilizeHeader();
     installStableNavigation();
+    const active=document.querySelector(".page.active");
+    if(active)stableNavigate(active.id);
   }
 
   if(document.readyState === "loading")document.addEventListener("DOMContentLoaded",boot);

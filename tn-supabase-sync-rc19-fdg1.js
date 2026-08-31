@@ -35,6 +35,7 @@
     && /(?:^|[?&])qa=1(?:&|$)/.test(qaLocation.search || "");
   const localFallbacks={
     bulkImport:window.bulkImport,
+    undoLastBulkImport:window.undoLastBulkImport,
     deleteSelected:window.deleteSelected,
     toggleFavorite:window.toggleStar
   };
@@ -732,7 +733,7 @@
 
   async function repairLegacyDefaultRows(playlistRows,wordRows,userId){
     if(!Array.isArray(playlistRows)||!Array.isArray(wordRows)||!userId)return playlistRows;
-    const canonical=playlistRows.find(row=>row.is_default&&safeText(row.name).toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase())
+    const canonical=playlistRows.find(row=>row.is_default)
       ||playlistRows.find(row=>safeText(row.name).toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase());
     if(!canonical)return playlistRows;
     const usedPlaylistIds=new Set(wordRows.map(row=>safeText(row.playlist_id)).filter(Boolean));
@@ -885,8 +886,9 @@
         .order("created_at",{ascending:true});
       assertActiveRequest(userId,account.generation);
       if(existing.error)throw existing.error;
-      const namedRows=(existing.data||[]).filter(row=>safeText(row.name).toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase());
-      const named=namedRows.find(row=>row.is_default)||namedRows[0]||null;
+      const rows=existing.data||[];
+      const namedRows=rows.filter(row=>safeText(row.name).toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase());
+      const named=rows.find(row=>row.is_default)||namedRows[0]||null;
       for(const duplicate of namedRows){
         if(!named||duplicate.id===named.id)continue;
         const moved=await client.from("tn_words")
@@ -913,7 +915,7 @@
       }
       if(named){
         const promoted=await client.from("tn_playlists")
-          .update({name:DEFAULT_PLAYLIST_NAME,is_default:true})
+          .update({is_default:true})
           .eq("id",named.id)
           .eq("user_id",userId)
           .select("*")
@@ -1021,7 +1023,7 @@
         }else{
           playlistRows=playlistsResult.data || [];
           const defaults=playlistRows.filter(row=>row.is_default);
-          const defaultIsCanonical=defaults.length===1&&safeText(defaults[0].name)===DEFAULT_PLAYLIST_NAME;
+          const defaultIsCanonical=defaults.length===1&&!!safeText(defaults[0].name);
           if(defaultPlaylistVerifiedUserId!==loadUserId||!defaultIsCanonical){
             try{
               await ensureDefaultPlaylist();
@@ -1121,6 +1123,7 @@
         updateCloudUi("Synced");
         setStartupState("READY");
         if(!changed)renderAll();
+        restoreBulkUndo();
         return changed ? next : previous;
       }catch(error){
         if(error?.staleAccountRequest)throw error;
@@ -1440,26 +1443,28 @@
       const data=getDb();
       id = id || $("renameListSelect")?.value;
       name = safeText(name || $("renameListInput")?.value);
-      if(!id || !name)return toast("Playlist name is required");
-      if(name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase())return toast("My Words is reserved as the default playlist.");
+      if(!id || !name){toast("Playlist name is required");return false}
       const list=data.lists?.find(item=>item.id===id);
-      if(!list)return toast("Playlist not found");
-      if(list.isDefault)return toast("My Words is the default playlist and cannot be renamed.");
+      if(!list){toast("Playlist not found");return false}
+      if(!list.isDefault&&name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase()){toast("My Words is reserved as the default playlist.");return false}
+      if(data.lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast("A playlist with this name already exists.");return false}
       list.name=name;
       list.updatedAt=nowIso();
       window.tnWriteData?.(data);
       if($("renameListInput"))$("renameListInput").value="";
       renderAll();
       toast("Playlist renamed");
-      return;
+      return true;
     }
     try{
       const account=await requireAccountContext();
       id = id || $("renameListSelect")?.value;
       name = safeText(name || $("renameListInput")?.value);
-      if(!id || !name)return toast("Playlist name is required");
-      if(name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase())return toast("My Words is reserved as the default playlist.");
-      if(getDb().lists?.find(item=>item.id===id)?.isDefault)return toast("My Words is the default playlist and cannot be renamed.");
+      if(!id || !name){toast("Playlist name is required");return false}
+      const list=getDb().lists?.find(item=>item.id===id);
+      if(!list){toast("Playlist not found");return false}
+      if(!list.isDefault&&name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase()){toast("My Words is reserved as the default playlist.");return false}
+      if(getDb().lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast("A playlist with this name already exists.");return false}
       const result = await client.from("tn_playlists")
         .update({name,updated_at:nowIso()})
         .eq("id",id)
@@ -1471,9 +1476,11 @@
       if($("renameListInput"))$("renameListInput").value = "";
       await loadCloud({force:true,silent:true});
       toast("Playlist renamed");
+      return true;
     }catch(error){
       if(error?.staleAccountRequest)return;
       toast(userError(error,"Couldn't rename the playlist. Please try again."));
+      return false;
     }
   }
 
@@ -1796,9 +1803,54 @@
     }
   }
 
-  async function bulkImport(mode){
+  function bulkUndoStorageKey(userId=currentUser?.id||""){return accountStorageKey(userId,"bulk-undo")}
+  function readBulkUndo(userId=currentUser?.id||""){
+    const key=bulkUndoStorageKey(userId);
+    if(!key)return null;
+    try{const value=JSON.parse(localStorage.getItem(key)||"null");return value?.userId===userId&&Array.isArray(value.ids)&&value.ids.length?value:null}catch(error){return null}
+  }
+  function storeBulkUndo(info){
+    const key=bulkUndoStorageKey(info?.userId);
+    if(!key||!info?.ids?.length)return;
+    try{localStorage.setItem(key,JSON.stringify(info))}catch(error){console.warn("Bulk undo could not be saved locally",error)}
+    window.showBulkUndo?.(info);
+  }
+  function clearCloudBulkUndo(userId=currentUser?.id||""){
+    const key=bulkUndoStorageKey(userId);
+    if(key)try{localStorage.removeItem(key)}catch(error){}
+    window.clearBulkUndo?.();
+  }
+  function restoreBulkUndo(){
+    const info=readBulkUndo();
+    if(info)window.showBulkUndo?.(info);
+  }
+  async function undoLastBulkImport(){
     try{
       const account=await requireAccountContext();
+      const info=readBulkUndo(account.userId);
+      if(!info)return toast("There is no Bulk Add to undo");
+      const ids=[...new Set(info.ids.filter(isUuid))];
+      if(!ids.length){clearCloudBulkUndo(account.userId);return toast("There is no Bulk Add to undo")}
+      for(let start=0;start<ids.length;start+=100){
+        const result=await client.from("tn_words").delete().eq("user_id",account.userId).in("id",ids.slice(start,start+100));
+        if(result.error)throw result.error;
+        assertActiveRequest(account.userId,account.generation);
+      }
+      clearCloudBulkUndo(account.userId);
+      await loadCloud({force:true,silent:true});
+      toast(`${ids.length} imported words removed`);
+    }catch(error){
+      if(error?.staleAccountRequest)return;
+      toast(userError(error,"Couldn't undo the last Bulk Add. Please try again."));
+    }
+  }
+
+  async function bulkImport(mode){
+    let account=null;
+    let insertedIds=[];
+    let targetInfo=null;
+    try{
+      account=await requireAccountContext();
       if(mode === "replace"){
         return toast("Cloud Replace is disabled for bulk safety. Use Skip or Add Both, or edit a word directly.");
       }
@@ -1820,10 +1872,13 @@
           return true;
         });
       }
+      if(!rows.length)return toast("No new words to add");
+      if(typeof window.requestBulkDestinationConfirmation==="function"&&!window.requestBulkDestinationConfirmation(rows,mode))return;
       const playlist = selectedPlaylistId("bulkList");
       rememberPlaylist(playlist);
       const frontLang = safeLang($("bulkFrontLang")?.value,"en-US");
       const backLang = safeLang($("bulkBackLang")?.value,"ja-JP");
+      targetInfo={playlistId:playlist,playlistName:getDb().lists.find(list=>list.id===playlist)?.name||"No playlist",frontLang,backLang};
       if(mode === "replace"){
         for(const row of rows){
           const existing = getDb().words.find(word =>
@@ -1881,6 +1936,7 @@
           if(Array.isArray(result.data)&&result.data.length!==chunk.length){
             throw new Error(`Bulk Add saved ${result.data.length} of ${chunk.length} rows in batch ${Math.floor(start/BULK_INSERT_SIZE)+1}.`);
           }
+          if(Array.isArray(result.data))insertedIds.push(...result.data.map(row=>row.id).filter(Boolean));
           insertedCount+=Array.isArray(result.data)?result.data.length:chunk.length;
         }
         if(insertedCount!==payload.length)throw new Error(`Bulk Add saved ${insertedCount} of ${payload.length} rows.`);
@@ -1890,9 +1946,16 @@
       clearTimeout(loadTimer);
       loadTimer=null;
       await loadCloud({force:true,silent:true});
+      if(insertedIds.length)storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo.playlistId,playlistName:targetInfo.playlistName,createdAt:nowIso()});
       toast(`${rows.length} added`);
     }catch(error){
       if(error?.staleAccountRequest)return;
+      if(account&&insertedIds.length&&activeRequest(account.userId,account.generation)){
+        storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo?.playlistId||"",playlistName:targetInfo?.playlistName||"the selected playlist",createdAt:nowIso()});
+        try{await loadCloud({force:true,silent:true})}catch(loadError){}
+        toast(`Bulk Add stopped after ${insertedIds.length} words. Undo is available below.`);
+        return;
+      }
       toast(userError(error,"Couldn't add these words. Check the entries and try again."));
     }
   }
@@ -2270,6 +2333,7 @@
     window.removeWord = removeWord;
     window.deleteSelected = deleteSelected;
     window.bulkImport = bulkImport;
+    window.undoLastBulkImport = undoLastBulkImport;
     window.toggleStar = toggleFavoriteRemote;
     window.tnBuildSafeExportData = safeExportData;
     window.tnAuthDiagnostics = () => ({
@@ -2351,6 +2415,7 @@
       window.tnDeleteWord=undefined;
       window.tnToggleFavorite=undefined;
       if(typeof localFallbacks.bulkImport==="function")window.bulkImport=localFallbacks.bulkImport;
+      if(typeof localFallbacks.undoLastBulkImport==="function")window.undoLastBulkImport=localFallbacks.undoLastBulkImport;
       if(typeof localFallbacks.deleteSelected==="function")window.deleteSelected=localFallbacks.deleteSelected;
       if(typeof localFallbacks.toggleFavorite==="function")window.toggleStar=localFallbacks.toggleFavorite;
       showApp();

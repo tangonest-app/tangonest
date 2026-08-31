@@ -16,6 +16,7 @@
   let contextTargetId = "";
   let searchRenderTimer = null;
   let filterPanelOpen = false;
+  let renderingLibrary = false;
   const filterValues={query:"",language:"all",letter:"all",playlist:"all",pos:"all",favorite:"all",learning:"all",sort:"newest"};
   const returnFocus = {rename:null,delete:null,detail:null};
   const selectedWordIds=new Set();
@@ -295,7 +296,8 @@
               <button type="button" data-playlist-mode="quiz" data-playlist-id="${esc(list.id)}" aria-label="Quiz ${esc(list.name)}">Quiz</button>
               <button type="button" data-playlist-mode="cards" data-playlist-id="${esc(list.id)}" aria-label="Study ${esc(list.name)} with cards">Cards</button>
               <button type="button" data-playlist-mode="listen" data-playlist-id="${esc(list.id)}" aria-label="Listen to ${esc(list.name)}">Listen</button>
-              ${isDefaultList(list)?'<span class="tn-default-playlist-label">Default</span>':`<button type="button" data-rename-playlist="${esc(list.id)}" aria-label="Rename ${esc(list.name)}">Rename</button><button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>`}
+              <button type="button" data-rename-playlist="${esc(list.id)}" aria-label="Rename ${esc(list.name)}">Rename</button>
+              ${isDefaultList(list)?'<span class="tn-default-playlist-label">Default</span>':`<button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>`}
               ${isDefaultList(list)?"":`<button type="button" class="tn-playlist-menu-btn" data-menu-playlist="${esc(list.id)}" aria-label="More actions for ${esc(list.name)}">...</button>`}
             </div>
           </article>
@@ -319,13 +321,18 @@
 
   function renderLibrary(){
     const mount = $("tn82LibraryMount");
-    if(!mount)return;
-    const validIds=new Set(ensureData().words.map(word=>word.id));
-    selectedWordIds.forEach(id=>{if(!validIds.has(id))selectedWordIds.delete(id)});
-    if(!["words","playlists","due","weak","mastered"].includes(activeView))activeView = "words";
-    mount.innerHTML = activeView === "playlists" ? playlistsView() : wordsView(activeView);
-    bindLibraryUi();
-    updateHeaderCounts();
+    if(!mount||renderingLibrary)return;
+    renderingLibrary=true;
+    try{
+      const data=ensureData();
+      const validIds=new Set(data.words.map(word=>word.id));
+      selectedWordIds.forEach(id=>{if(!validIds.has(id))selectedWordIds.delete(id)});
+      if(filterValues.playlist!=="all"&&!data.lists.some(list=>list.id===filterValues.playlist))filterValues.playlist="all";
+      if(!["words","playlists","due","weak","mastered"].includes(activeView))activeView = "words";
+      mount.innerHTML = activeView === "playlists" ? playlistsView() : wordsView(activeView);
+      bindLibraryUi();
+      updateHeaderCounts();
+    }finally{renderingLibrary=false}
   }
 
   function updateHeaderCounts(){
@@ -420,11 +427,12 @@
       button.classList.toggle("active",textPage === page || idPage === page);
     });
 
-    try{ if(typeof window.render === "function")window.render(); }catch(e){}
+    let rendered=false;
+    try{ if(typeof window.render === "function"){window.render();rendered=true} }catch(e){}
     if(page === "quiz"){
       try{ if(typeof window.resetQuiz === "function")window.resetQuiz(); }catch(e){}
     }
-    if(page === "library")renderLibrary();
+    if(page === "library"&&!rendered)renderLibrary();
     const shellLabels={
       home:["Forest Desk","Home"],create:["Collection","Add Words"],library:["Collection","Library"],
       cards:["Practice","Cards"],quiz:["Practice","Quiz"],listen:["Practice","Listen"],settings:["TangoNest","Settings"]
@@ -637,12 +645,14 @@
     if(!clean)return toast("Playlist name is required");
     const listId=pendingRenameId;
     if(!listId)return;
-    if(typeof window.tnRenamePlaylist==="function")await window.tnRenamePlaylist(listId,clean);
+    let renamed=true;
+    if(typeof window.tnRenamePlaylist==="function")renamed=(await window.tnRenamePlaylist(listId,clean))!==false;
     else{
       if($("renameListSelect"))$("renameListSelect").value=listId;
       if($("renameListInput"))$("renameListInput").value=clean;
       await window.renameList?.();
     }
+    if(!renamed)return;
     renderLibrary();
     hideRenameModal();
   }
@@ -748,7 +758,7 @@
       const hasRendered=el.dataset.tnSelectionReady==="1";
       const unfiled=["addList","bulkList","editList"].includes(id);
       const allWords=["studyList","quizList","audioList"].includes(id);
-      const availableLists=id==="renameListSelect"?data.lists.filter(list=>!isDefaultList(list)):data.lists;
+      const availableLists=data.lists;
       const virtual=unfiled?'<option value="">No playlist</option>':allWords?'<option value="all">All words</option>':"";
       el.innerHTML = virtual+availableLists.map(list => `<option value="${esc(list.id)}">${esc(list.name || "Untitled Playlist")}</option>`).join("");
       const canRestore=[...el.options].some(option=>option.value===current) && (current!=="" || !unfiled || hasRendered);

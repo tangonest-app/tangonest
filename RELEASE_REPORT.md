@@ -1,113 +1,153 @@
-# TangoNest Task 11 Final Acceptance Closure Report
+# TangoNest Forest Desk Glass Release Report
 
-Date: 2026-08-24
+## Result
 
-## RESULT
+`UI_READY_FOR_DEPLOYMENT`
 
-BLOCKED
+The local release package is complete and verified. The GitHub Pages public
+site does not change until the package contents are uploaded to the repository.
 
-## VERSION
+## What Changed
 
-- Before: `1.0.0-rc.10`
-- After: `1.0.0-rc.11`
-- Release artifact: `TangoNest_v1.0.0-rc11_Task11_FinalAcceptance_BLOCKED.zip`
+- Rebuilt the application shell around a deep forest sidebar, warm ivory paper
+  surfaces, Mincho-style headings, sage and brass accents, and restrained
+  botanical decoration.
+- Applied one visual system to Login, Home, Create, Bulk Add, Library, Cards,
+  Quiz, Listen, Settings, dialogs, empty states, and mobile navigation.
+- Added a purpose-made forest study background to Login with a centered frosted
+  paper panel and preserved Email, Password, Login, Create account, reset, and
+  validation behavior.
+- Converted Library words to a calm Word / Meaning / POS list. Rows open the
+  existing detail panel instead of displaying every secondary action at once.
+- Kept English, Japanese, Korean, and French at the top of every language
+  picker and made open pickers close on navigation.
+- Stabilized Quiz with fixed question, choice, result, and action regions. The
+  layout does not move when correct or incorrect feedback appears.
+- Raised mobile playlist actions to at least 44 by 44 CSS pixels and removed
+  horizontal overflow.
 
-## FIXED
+## Files Changed
 
-- Replaced misleading session-restore text that told users to log in again when online sync itself was unavailable. The app now states that locally saved data is safe and suggests retrying later.
-- Removed implementation-specific Supabase wording from normal Settings, Auth, import, delete, and sync error messages.
-- Added static regression coverage for the new offline-safe and user-readable messages.
-- Added Desktop Safari WebKit to the Playwright project matrix.
-- Updated GitHub Actions to install and run Chromium and WebKit acceptance tests.
-- Updated app, fixture, asset, Service Worker, README, and package version identifiers to rc.11.
-
-## NEWLY DISCOVERED
-
-- Critical external blocker: `bkbteylavujkfiwuqwdq.supabase.co` returns public DNS `NXDOMAIN`. The configured production backend currently does not exist on public DNS, so real Auth and cloud sync cannot operate.
-- The canonical GitHub Pages site still serves the older July 4 build, not rc.11.
-- The public repository exposes only Pages deployment history. The included `TangoNest QA` workflow is not deployed to the repository.
-- Standalone Playwright WebKit installs correctly but aborts before page execution under the local macOS MachPort sandbox. WebKit is now covered by the included Linux CI workflow, but that workflow has not been deployed.
-
-## PRODUCTION ACCEPTANCE
-
-- Auth: BLOCKED - production backend hostname is NXDOMAIN.
-- Session: BLOCKED - local session, reload, and route retention PASS; production session restore cannot be exercised.
-- CRUD: BLOCKED - local Create, Read, Update/Rename, and delete-confirmation path PASS; real cloud CRUD cannot run.
-- RLS: BLOCKED - schema and policy contracts PASS; live two-account attacks cannot run without the backend.
-- RPC: BLOCKED - learning and SQL contracts PASS; production RPC cannot run.
-- Learning: PASS - Cards, Quiz feedback, manual Next, state reset, non-consecutive questions, and Listen passed locally.
-- Realtime: BLOCKED - unit/schema/client lifecycle contracts PASS; live delivery cannot run.
-- PC to Mobile: BLOCKED - the backend required for device sync is unavailable.
-- Mobile to PC: BLOCKED - the backend required for device sync is unavailable.
-- Account isolation: BLOCKED - local account-scoped queue/cache regressions PASS; live two-account verification cannot run.
-- Data loss: BLOCKED - local persistence and shadow-copy regressions PASS; production logout/login, account switch, and cloud recovery cannot run.
-- PWA: PASS - active rc.11 Service Worker, 27 cached shell assets, and zero external/Auth/API cache entries.
-- Desktop: PASS - all seven pages, playlist Create/Rename, language selection, Add Word, Library All, Cards, Quiz, Listen, and reload retention passed in the in-app browser.
-- Mobile: PASS - all seven pages passed at 390 x 844 with no document overflow; playlist actions remained inside both cards.
-- WebKit: BLOCKED - project and CI coverage added; local executable was stopped by the macOS browser sandbox and remote CI is absent.
-- Accessibility: PASS - desktop app, mobile app, and login axe audits reported zero Critical/Serious violations.
-- Security: BLOCKED for production - dependency/secret/XSS/cache/schema scans PASS; live RLS isolation cannot run.
-- CI: BLOCKED - workflow is included in the package but not present in the public repository.
-
-## FINAL QA
-
-- Pass 1, core and identity: PASS. TangoNest naming, empty demo-free state, navigation, routes, CRUD UI, and learning modes passed.
-- Pass 2, Auth/RLS/RPC: BLOCKED. Static and unit contracts pass; production DNS prevents real execution.
-- Pass 3, cloud CRUD/Realtime: BLOCKED. Local and mocked regressions pass; production endpoint is unavailable.
-- Pass 4, data safety/account switching: BLOCKED. Local persistence, retry, ownership, and shadow-data tests pass; real accounts cannot run.
-- Pass 5, devices/PWA/WebKit: BLOCKED. Desktop, 390 x 844 mobile, and PWA pass; real WebKit and signed-in devices remain blocked.
-- Pass 6, security/accessibility/performance: PASS locally. Zero dependency vulnerabilities, zero serious axe violations, no service key, no cloud entries in PWA cache, and 15.9ms/5.1ms/11.1ms for 100/1,000/5,000-word benchmarks.
-- Pass 7, CI/deployment: BLOCKED. The package contains the QA workflow, but the public repository and Pages site have not been updated.
-- Regression suites: PASS for syntax, four unit suites, four static suites, CSS audit, dependency audit, benchmark, manual browser journeys, responsive overflow, accessibility harnesses, and PWA harness.
-- Known code-critical issues remaining: 0.
-- Critical external/configuration issues remaining: 1, the production Supabase hostname is NXDOMAIN.
-- High deployment issues remaining: 1, rc.11 and the QA workflow are not deployed.
-- Medium acceptance gaps remaining: 1, physical Safari and bidirectional signed-in device verification after backend restoration.
-
-## RELEASE DECISION
-
-- Stable release allowed: NO
-- `1.0.0` stable tag allowed: NO
-- Decision: keep `1.0.0-rc.11` as a BLOCKED release candidate.
-
-The final stable gate cannot pass while the configured production backend is absent from public DNS. This is not inferred from a local network failure: an independent public DNS-over-HTTPS lookup also returned `NXDOMAIN`.
-
-## REMAINING
-
-- Restore the existing Supabase project or create a replacement project and update `config.js` with its Project URL and publishable key.
-- Run `SUPABASE_SQL_RUN_ONCE.sql` in the restored/replacement project.
-- Deploy the exact rc.11 package, including `.github/workflows/qa.yml`, to `tangonest-app/tangonest`.
-- Re-run Auth, CRUD, RLS, RPC, Realtime, account isolation, data-loss, WebKit, and bidirectional PC/phone acceptance against the working backend.
-
-## MANUAL ACTION
-
-1. In Supabase, restore `bkbteylavujkfiwuqwdq` if it was paused/deleted, or create a new TangoNest project. Provide the new Project URL and publishable key if the identifier changes.
-2. Run `SUPABASE_SQL_RUN_ONCE.sql` once in that project.
-3. Upload the exact rc.11 folder contents to `tangonest-app/tangonest`, including `.github/workflows/qa.yml`. Do not upload `node_modules` or local test output.
-4. Confirm `TangoNest QA` is green and the Pages source contains `appVersion:"1.0.0-rc.11"`.
-5. With two temporary accounts and PC plus phone, complete Add/Edit/Favorite/Playlist Rename/Cards/Quiz/Delete in both directions, verify Account B never sees Account A data, and verify logout/login, offline/reconnect, reload, and PWA reopen without loss.
-
-## POST-1.0
-
-- Further CSS architecture cleanup and `!important` reduction.
-- Continue splitting legacy `app.js` into isolated modules.
-- Optional visual refinement after production stability is proven.
-- External dictionary/translation integrations and TTS upgrades.
-
-## CHANGED FILES
-
-- `.github/workflows/qa.yml`
-- `README.md`
-- `RELEASE_REPORT.md`
-- `app.js`
-- `config.js`
 - `index.html`
-- `package-lock.json`
-- `package.json`
-- `playwright.config.js`
+- `ui/forest-desk-glass.css`
+- `ui/forest-desk-glass-rc19-fdg1.css`
+- `assets/forest-study-login-v1.png`
+- `assets/botanical-corner.svg`
+- `app.js` and `app-rc19-fdg1.js`
+- `tn-library-management.js` and `tn-library-management-rc19-fdg1.js`
+- `ui/runtime.js` and `ui/runtime-rc19-fdg1.js`
+- `manifest.json` and `manifest-rc19-fdg1.json`
 - `sw.js`
-- `tn-supabase-sync.js`
-- `tests/e2e/fixtures.js`
-- `tests/e2e/pwa-harness.html`
-- `tests/static/release-contracts.test.js`
-- `tests/static/ui-contracts.test.js`
+- `tests/static/*.test.js`
+- `tests/e2e/ux-refinement.spec.js`
+- `tools/capture-forest-desk-glass.js`
+- `package.json`
+- `README.md`
+
+## Data Logic Preserved
+
+The UI update does not clear or reseed production data. Existing Supabase Auth,
+RLS, account isolation, playlists, words, learning state, sync, Cards, Quiz,
+Listen, Import, Export, and Service Worker update behavior remain in place.
+Automated regression coverage confirmed that a data-table failure does not
+become an authentication logout.
+
+## Quiz Stable Flow
+
+- Question, four choices, feedback, and actions reserve stable space before the
+  answer is selected.
+- Correct and incorrect feedback reuse those regions without changing their
+  top or bottom coordinates.
+- Manual Next and smart auto timing remain supported.
+- Correct answer, selected answer, learning consequence, replay, and Next are
+  visible without automatic scrolling.
+- Previous highlight and feedback state are cleared for the next question.
+
+## Responsive Behavior
+
+- Desktop uses a fixed forest sidebar, sticky paper header, and one shared
+  content width.
+- Mobile uses a sticky compact header and six-item bottom navigation; Create is
+  reached through the Add Words action.
+- Login, Library rows, playlist actions, Quiz, Cards, Listen, Settings, dialogs,
+  and language pickers were verified from 320px through 1920px widths.
+- No tested viewport has horizontal scrolling.
+
+## Test Results
+
+- Syntax, unit, sync regression, static UI, accessibility, release, and DB
+  contract tests: PASS.
+- Full Playwright E2E: 150 passed, 6 intentionally skipped, 0 failed.
+- Browsers: Chromium desktop, Chromium mobile, and WebKit: PASS.
+- Axe WCAG serious/critical checks on Login and all primary screens: PASS.
+- Library 100, 1,000, and 5,000-word browser performance tests: PASS.
+- Node Library benchmark: 100 words 8.3ms, 1,000 words 1.8ms, 5,000 words
+  6.9ms: PASS.
+- Dependency audit: 0 vulnerabilities.
+- Final visual QA: 80 screenshots generated across eight desktop and mobile
+  viewport profiles; representative Login, Home, Create, Bulk, Library, Cards,
+  Quiz feedback, Listen, and Settings screens inspected.
+- Console and uncaught page errors during E2E: 0.
+- Packaged-folder smoke test: 30 seconds idle with 0px movement in header,
+  sidebar, workspace, and scroll position; all seven pages had 0px horizontal
+  overflow; Quiz question, choices, and actions moved 0px after answering.
+
+## Known Issues
+
+- No known UI release blocker remains in the verified local package.
+- Live production Supabase credentials and real cross-device accounts were not
+  modified or exercised by this visual release. Existing production acceptance
+  requirements in `RC19_ACCOUNT_ISOLATION_QA_REPORT.md` still apply.
+
+## Manual Follow-up
+
+1. Upload the contents of `TangoNest_ForestDeskGlass_UI_READY` to the GitHub
+   Pages repository root.
+2. Wait for GitHub Pages deployment to complete.
+3. Open the public URL once with a hard reload so the new Service Worker shell
+   is installed.
+4. Confirm one real account on PC and mobile before treating production cloud
+   acceptance as complete.
+
+## FDG2 Navigation And Motion Refinement
+
+- Desktop navigation now starts with Home, followed by Library and Add Words.
+  Home remains the default post-login destination, while Add Words stays one
+  action away from both the sidebar and Home call to action.
+- Desktop Create focuses the Front field without scrolling. Successful login
+  moves keyboard focus to the visible Home navigation control on desktop or
+  mobile.
+- Motion is restricted to local controls, quiz feedback colors, and the
+  flashcard face. Main pages and layout containers never fade, translate, or
+  resize during navigation.
+- A first page-fade experiment was rejected during PDCA because its temporary
+  opacity reduced contrast during automated accessibility inspection.
+- Twelve separate learner personas used twelve isolated mock Supabase users,
+  email addresses, passwords, sessions, and datasets. Desktop and mobile runs
+  covered students, workers, teachers, foreign residents, commuters,
+  developers, keyboard-only learners, multilingual learners, a 1,014-word
+  library, and a returning learner.
+- The persona fixture does not create accounts in production Supabase. A real
+  second-account and cross-device production check still requires dedicated
+  credentials supplied outside the repository.
+
+## FDG7 Playlist And Learning Safety
+
+- The single default playlist keeps its system identity while allowing the
+  user-visible name to be renamed. Repeated normalization and navigation no
+  longer restore the label to `My Words`.
+- Bulk Add now displays the exact destination playlist, Front/Back language
+  direction, and import count before any words are written. The latest import
+  can be undone without deleting earlier vocabulary, including after a partial
+  cloud batch failure.
+- Library rendering is guarded against duplicate render passes, stale playlist
+  filters are reset safely, and repeated navigation no longer creates duplicate
+  mounts or layout overflow.
+- Quiz distractors are limited to the current playlist's Back language. A
+  Chinese to Japanese quiz can no longer fill missing choices with English or
+  another language.
+- Listen now uses a compact archival player with reserved text and waveform
+  regions instead of the oversized circular display.
+- Final FDG7 acceptance: 150 Playwright checks passed across desktop Chromium,
+  mobile Chromium, and WebKit; 6 intended project-specific checks were skipped;
+  0 failed. All 80 responsive QA screenshots were regenerated successfully.

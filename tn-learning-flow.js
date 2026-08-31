@@ -1,12 +1,11 @@
 (function(){
   "use strict";
 
-  const DATA_KEY="tangonest_production_stable_v1";
   const engine=()=>window.TangoNestLearningEngine||null;
 
   function dbRef(){
     try{if(typeof window.tnGetDb==="function")return window.tnGetDb()}catch(e){}
-    try{return JSON.parse(localStorage.getItem(DATA_KEY)||"{}")}catch(e){return{words:[]}}
+    return {words:[]};
   }
 
   function words(){
