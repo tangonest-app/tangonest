@@ -1227,3 +1227,81 @@ input:focus,select:focus,textarea:focus,
     transition-duration:.01ms;
   }
 }
+
+/* FDG8: the question frame never changes size; only its inner paper turns. */
+#pageQuiz .quiz-question,
+#pageQuiz.quiz-focus-active .quiz-question,
+#pageQuiz .quiz-question.is-answered{
+  position:relative;
+  padding:0;
+  overflow:hidden;
+  perspective:1200px;
+  background:#e8dcc4;
+  border-color:#bca778;
+  animation:none;
+}
+#pageQuiz .quiz-question::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  z-index:3;
+  border:1px solid rgba(155,122,57,.34);
+  border-radius:calc(var(--fdg-radius-md) - 3px);
+  pointer-events:none;
+}
+#pageQuiz .quiz-question > .quiz-flip-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  max-height:none;
+  overflow:visible;
+  transform-style:preserve-3d;
+  transition:transform 560ms cubic-bezier(.2,.78,.22,1);
+  will-change:transform;
+}
+#pageQuiz .quiz-question.is-answered > .quiz-flip-inner{transform:rotateY(180deg)}
+#pageQuiz .quiz-face{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-content:center;
+  justify-items:center;
+  gap:7px;
+  padding:18px 34px;
+  overflow:auto;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  background:#f5ecda url("../assets/botanical-corner.svg") right bottom/100px auto no-repeat;
+}
+#pageQuiz .quiz-face-front{transform:rotateY(0deg)}
+#pageQuiz .quiz-face-back{transform:rotateY(180deg);background-color:#f8f0df}
+#pageQuiz .quiz-question-answer,
+#pageQuiz .quiz-question-answer.show{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:auto;
+  min-height:0;
+  margin:0;
+  padding:0;
+  border:0;
+  visibility:visible;
+  opacity:1;
+}
+.quiz-reveal-kicker{color:var(--fdg-sage-500);font-size:9px;font-weight:760;letter-spacing:.15em}
+.quiz-reveal-answer{max-width:100%;overflow:hidden;color:var(--fdg-forest-950);font-family:"Iowan Old Style",Georgia,serif;font-size:clamp(23px,3vw,34px);font-weight:600;line-height:1.1;text-overflow:ellipsis;white-space:nowrap}
+.quiz-reveal-selected,.quiz-reveal-note{color:var(--fdg-copy);font-size:11px;line-height:1.35}
+.quiz-face-back .quiz-answer-status{margin:0 0 3px}
+
+@media(max-width:600px){
+  #pageQuiz .quiz-face{padding:13px 18px}
+  .quiz-reveal-answer{font-size:24px}
+  .quiz-reveal-note{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #pageQuiz .quiz-question > .quiz-flip-inner{transition:none}
+  #pageQuiz .quiz-question.is-answered > .quiz-flip-inner{transform:none}
+  #pageQuiz .quiz-question.is-answered .quiz-face-front{visibility:hidden}
+  #pageQuiz .quiz-question.is-answered .quiz-face-back{transform:none}
+}
