@@ -128,7 +128,7 @@ function tnNormalizeDataShape(value,reason){
   else if(!data.lists.length)data.lists.unshift(tnLocalDefaultPlaylist(at));
   const validListIds=new Set(data.lists.map(list=>list.id));
   data.words=data.words.map(word=>{
-    const normalized={
+    let normalized={
       ...word,
       id:String(word.id||tnStableId("word")),
       listId:legacyDefaultIds.has(String(word.listId||""))&&validListIds.has(TN_LOCAL_DEFAULT_PLAYLIST_ID)
@@ -139,6 +139,7 @@ function tnNormalizeDataShape(value,reason){
       createdAt:word.createdAt||word.created_at||at,
       updatedAt:word.updatedAt||word.updated_at||at
     };
+    try{normalized=window.TangoNestExampleFields?.normalizeWord(normalized)||normalized}catch(e){}
     try{return window.TangoNestLearningEngine?.normalizeWord(normalized)||normalized}catch(e){return normalized}
   });
   data.mistakes=Array.isArray(data.mistakes)?data.mistakes.filter(entry=>entry&&entry.wordId):[];
@@ -852,14 +853,15 @@ function parseBulk(text){
       }
 
       let parts=splitBulkLine(before);
-      let front="",back="",pos="",gender="",memo="";
+      let front="",back="",pos="",gender="",memo="",pronunciation="";
 
       if(parts.length>=5){
         front=parts[0];
         back=parts[1];
         pos=parts[2];
         gender=parts[3];
-        memo=parts.slice(4).join(" ");
+        if(exampleFromPipe)pronunciation=parts.slice(4).join(" ");
+        else memo=parts.slice(4).join(" ");
       }else if(parts.length===4){
         front=parts[0];
         back=parts[1];
@@ -877,16 +879,18 @@ function parseBulk(text){
       }
 
       if(exampleFromPipe){
-        memo = memo ? `${memo} | ${exampleFromPipe}` : exampleFromPipe;
+        memo=exampleFromPipe;
       }
 
+      const normalized=window.TangoNestExampleFields?.normalizeFields(memo,pronunciation)||{memo,pronunciation};
       return {
         row,
         front:cleanBulkValue(front),
         back:cleanBulkValue(back),
         pos:cleanBulkValue(pos),
         gender:cleanBulkValue(gender),
-        memo:cleanBulkValue(memo)
+        memo:cleanBulkValue(normalized.memo),
+        pronunciation:cleanBulkValue(normalized.pronunciation)
       };
     })
     .filter(r=>r.front && r.back);
@@ -963,7 +967,7 @@ function previewBulk(){
   box.style.display="block";
   if(!rows.length){box.innerHTML='<div class="empty"><h3>No readable words</h3><p>Each row needs at least Front and Back.</p></div>';return}
   renderDuplicatePanel(rows);
-  box.innerHTML=`<div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
+  box.innerHTML=`<div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
 }
 function bulkImport(mode){
   let rows=bulkRows();
@@ -975,9 +979,9 @@ function bulkImport(mode){
     rows.forEach(r=>{
       const ex=softDuplicateMatch(r,listId);
       if(ex){
-        db.words=db.words.map(w=>w.id===ex.id?{...w,front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pos:r.pos,gender:r.gender}:w);
+        db.words=db.words.map(w=>w.id===ex.id?{...w,front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender}:w);
       }else{
-        db.words.push({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()});
+        db.words.push({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()});
       }
     });
     $("bulkText").value="";clearBulkPreview();save();return toast(`${rows.length} processed`);
@@ -994,7 +998,7 @@ function bulkImport(mode){
       return true;
     });
   }
-  db.words=[...db.words,...rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}))];
+  db.words=[...db.words,...rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}))];
   $("bulkText").value="";clearBulkPreview();save();toast(`${rows.length} added`);
 }
 try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;}catch(e){}

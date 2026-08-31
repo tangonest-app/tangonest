@@ -1,5 +1,6 @@
 
 function appShow(pageId){
+  if(typeof closeLanguagePickers==="function")closeLanguagePickers();
   if(typeof go==="function"){go(pageId);return;}
   if(typeof showPage==="function"){showPage(pageId);return;}
   const target=document.querySelector(`[data-page="${pageId}"]`);
@@ -10,6 +11,11 @@ function appShow(pageId){
 
 const KEY="tangonest_production_stable_v1";
 const SHADOW_KEY="tangonest_last_good_data_v1";
+const TN_ACCOUNT_STORAGE_PREFIX="tangonest:account:v2:";
+const TN_ACCOUNT_ISOLATION_MARKER="tangonest_account_isolation_rc19_v1";
+const TN_LOCAL_QA_MODE=/^(localhost|127\.0\.0\.1)$/.test(location.hostname||"")&&/(?:^|[?&])qa=1(?:&|$)/.test(location.search||"");
+let tnActiveStorageUserId="";
+const TN_SHADOW_MAX_CHARS=1500000;
 const LEGACY_SLUG="vocab"+"rise";
 const LEGACY_KEYS=[
   `${LEGACY_SLUG}_production_stable_v1`,
@@ -32,8 +38,10 @@ const LEGACY_KEYS=[
   `${LEGACY_SLUG}_beta19`,
   `${LEGACY_SLUG}_beta18`
 ];
-const TN_SCHEMA_VERSION=2;
+const TN_SCHEMA_VERSION=3;
 const TN_DATA_VERSION="1.0.0";
+const TN_DEFAULT_PLAYLIST_NAME="My Words";
+const TN_LOCAL_DEFAULT_PLAYLIST_ID="local-my-words";
 const LEGACY_RESET_MARKER_KEY="tangonest_task1_reset_20260823_v1";
 const LEGACY_SNAPSHOT_KEY="tangonest_task1_legacy_snapshot_v1";
 const LEGACY_SNAPSHOT_INDEX_KEY="tangonest_task1_legacy_snapshot_index_v1";
@@ -46,6 +54,9 @@ const RETIRED_LOCAL_KEYS=[
   "tangonest_beta83_library_clean_reset_v1"
 ];
 function tnNowIso(){return new Date().toISOString()}
+function tnLocalDefaultPlaylist(at=tnNowIso()){
+  return window.TangoNestDefaultPlaylist?.createDefault(at)||{id:TN_LOCAL_DEFAULT_PLAYLIST_ID,name:TN_DEFAULT_PLAYLIST_NAME,isDefault:true,createdAt:at,updatedAt:at};
+}
 function tnEmptyData(reason){
   const at=tnNowIso();
   return {
@@ -53,7 +64,7 @@ function tnEmptyData(reason){
     dataVersion:TN_DATA_VERSION,
     ui:"en",
     prefs:{frontLang:"en-US",backLang:"ja-JP"},
-    lists:[{id:"starter",name:"New Playlist",createdAt:at,updatedAt:at}],
+    lists:[tnLocalDefaultPlaylist(at)],
     words:[],
     mistakes:[],
     meta:{
@@ -62,9 +73,29 @@ function tnEmptyData(reason){
       updatedAt:at,
       resetReason:reason||"clean-cache",
       sourceOfTruth:"supabase",
-      localStorageRole:"cache-backup"
+      localStorageRole:"cache-backup",
+      userId:tnActiveStorageUserId||""
     }
   };
+}
+function tnAccountStorageKey(userId,kind){
+  const owner=String(userId||"").trim();
+  return owner?`${TN_ACCOUNT_STORAGE_PREFIX}${owner}:${kind}`:"";
+}
+function tnDataStorageKey(){return TN_LOCAL_QA_MODE?KEY:tnAccountStorageKey(tnActiveStorageUserId,"data")}
+function tnShadowStorageKey(){return TN_LOCAL_QA_MODE?SHADOW_KEY:tnAccountStorageKey(tnActiveStorageUserId,"shadow")}
+function tnSessionStorageKey(){return tnAccountStorageKey(tnActiveStorageUserId,"learning-session")}
+function tnRecentPlaylistStorageKey(){return tnAccountStorageKey(tnActiveStorageUserId,"recent-playlist")}
+function tnSetActiveUserScope(userId){
+  tnActiveStorageUserId=String(userId||"").trim();
+  return tnActiveStorageUserId;
+}
+function tnPurgeUserStorage(userId){
+  const owner=String(userId||"").trim();
+  if(!owner)return;
+  ["data","shadow","learning-session","recent-playlist","pending"].forEach(kind=>{
+    try{localStorage.removeItem(tnAccountStorageKey(owner,kind))}catch(e){}
+  });
 }
 function tnClone(value){
   try{return JSON.parse(JSON.stringify(value||{}))}catch(e){return{}}
@@ -81,26 +112,34 @@ function tnNormalizeDataShape(value,reason){
   data.prefs=data.prefs&&typeof data.prefs==="object"?data.prefs:{};
   data.prefs.frontLang=data.prefs.frontLang||"en-US";
   data.prefs.backLang=data.prefs.backLang||"ja-JP";
-  data.lists=Array.isArray(data.lists)?data.lists.filter(Boolean):[];
-  if(!data.lists.length)data.lists.push({id:"starter",name:"New Playlist",createdAt:at,updatedAt:at});
-  data.lists=data.lists.map((list,index)=>({
+  const legacyDefaultIds=new Set(["starter","local-starter"]);
+  data.lists=(Array.isArray(data.lists)?data.lists:[]).filter(Boolean).map((list,index)=>({
     id:String(list.id||`list-${index+1}`),
-    name:String(list.name||"New Playlist").trim()||"New Playlist",
+    name:String(list.name||"Untitled Playlist").trim()||"Untitled Playlist",
+    isDefault:!!(list.isDefault||list.is_default||String(list.id||"")===TN_LOCAL_DEFAULT_PLAYLIST_ID),
+    systemKey:list.systemKey||"",
+    generatedBy:list.generatedBy||list.generated_by||"",
+    isGenerated:list.isGenerated===true||list.is_generated===true,
     createdAt:list.createdAt||list.created_at||at,
     updatedAt:list.updatedAt||list.updated_at||at
   }));
-  const firstListId=data.lists[0]?.id||"starter";
   data.words=Array.isArray(data.words)?data.words.filter(word=>word&&String(word.front||"").trim()&&String(word.back||"").trim()):[];
+  if(window.TangoNestDefaultPlaylist?.enforce)window.TangoNestDefaultPlaylist.enforce(data,{clone:false,now:at});
+  else if(!data.lists.length)data.lists.unshift(tnLocalDefaultPlaylist(at));
+  const validListIds=new Set(data.lists.map(list=>list.id));
   data.words=data.words.map(word=>{
-    const normalized={
+    let normalized={
       ...word,
       id:String(word.id||tnStableId("word")),
-      listId:data.lists.some(list=>list.id===word.listId)?word.listId:firstListId,
+      listId:legacyDefaultIds.has(String(word.listId||""))&&validListIds.has(TN_LOCAL_DEFAULT_PLAYLIST_ID)
+        ?TN_LOCAL_DEFAULT_PLAYLIST_ID
+        :(validListIds.has(String(word.listId||""))?String(word.listId):""),
       frontLang:word.frontLang||data.prefs.frontLang,
       backLang:word.backLang||data.prefs.backLang,
       createdAt:word.createdAt||word.created_at||at,
       updatedAt:word.updatedAt||word.updated_at||at
     };
+    try{normalized=window.TangoNestExampleFields?.normalizeWord(normalized)||normalized}catch(e){}
     try{return window.TangoNestLearningEngine?.normalizeWord(normalized)||normalized}catch(e){return normalized}
   });
   data.mistakes=Array.isArray(data.mistakes)?data.mistakes.filter(entry=>entry&&entry.wordId):[];
@@ -125,53 +164,30 @@ function tnStorageKeyLooksRelevant(key){
   if(k.includes("sync_email") || k.includes("sync_hash"))return false;
   return k.startsWith("tangonest_") || k.includes(LEGACY_SLUG);
 }
-function tnSnapshotLocalStorage(reason){
-  const snapshot={at:tnNowIso(),reason:reason||"legacy-snapshot",summary:{keys:0,words:0,lists:0,accounts:0},items:[]};
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const key=localStorage.key(i);
-      if(!tnStorageKeyLooksRelevant(key))continue;
-      const raw=localStorage.getItem(key);
-      const parsed=tnParsedData(raw);
-      const wordCount=Array.isArray(parsed?.words)?parsed.words.length:0;
-      const listCount=Array.isArray(parsed?.lists)?parsed.lists.length:0;
-      snapshot.items.push({key,raw:wordCount||listCount?raw:"",wordCount,listCount,bytes:String(raw||"").length});
-      snapshot.summary.keys++;
-      snapshot.summary.words+=wordCount;
-      snapshot.summary.lists+=listCount;
-    }
-    const cleanAt=snapshot.at.replace(/[:.]/g,"-");
-    const generationKey=`tangonest_legacy_snapshot_${cleanAt}`;
-    localStorage.setItem(LEGACY_SNAPSHOT_KEY,JSON.stringify(snapshot));
-    localStorage.setItem(generationKey,JSON.stringify(snapshot));
-    const index=tnParsedData(localStorage.getItem(LEGACY_SNAPSHOT_INDEX_KEY))||[];
-    index.unshift(generationKey);
-    const unique=[...new Set(index)].slice(0,5);
-    index.slice(5).forEach(oldKey=>{try{localStorage.removeItem(oldKey)}catch(e){}});
-    localStorage.setItem(LEGACY_SNAPSHOT_INDEX_KEY,JSON.stringify(unique));
-  }catch(e){
-    snapshot.error=e?.message||String(e);
-  }
-  return snapshot;
-}
 function tnResetRetiredLocalStorage(){
+  if(TN_LOCAL_QA_MODE)return;
   try{
-    if(localStorage.getItem(LEGACY_RESET_MARKER_KEY))return;
-    const snapshot=tnSnapshotLocalStorage("before-local-reset");
-    [...RETIRED_LOCAL_KEYS,...LEGACY_KEYS].forEach(key=>{try{localStorage.removeItem(key)}catch(e){}});
+    if(localStorage.getItem(TN_ACCOUNT_ISOLATION_MARKER)==="complete")return;
+    const exact=new Set([
+      KEY,SHADOW_KEY,"tangonest_cache_user_id_v1","tangonest_unassigned_cache_backup_v1",
+      "tangonest_pending_mutations_v1","tangonest_recent_playlist_v1","tangonest_learning_session_v1",
+      LEGACY_SNAPSHOT_KEY,LEGACY_SNAPSHOT_INDEX_KEY,LEGACY_RESET_MARKER_KEY,
+      ...RETIRED_LOCAL_KEYS,...LEGACY_KEYS
+    ]);
     for(let i=localStorage.length-1;i>=0;i--){
       const key=localStorage.key(i);
-      if(key&&key.toLowerCase().includes(LEGACY_SLUG))localStorage.removeItem(key);
+      if(!key)continue;
+      if(
+        exact.has(key)||key.toLowerCase().includes(LEGACY_SLUG)||
+        key.startsWith("tangonest_account_cache_v1:")||
+        key.startsWith("tangonest_account_shadow_v1:")||
+        key.startsWith("tangonest_account_clean_start_v1:")||
+        key.startsWith("tangonest_legacy_snapshot_")
+      )localStorage.removeItem(key);
     }
-    localStorage.setItem(LEGACY_RESET_MARKER_KEY,JSON.stringify({
-      at:tnNowIso(),
-      snapshotKey:LEGACY_SNAPSHOT_KEY,
-      previousKeys:snapshot.summary.keys,
-      previousWords:snapshot.summary.words,
-      previousLists:snapshot.summary.lists
-    }));
+    localStorage.setItem(TN_ACCOUNT_ISOLATION_MARKER,"complete");
   }catch(e){
-    console.warn("TangoNest legacy storage cleanup skipped",e);
+    console.warn("TangoNest account-isolation storage cleanup skipped",e);
   }
 }
 function tnParsedData(raw){
@@ -179,9 +195,9 @@ function tnParsedData(raw){
 }
 tnResetRetiredLocalStorage();
 function tnIsDefaultList(list){
+  try{if(window.TangoNestDefaultPlaylist?.isMarkedDefault)return window.TangoNestDefaultPlaylist.isMarkedDefault(list)}catch(e){}
   const id=String(list?.id||"");
-  const name=String(list?.name||"").trim().toLowerCase();
-  return !name || name==="new playlist" || id==="starter" || id==="local-starter";
+  return !!list?.isDefault || id==="starter" || id==="local-starter" || id===TN_LOCAL_DEFAULT_PLAYLIST_ID;
 }
 function tnHasUserData(data){
   if(!data || typeof data!=="object")return false;
@@ -191,7 +207,7 @@ function tnHasUserData(data){
     lists.some(list=>!tnIsDefaultList(list));
 }
 function tnListName(data,id){
-  return String((data?.lists||[]).find(list=>list.id===id)?.name||"New Playlist").trim().toLowerCase();
+  return String((data?.lists||[]).find(list=>list.id===id)?.name||"Unfiled").trim().toLowerCase();
 }
 function tnMergeStoredData(primary,backup){
   const a=primary&&typeof primary==="object"?primary:{};
@@ -206,20 +222,20 @@ function tnMergeStoredData(primary,backup){
   };
   const addList=list=>{
     if(!list)return;
-    const name=String(list.name||"New Playlist").trim().toLowerCase();
+    const name=String(list.name||"Untitled Playlist").trim().toLowerCase();
     const existing=out.lists.find(item=>item.id===list.id||String(item.name||"").trim().toLowerCase()===name);
     if(existing)Object.assign(existing,list);
     else out.lists.push({...list});
   };
   (b.lists||[]).forEach(addList);
   (a.lists||[]).forEach(addList);
-  if(!out.lists.length)out.lists.push({id:"starter",name:"New Playlist"});
   const listIdByName=new Map(out.lists.map(list=>[String(list.name||"").trim().toLowerCase(),list.id]));
   const wordMap=new Map();
   const addWord=(source,word)=>{
     if(!word||!String(word.front||"").trim()||!String(word.back||"").trim())return;
     const sourceListName=tnListName(source,word.listId);
-    const next={...word,listId:listIdByName.get(sourceListName)||word.listId||out.lists[0].id};
+    const requestedId=String(word.listId||"");
+    const next={...word,listId:listIdByName.get(sourceListName)||(out.lists.some(list=>list.id===requestedId)?requestedId:"")};
     const key=next.id||[String(next.front).trim().toLowerCase(),String(next.back).trim().toLowerCase(),sourceListName].join("|");
     wordMap.set(key,{...(wordMap.get(key)||{}),...next});
   };
@@ -247,23 +263,58 @@ function tnMergeStoredData(primary,backup){
 }
 function tnWriteData(data){
   const safe=tnMigrateData(data);
+  safe.meta=safe.meta||{};
+  const incomingOwner=String(safe.meta.userId||"").trim();
+  if(!TN_LOCAL_QA_MODE&&(!tnActiveStorageUserId||(incomingOwner&&incomingOwner!==tnActiveStorageUserId))){
+    console.warn("TangoNest blocked a cache write outside the active account boundary.");
+    return safe;
+  }
+  safe.meta.userId=tnActiveStorageUserId||safe.meta.userId||"";
   if(data&&typeof data==="object"&&data!==safe){
     Object.keys(data).forEach(key=>delete data[key]);
     Object.assign(data,safe);
   }
+  const dataKey=tnDataStorageKey();
+  const shadowKey=tnShadowStorageKey();
+  if(!dataKey)return safe;
   const text=JSON.stringify(safe);
-  localStorage.setItem(KEY,text);
-  if(tnHasUserData(safe))localStorage.setItem(SHADOW_KEY,text);
-  else tnClearLastGoodData();
+  localStorage.setItem(dataKey,text);
+  if(!tnHasUserData(safe)){
+    tnClearLastGoodData();
+    return;
+  }
+  // A second full local copy can exceed Safari's storage quota on large libraries.
+  if(text.length>TN_SHADOW_MAX_CHARS){
+    tnClearLastGoodData();
+    return;
+  }
+  try{
+    localStorage.setItem(shadowKey,text);
+  }catch(error){
+    tnClearLastGoodData();
+    console.warn("TangoNest skipped the local last-good backup because browser storage is full.");
+  }
 }
 function tnClearLastGoodData(){
-  try{localStorage.removeItem(SHADOW_KEY)}catch(e){}
+  const key=tnShadowStorageKey();
+  if(key)try{localStorage.removeItem(key)}catch(e){}
 }
 function loadTangoNestDB(){
-  const current=localStorage.getItem(KEY);
+  const dataKey=tnDataStorageKey();
+  const shadowKey=tnShadowStorageKey();
+  if(!dataKey)return tnEmptyData("auth-boundary-empty");
+  const current=localStorage.getItem(dataKey);
   if(current){
-    const parsed=tnParsedData(current);
-    const shadow=tnParsedData(localStorage.getItem(SHADOW_KEY));
+    let parsed=tnParsedData(current);
+    let shadow=tnParsedData(localStorage.getItem(shadowKey));
+    if(!TN_LOCAL_QA_MODE&&parsed?.meta?.userId!==tnActiveStorageUserId){
+      try{localStorage.removeItem(dataKey)}catch(e){}
+      parsed=null;
+    }
+    if(!TN_LOCAL_QA_MODE&&shadow?.meta?.userId!==tnActiveStorageUserId){
+      try{localStorage.removeItem(shadowKey)}catch(e){}
+      shadow=null;
+    }
     if(parsed){
       if(tnHasUserData(parsed) && tnHasUserData(shadow)){
         const merged=tnMergeStoredData(parsed,shadow);
@@ -287,7 +338,11 @@ function loadTangoNestDB(){
       return migratedShadow;
     }
   }
-  const shadow=tnParsedData(localStorage.getItem(SHADOW_KEY));
+  let shadow=tnParsedData(localStorage.getItem(shadowKey));
+  if(!TN_LOCAL_QA_MODE&&shadow?.meta?.userId!==tnActiveStorageUserId){
+    try{localStorage.removeItem(shadowKey)}catch(e){}
+    shadow=null;
+  }
   if(tnHasUserData(shadow)){
     const migratedShadow=tnMigrateData(shadow);
     tnWriteData(migratedShadow);
@@ -298,11 +353,20 @@ function loadTangoNestDB(){
   tnWriteData(fresh);
   return fresh;
 }
-const LANGS=[
-  ["fr-FR","French","mot"],["en-US","English","word"],["ja-JP","Japanese","意味"],["ko-KR","Korean","단어"],["zh-CN","Chinese Simplified","词"],["zh-TW","Chinese Traditional","詞"],["es-ES","Spanish","palabra"],["ar-SA","Arabic","كلمة"],["it-IT","Italian","parola"],["de-DE","German","Wort"],["pt-BR","Portuguese","palavra"],["ru-RU","Russian","слово"],["nl-NL","Dutch","woord"],["vi-VN","Vietnamese","tu"],["th-TH","Thai","คำ"],["tr-TR","Turkish","kelime"],["hi-IN","Hindi","शब्द"],["id-ID","Indonesian","kata"],["el-GR","Greek","λέξη"],["he-IL","Hebrew","מילה"]
-];
+const LANGUAGE_OPTIONS=Object.freeze([
+  ["en-US","English","word"],["ja-JP","Japanese","意味"],["ko-KR","Korean","단어"],["fr-FR","French","mot"],["zh-CN","Chinese Simplified","词"],["zh-TW","Chinese Traditional","詞"],["es-ES","Spanish","palabra"],["de-DE","German","Wort"],["it-IT","Italian","parola"],["pt-BR","Portuguese","palavra"],["ar-SA","Arabic","كلمة"],["ru-RU","Russian","слово"],["nl-NL","Dutch","woord"],["vi-VN","Vietnamese","tu"],["th-TH","Thai","คำ"],["tr-TR","Turkish","kelime"],["hi-IN","Hindi","शब्द"],["id-ID","Indonesian","kata"],["el-GR","Greek","λέξη"],["he-IL","Hebrew","מילה"]
+]);
+const LANGS=LANGUAGE_OPTIONS;
+const LANGUAGE_PRIORITY=new Map(LANGUAGE_OPTIONS.map((item,index)=>[item[0],index]));
+try{
+  window.TangoNestLanguages=Object.freeze({
+    options:LANGUAGE_OPTIONS,
+    label:code=>(LANGUAGE_OPTIONS.find(item=>item[0]===code)||[code,code])[1],
+    priority:code=>LANGUAGE_PRIORITY.has(code)?LANGUAGE_PRIORITY.get(code):LANGUAGE_OPTIONS.length
+  });
+}catch(e){}
 let db=loadTangoNestDB();
-db.prefs=db.prefs||{frontLang:"en-US",backLang:"ja-JP"};db.lists=db.lists&&db.lists.length?db.lists:[{id:"starter",name:"New Playlist"}];db.words=db.words||[];db.mistakes=Array.isArray(db.mistakes)?db.mistakes:[];
+db.prefs=db.prefs||{frontLang:"en-US",backLang:"ja-JP"};db.lists=Array.isArray(db.lists)?db.lists:[];db.words=db.words||[];db.mistakes=Array.isArray(db.mistakes)?db.mistakes:[];
 try{window.db=db;}catch(e){}
 let current=null,flipped=false,flashTimers=[],audioTimer=null,audioQueue=[],audioIndex=0,audioPaused=false,selectedIds=new Set();
 const modalReturnFocus={edit:null,detail:null};
@@ -328,7 +392,17 @@ function tnGetDb(){return shareDb()}
 function tnAdoptDb(next){if(next&&typeof next==="object"){Object.keys(db).forEach(key=>delete db[key]);Object.assign(db,next);}return shareDb()}
 function save(renderUI=true){shareDb();tnWriteData(db);if(renderUI)render()}
 function persist(){shareDb();tnWriteData(db)}
-try{window.tnGetDb=tnGetDb;window.tnAdoptDb=tnAdoptDb;window.tnWriteData=tnWriteData;}catch(e){}
+try{
+  window.tnGetDb=tnGetDb;
+  window.tnAdoptDb=tnAdoptDb;
+  window.tnWriteData=tnWriteData;
+  window.tnMigrateData=tnMigrateData;
+  window.tnEmptyData=tnEmptyData;
+  window.tnIsDefaultList=tnIsDefaultList;
+  window.tnSetActiveUserScope=tnSetActiveUserScope;
+  window.tnPurgeUserStorage=tnPurgeUserStorage;
+  window.tnGetActiveUserScope=()=>tnActiveStorageUserId;
+}catch(e){}
 let toastTimer=null;
 function toast(m){const box=$("toast");if(!box)return;clearTimeout(toastTimer);box.textContent=m;box.classList.add("show");toastTimer=setTimeout(()=>box.classList.remove("show"),1900)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
@@ -424,7 +498,7 @@ function clearMistakes(){
 }
 function mistakeNotebookHtml(limit){
   const entries=mistakeEntriesSorted();
-  if(!entries.length)return '<div class="empty">No mistakes yet.</div>';
+  if(!entries.length)return '<div class="empty"><div><strong>No mistakes yet</strong><span>Your missed answers will collect here for focused review.</span></div><button type="button" class="btn" onclick="appShow(\'quiz\')">Start Quiz</button></div>';
   const rows=entries.slice(0,limit||entries.length).map(entry=>{
     const live=(db.words||[]).find(word=>word.id===entry.wordId)||entry;
     const date=entry.lastWrongAt?new Date(entry.lastWrongAt).toLocaleDateString():"-";
@@ -456,131 +530,95 @@ try{
 }catch(e){}
 function cap(s){return s[0].toUpperCase()+s.slice(1)}
 
-window.tnDataSafety = window.tnDataSafety || (() => {
-  const BACKUP_KEY = "tangonest_backup_before_cloud_hydration_v1";
-  const clone = value => {
-    try{return JSON.parse(JSON.stringify(value || {}));}catch(e){return {};}
-  };
-  const now = () => new Date().toISOString();
-  const normalize = value => {
-    const data = clone(value);
-    data.ui = data.ui || "en";
-    data.prefs = data.prefs || {};
-    data.meta = data.meta || {};
-    data.lists = Array.isArray(data.lists) ? data.lists.filter(Boolean) : [];
-    data.words = Array.isArray(data.words) ? data.words.filter(Boolean) : [];
-    if(!data.prefs.frontLang)data.prefs.frontLang = "en-US";
-    if(!data.prefs.backLang)data.prefs.backLang = "ja-JP";
-    if(!data.lists.length)data.lists.push({id:"starter",name:"New Playlist",createdAt:now()});
-    data.words = data.words.map(word => ({...word,listId:word.listId || data.lists[0]?.id}));
-    return data;
-  };
-  const isDefaultList = list => {
-    const id = String(list?.id || "");
-    const name = String(list?.name || "").trim().toLowerCase();
-    return !name || name === "new playlist" || id === "starter" || id === "local-starter";
-  };
-  const hasUserData = value => {
-    const data = normalize(value);
-    const hasCustomPrefs = Object.entries(data.prefs || {}).some(([key,value]) => {
-      if(key === "frontLang")return value && value !== "en-US";
-      if(key === "backLang")return value && value !== "ja-JP";
-      return value !== undefined && value !== null && value !== "";
-    });
-    return data.words.some(word => String(word.front || "").trim() && String(word.back || "").trim()) ||
-      data.lists.some(list => !isDefaultList(list)) ||
-      hasCustomPrefs;
-  };
-  const listName = (data,id) => String((data.lists || []).find(list => list.id === id)?.name || "New Playlist").trim().toLowerCase();
-  const wordKey = (data,word) => [
-    String(word.front || "").trim().toLowerCase(),
-    String(word.back || "").trim().toLowerCase(),
-    listName(data,word.listId)
-  ].join("|");
-  const newer = (a,b) => {
-    const at = a?.updatedAt || a?.updated_at || a?.createdAt || a?.created_at || "";
-    const bt = b?.updatedAt || b?.updated_at || b?.createdAt || b?.created_at || "";
-    if(!at)return b;
-    if(!bt)return a;
-    return new Date(at) >= new Date(bt) ? a : b;
-  };
-  function merge(localValue,cloudValue){
-    const local = normalize(localValue);
-    const cloud = normalize(cloudValue);
-    const lists = [];
-    const addList = list => {
-      if(!list)return;
-      const name = String(list.name || "New Playlist").trim().toLowerCase();
-      const exists = lists.find(item => item.id === list.id || String(item.name || "").trim().toLowerCase() === name);
-      if(exists)Object.assign(exists,newer(exists,list));
-      else lists.push({...list});
-    };
-    cloud.lists.forEach(addList);
-    local.lists.forEach(addList);
-    if(!lists.length)lists.push({id:"starter",name:"New Playlist",createdAt:now()});
-    const byName = new Map(lists.map(list => [String(list.name || "").trim().toLowerCase(),list.id]));
-    const merged = {...cloud,prefs:{...local.prefs,...cloud.prefs},meta:{...local.meta,...cloud.meta},lists,words:[],mistakes:[]};
-    const words = new Map();
-    const addWord = (source,word) => {
-      if(!word || !String(word.front || "").trim() || !String(word.back || "").trim())return;
-      const sourceListName = listName(source,word.listId);
-      const next = {...word,listId:byName.get(sourceListName) || word.listId || lists[0].id};
-      const key = wordKey({...source,lists},next);
-      words.set(key,words.has(key) ? newer(words.get(key),next) : next);
-    };
-    cloud.words.forEach(word => addWord(cloud,word));
-    local.words.forEach(word => addWord(local,word));
-    merged.words = [...words.values()];
-    const mistakes = new Map();
-    [...(cloud.mistakes||[]),...(local.mistakes||[])].forEach(entry=>{
-      if(!entry?.wordId)return;
-      const existing=mistakes.get(entry.wordId);
-      if(!existing)mistakes.set(entry.wordId,{...entry});
-      else mistakes.set(entry.wordId,{...existing,...entry,wrongCount:Math.max(Number(existing.wrongCount||0),Number(entry.wrongCount||0)),lastWrongAt:String(entry.lastWrongAt||"").localeCompare(String(existing.lastWrongAt||""))>0?entry.lastWrongAt:existing.lastWrongAt});
-    });
-    merged.mistakes = [...mistakes.values()];
-    merged.meta.updatedAt = newer(local.meta,cloud.meta)?.updatedAt || newer(local.meta,cloud.meta)?.updated_at || local.meta.updatedAt || cloud.meta.updatedAt || now();
-    return normalize(merged);
-  }
-  function backup(reason,local,incoming){
-    try{
-      localStorage.setItem(BACKUP_KEY,JSON.stringify({at:now(),reason,local:clone(local),incoming:clone(incoming)}));
-    }catch(e){}
-  }
-  function replace(next){
-    const safe = normalize(next);
-    Object.keys(db).forEach(key => delete db[key]);
-    Object.assign(db,safe);
-    shareDb();
-    persist();
-    return db;
-  }
-  function safeHydrate(incoming,reason="cloud-hydration"){
-    const local = normalize(db);
-    const cloud = normalize(incoming);
-    const localHas = hasUserData(local);
-    const cloudHas = hasUserData(cloud);
-    if(localHas && !cloudHas){
-      backup(reason + ":kept-local",local,cloud);
-      persist();
-      return {action:"kept-local",data:local};
-    }
-    const next = localHas && cloudHas ? merge(local,cloud) : cloud;
-    if(JSON.stringify(next) !== JSON.stringify(local))backup(reason,local,cloud);
-    replace(next);
-    return {action:localHas && cloudHas ? "merged" : "applied-cloud",data:db};
-  }
-  return {normalize,hasUserData,merge,safeHydrate,backup};
-})();
-function tnSafeApplyCloudData(incoming,reason){
-  return window.tnDataSafety?.safeHydrate(incoming,reason)?.data || incoming;
-}
 function langName(c){c=safeLang(c);return (LANGS.find(l=>l[0]===c)||[c,c])[1]}
 function placeholderFor(c){c=safeLang(c);return (LANGS.find(l=>l[0]===c)||["","", "word"])[2]}
 function optionsHTML(selected){selected=safeLang(selected);return LANGS.map(l=>`<option value="${l[0]}" ${l[0]===selected?"selected":""}>${l[1]}</option>`).join("")}
-function fillLangSelects(){db.prefs=db.prefs||{};db.prefs.frontLang=db.prefs.frontLang||"en-US";db.prefs.backLang=db.prefs.backLang||"ja-JP";["frontLang","bulkFrontLang","editFrontLang"].forEach(id=>{if($(id))$(id).innerHTML=optionsHTML(db.prefs.frontLang)});["backLang","bulkBackLang","editBackLang"].forEach(id=>{if($(id))$(id).innerHTML=optionsHTML(db.prefs.backLang)});updatePlaceholders();attachLangMemory()}
+function closeLanguagePickers(except){
+  document.querySelectorAll(".tn-language-picker.is-open").forEach(picker=>{
+    if(picker===except)return;
+    picker.classList.remove("is-open");
+    picker.querySelector(".tn-language-picker-trigger")?.setAttribute("aria-expanded","false");
+  });
+}
+function syncLanguagePicker(select){
+  if(!select)return;
+  const picker=select.closest(".tn-language-picker");
+  if(!picker)return;
+  const trigger=picker.querySelector(".tn-language-picker-trigger");
+  const menu=picker.querySelector(".tn-language-picker-menu");
+  const selected=[...select.options].find(option=>option.value===select.value)||select.options[0];
+  if(trigger)trigger.textContent=selected?.textContent||"Select language";
+  if(!menu)return;
+  menu.replaceChildren(...[...select.options].map(option=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="tn-language-picker-option";
+    button.dataset.value=option.value;
+    button.setAttribute("role","option");
+    button.setAttribute("aria-selected",String(option.value===select.value));
+    button.textContent=option.textContent;
+    button.addEventListener("click",()=>{
+      select.value=option.value;
+      select.dispatchEvent(new Event("change",{bubbles:true}));
+      syncLanguagePicker(select);
+      closeLanguagePickers();
+      trigger?.focus({preventScroll:true});
+    });
+    return button;
+  }));
+}
+function enhanceLanguagePicker(select){
+  if(!select)return;
+  let picker=select.closest(".tn-language-picker");
+  if(!picker){
+    picker=document.createElement("div");
+    picker.className="tn-language-picker";
+    picker.dataset.languagePicker=select.id;
+    select.before(picker);
+    picker.appendChild(select);
+    select.classList.add("tn-language-native");
+    select.tabIndex=-1;
+    select.setAttribute("aria-hidden","true");
+    const label=document.querySelector(`label[for="${select.id}"]`)?.textContent?.trim()||"Language";
+    const trigger=document.createElement("button");
+    trigger.type="button";
+    trigger.className="tn-language-picker-trigger";
+    trigger.dataset.languagePickerTrigger=select.id;
+    trigger.setAttribute("aria-label",label);
+    trigger.setAttribute("aria-haspopup","listbox");
+    trigger.setAttribute("aria-expanded","false");
+    const menu=document.createElement("div");
+    menu.className="tn-language-picker-menu";
+    menu.setAttribute("role","listbox");
+    menu.setAttribute("aria-label",`${label} options`);
+    trigger.addEventListener("click",()=>{
+      const opening=!picker.classList.contains("is-open");
+      closeLanguagePickers(opening?picker:null);
+      picker.classList.toggle("is-open",opening);
+      trigger.setAttribute("aria-expanded",String(opening));
+      if(opening)menu.querySelector(".tn-language-picker-option")?.focus({preventScroll:true});
+    });
+    select.addEventListener("change",()=>syncLanguagePicker(select));
+    picker.append(trigger,menu);
+  }
+  syncLanguagePicker(select);
+}
+function enhanceLanguagePickers(){
+  ["frontLang","backLang","bulkFrontLang","bulkBackLang","editFrontLang","editBackLang"].forEach(id=>enhanceLanguagePicker($(id)));
+}
+document.addEventListener("pointerdown",event=>{
+  if(!event.target?.closest?.(".tn-language-picker"))closeLanguagePickers();
+});
+document.addEventListener("keydown",event=>{
+  if(event.key!=="Escape")return;
+  const open=document.querySelector(".tn-language-picker.is-open");
+  if(!open)return;
+  closeLanguagePickers();
+  open.querySelector(".tn-language-picker-trigger")?.focus({preventScroll:true});
+});
+function fillLangSelects(){db.prefs=db.prefs||{};db.prefs.frontLang=db.prefs.frontLang||"en-US";db.prefs.backLang=db.prefs.backLang||"ja-JP";["frontLang","bulkFrontLang","editFrontLang"].forEach(id=>{if($(id))$(id).innerHTML=optionsHTML(db.prefs.frontLang)});["backLang","bulkBackLang","editBackLang"].forEach(id=>{if($(id))$(id).innerHTML=optionsHTML(db.prefs.backLang)});attachLangMemory();enhanceLanguagePickers();updatePlaceholders()}
 function attachLangMemory(){["frontLang","backLang","bulkFrontLang","bulkBackLang"].forEach(id=>{let el=$(id);if(el&&!el.dataset.attached){el.addEventListener("change",()=>{if(id.includes("Front"))db.prefs.frontLang=el.value;else if(id.includes("Back"))db.prefs.backLang=el.value;else if(id==="frontLang")db.prefs.frontLang=el.value;else if(id==="backLang")db.prefs.backLang=el.value;persist();updatePlaceholders()});el.dataset.attached=1}})}
-function updatePlaceholders(){if($("front"))$("front").placeholder=placeholderFor($("frontLang").value);if($("back"))$("back").placeholder=placeholderFor($("backLang").value)}
+function updatePlaceholders(){if($("front"))$("front").placeholder=placeholderFor($("frontLang").value);if($("back"))$("back").placeholder=placeholderFor($("backLang").value);syncLanguagePicker($("frontLang"));syncLanguagePicker($("backLang"))}
 function detectLang(t,currentLang){
   const s=String(t||"").trim().toLowerCase();
   if(/[؀-ۿ]/.test(s))return"ar-SA";
@@ -611,11 +649,39 @@ function detectLangWithContext(t,currentLang,context){
 }
 function autoDetectFront(){let t=$("front").value.trim();if(t){$("frontLang").value=detectLangWithContext(t,$("frontLang").value,($("back")?.value||"")+" "+($("memo")?.value||""));updatePlaceholders()}}
 function autoDetectBack(){let t=$("back").value.trim();if(t){$("backLang").value=detectLangWithContext(t,$("backLang").value,($("front")?.value||"")+" "+($("memo")?.value||""));updatePlaceholders()}}
-function renderSelect(id,all=false){let el=$(id);if(!el)return;let v=el.value;el.innerHTML="";if(all){let o=document.createElement("option");o.value="all";o.textContent="All";el.appendChild(o)}db.lists.forEach(l=>{let o=document.createElement("option");o.value=l.id;o.textContent=l.name;el.appendChild(o)});if([...el.options].some(o=>o.value===v))el.value=v;else if(all)el.value="all"}
-function go(p){["home","add","words","study","quiz","audio","manage"].forEach(x=>{let page=$("page"+cap(x)),nav=$("nav"+cap(x)),mnav=$("mnav"+cap(x));if(page)page.classList.toggle("active",x===p);if(nav)nav.classList.toggle("active",x===p);if(mnav)mnav.classList.toggle("active",x===p)});if(p==="quiz")resetQuiz();render()}
+function renderSelect(id){
+  const el=$(id);if(!el)return;
+  const previous=el.value;
+  const hasRendered=el.dataset.tnSelectionReady==="1";
+  const unfiled=["addList","bulkList","editList"].includes(id);
+  const allWords=["studyList","quizList","audioList"].includes(id);
+  const availableLists=id==="renameListSelect"?db.lists.filter(list=>!tnIsDefaultList(list)):db.lists;
+  el.innerHTML="";
+  if(unfiled){const option=document.createElement("option");option.value="";option.textContent="No playlist";el.appendChild(option)}
+  if(allWords){const option=document.createElement("option");option.value="all";option.textContent="All words";el.appendChild(option)}
+  availableLists.forEach(list=>{const option=document.createElement("option");option.value=list.id;option.textContent=list.name;el.appendChild(option)});
+  const canRestore=[...el.options].some(option=>option.value===previous) && (previous!=="" || !unfiled || hasRendered);
+  if(canRestore)el.value=previous;
+  else if(allWords)el.value="all";
+  else if(unfiled)el.value=(db.lists.find(tnIsDefaultList)||db.lists[0])?.id||"";
+  el.dataset.tnSelectionReady="1";
+  const renameUnavailable=id==="renameListSelect"&&!availableLists.length;
+  el.disabled=renameUnavailable;
+  if(id==="renameListSelect"){
+    if($("renameListInput"))$("renameListInput").disabled=renameUnavailable;
+    if($("renameListButton"))$("renameListButton").disabled=renameUnavailable;
+  }
+}
+function go(p){
+  if(typeof window.tnStableNavigate==="function")return window.tnStableNavigate(p);
+  ["home","add","words","study","quiz","audio","manage"].forEach(x=>{let page=$("page"+cap(x)),nav=$("nav"+cap(x)),mnav=$("mnav"+cap(x));if(page)page.classList.toggle("active",x===p);if(nav)nav.classList.toggle("active",x===p);if(mnav)mnav.classList.toggle("active",x===p)});
+  if(p==="quiz")resetQuiz();
+  render();
+}
 
 function listWords(listId){
-  return db.words.filter(w=>w.listId===listId);
+  if(listId==="all")return [...db.words];
+  return db.words.filter(word=>(word.listId||"")===(listId||""));
 }
 function playlistLangMeta(listId){
   const words=listWords(listId);
@@ -631,15 +697,15 @@ function activeListId(){
     const el=$(id);
     if(el&&el.value)return el.value;
   }
-  return db.lists[0]?.id||"starter";
+  return "all";
 }
 function updateBrandContext(){
   db.words=Array.isArray(db.words)?db.words:[];
-  db.lists=Array.isArray(db.lists)&&db.lists.length?db.lists:[{id:"starter",name:"New Playlist"}];
+  db.lists=Array.isArray(db.lists)?db.lists:[];
   const total=db.words.length;
   const learned=masteredWords().length;
   const listId=activeListId();
-  const list=db.lists.find(l=>l.id===listId)||db.lists[0]||{id:"starter",name:"New Playlist"};
+  const list=db.lists.find(item=>item.id===listId)||{id:"all",name:"All Words"};
   const words=listWords(list.id);
   const meta=playlistLangMeta(list.id);
   if($("heroPhoneDeck"))$("heroPhoneDeck").textContent=list.name;
@@ -670,8 +736,8 @@ function startSmartSession(kind="random"){
   const matches=kind==="due"?dueWords():kind==="weak"?weakWords():kind==="new"?db.words.filter(w=>Number(w.reviewCount||0)===0):kind==="saved"?db.words.filter(w=>w.saved):kind==="today"&&engine?engine.buildSmartSession(db.words,{limit:20}):db.words;
   if(!matches.length)return toast(kind==="due"?"You are all caught up":kind==="weak"?"No weak words right now":kind==="new"?"No new words waiting":"No words in this session");
   smartSessionQueue=kind==="random"?[]:[...matches];
-  const firstList=db.lists.find(list=>matches.some(word=>word.listId===list.id))||db.lists.find(list=>db.words.some(word=>word.listId===list.id))||db.lists[0];
-  if($("quizList")&&firstList)$("quizList").value=firstList.id;
+  const firstList=db.lists.find(list=>matches.some(word=>word.listId===list.id))||db.lists.find(list=>db.words.some(word=>word.listId===list.id))||null;
+  if($("quizList"))$("quizList").value=firstList?.id||"all";
   if($("quizType"))$("quizType").value="choice";
   if($("quizOrderMode"))$("quizOrderMode").value=kind==="today"?"playlist":kind==="weak"?"weak":kind==="due"?"due":"random";
   if($("quizScope")){
@@ -744,7 +810,7 @@ function renderHome(){
         <button class="btn small" onclick="goStudy(${id},'audio')">Listen</button>
       </div>
     </div>`
-  }).join("")||'<div class="empty">No playlists yet</div>';
+  }).join("")||'<div class="empty"><div><strong>No lists yet</strong><span>Create a list when you want to group words by language, topic, or goal.</span></div><button type="button" class="btn" onclick="appShow(\'add\')">Create List</button></div>';
   updateBrandContext();
 }
 
@@ -787,14 +853,15 @@ function parseBulk(text){
       }
 
       let parts=splitBulkLine(before);
-      let front="",back="",pos="",gender="",memo="";
+      let front="",back="",pos="",gender="",memo="",pronunciation="";
 
       if(parts.length>=5){
         front=parts[0];
         back=parts[1];
         pos=parts[2];
         gender=parts[3];
-        memo=parts.slice(4).join(" ");
+        if(exampleFromPipe)pronunciation=parts.slice(4).join(" ");
+        else memo=parts.slice(4).join(" ");
       }else if(parts.length===4){
         front=parts[0];
         back=parts[1];
@@ -812,16 +879,18 @@ function parseBulk(text){
       }
 
       if(exampleFromPipe){
-        memo = memo ? `${memo} | ${exampleFromPipe}` : exampleFromPipe;
+        memo=exampleFromPipe;
       }
 
+      const normalized=window.TangoNestExampleFields?.normalizeFields(memo,pronunciation)||{memo,pronunciation};
       return {
         row,
         front:cleanBulkValue(front),
         back:cleanBulkValue(back),
         pos:cleanBulkValue(pos),
         gender:cleanBulkValue(gender),
-        memo:cleanBulkValue(memo)
+        memo:cleanBulkValue(normalized.memo),
+        pronunciation:cleanBulkValue(normalized.pronunciation)
       };
     })
     .filter(r=>r.front && r.back);
@@ -898,7 +967,7 @@ function previewBulk(){
   box.style.display="block";
   if(!rows.length){box.innerHTML='<div class="empty"><h3>No readable words</h3><p>Each row needs at least Front and Back.</p></div>';return}
   renderDuplicatePanel(rows);
-  box.innerHTML=`<div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
+  box.innerHTML=`<div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
 }
 function bulkImport(mode){
   let rows=bulkRows();
@@ -910,9 +979,9 @@ function bulkImport(mode){
     rows.forEach(r=>{
       const ex=softDuplicateMatch(r,listId);
       if(ex){
-        db.words=db.words.map(w=>w.id===ex.id?{...w,front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pos:r.pos,gender:r.gender}:w);
+        db.words=db.words.map(w=>w.id===ex.id?{...w,front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender}:w);
       }else{
-        db.words.push({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()});
+        db.words.push({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()});
       }
     });
     $("bulkText").value="";clearBulkPreview();save();return toast(`${rows.length} processed`);
@@ -929,7 +998,7 @@ function bulkImport(mode){
       return true;
     });
   }
-  db.words=[...db.words,...rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}))];
+  db.words=[...db.words,...rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}))];
   $("bulkText").value="";clearBulkPreview();save();toast(`${rows.length} added`);
 }
 try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;}catch(e){}
@@ -942,10 +1011,10 @@ function removeWord(id){if(!confirm("Delete this word?"))return;db.words=db.word
 function toggleStar(id){db.words=db.words.map(w=>w.id===id?{...w,saved:!w.saved}:w);if(current&&current.id===id)current=db.words.find(w=>w.id===id);save()}
 function openDetail(id){let w=db.words.find(x=>x.id===id);if(!w)return;modalReturnFocus.detail=document.activeElement;const view=learningPresentation();const learning=view?.state(w)||{label:learningEngine()?.levelName(w.level)||"Learning"};const review=view?.review(w)||{label:w.nextReview||"Review not scheduled"};const accuracy=view?.accuracy(w)||{label:`${Math.round((learningEngine()?.accuracy(w)||0)*100)}% accuracy`};const lastStudied=view?.lastStudied(w)||(w.lastAnsweredAt?new Date(w.lastAnsweredAt).toLocaleDateString():"Not studied yet");$("detailContent").innerHTML=`<div class="dict-title">${esc(w.front)}</div><div class="dict-meaning">${esc(w.back)}</div><div>${posBadge(w.pos)} ${genderBadge(w.gender)} ${w.tags?`<span class="badge">${esc(w.tags)}</span>`:""}</div><div class="actions"><button class="btn blue" onclick="speak(${jsArg(w.front)},${jsArg(safeLang(w.frontLang))})">Play Front</button><button class="btn blue" onclick="speak(${jsArg(w.back)},${jsArg(safeLang(w.backLang,"ja-JP"))})">Play Back</button><button class="btn" onclick="openEdit(${jsArg(w.id)})">Edit</button></div><div class="dict-grid"><div class="dict-box"><b>Languages</b>${langName(w.frontLang)} → ${langName(w.backLang)}</div><div class="dict-box"><b>Learning</b>${esc(learning.label)}</div><div class="dict-box"><b>Accuracy</b>${esc(accuracy.label)}</div><div class="dict-box"><b>Next Review</b>${esc(review.label)}</div><div class="dict-box"><b>Last Studied</b>${esc(lastStudied)}</div><div class="dict-box"><b>Memo / Example</b>${esc(w.memo||"-")}</div></div>`;$("detailModal").classList.add("show");setTimeout(()=>$("detailModal")?.querySelector("button")?.focus({preventScroll:true}),0)}
 function closeDetail(){$("detailModal").classList.remove("show");if(modalReturnFocus.detail?.isConnected)modalReturnFocus.detail.focus({preventScroll:true});modalReturnFocus.detail=null}
-function openEdit(id){let w=db.words.find(x=>x.id===id);if(!w)return;modalReturnFocus.edit=document.activeElement;$("editId").value=w.id;$("editFront").value=w.front;$("editBack").value=w.back;$("editFrontLang").innerHTML=optionsHTML(w.frontLang);$("editBackLang").innerHTML=optionsHTML(w.backLang);$("editList").value=w.listId;$("editPOS").value=w.pos||"";$("editGender").value=w.gender||"";$("editTags").value=w.tags||"";$("editMemo").value=w.memo||"";$("editModal").classList.add("show");setTimeout(()=>$("editFront")?.focus({preventScroll:true}),0)}
+function openEdit(id){let w=db.words.find(x=>x.id===id);if(!w)return;modalReturnFocus.edit=document.activeElement;$("editId").value=w.id;$("editFront").value=w.front;$("editBack").value=w.back;$("editFrontLang").innerHTML=optionsHTML(w.frontLang);$("editBackLang").innerHTML=optionsHTML(w.backLang);syncLanguagePicker($("editFrontLang"));syncLanguagePicker($("editBackLang"));$("editList").value=w.listId;$("editPOS").value=w.pos||"";$("editGender").value=w.gender||"";$("editTags").value=w.tags||"";$("editMemo").value=w.memo||"";$("editModal").classList.add("show");setTimeout(()=>$("editFront")?.focus({preventScroll:true}),0)}
 function closeEdit(){$("editModal").classList.remove("show");if(modalReturnFocus.edit?.isConnected)modalReturnFocus.edit.focus({preventScroll:true});modalReturnFocus.edit=null}
 function saveEdit(){let id=$("editId").value;db.words=db.words.map(w=>w.id===id?{...w,front:$("editFront").value.trim(),back:$("editBack").value.trim(),frontLang:$("editFrontLang").value,backLang:$("editBackLang").value,listId:$("editList").value,pos:$("editPOS").value,gender:$("editGender").value,tags:$("editTags").value.trim(),memo:$("editMemo").value.trim()}:w);const edited=db.words.find(w=>w.id===id);const mistake=ensureMistakes().find(entry=>entry.wordId===id);if(edited&&mistake){Object.assign(mistake,{front:edited.front,back:edited.back,playlistId:edited.listId,language:edited.frontLang,backLanguage:edited.backLang,pronunciation:wordPronunciation(edited)})}closeEdit();save()}
-function studyWords(){let list=$("studyList").value,mode=$("studyMode").value;let words=db.words.filter(w=>w.listId===list);if(mode==="hard")words=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard");if(mode==="due")words=words.filter(isDue);if(mode==="star")words=words.filter(w=>w.saved);return words}
+function studyWords(){let list=$("studyList").value,mode=$("studyMode").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(mode==="hard")words=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard");if(mode==="due")words=words.filter(isDue);if(mode==="star")words=words.filter(w=>w.saved);return words}
 function updateStudyProgress(){
   const el=$("studyProgress");
   if(!el)return;
@@ -960,7 +1029,7 @@ function nextCard(){clearFlashTimers();let words=studyWords();if(!words.length){
 function drawCard(){if(!current)return;let mode=$("studyMode").value;if(mode==="back"){$("frontWord").textContent=current.back;$("backWord").textContent=current.front;$("backMemo").textContent=current.memo||""}else{$("frontWord").textContent=current.front;$("backWord").textContent=current.back;$("backMemo").textContent=current.memo||""}$("frontMemo").textContent=[current.pos,current.gender].filter(Boolean).join(" / ")}
 function flipCard(){if(!current)return;flipped=!flipped;$("flash").classList.toggle("is-flipped",flipped)}
 function speakCard(){if(!current)return;let mode=$("studyMode").value,text,lang;if(mode==="back"){text=flipped?current.front:current.back;lang=flipped?current.frontLang:current.backLang}else{text=flipped?current.back:current.front;lang=flipped?current.backLang:current.frontLang}speak(text,lang)}
-function markCard(rating,autoNext=false){if(!current)return;const normalized=learningEngine()?.normalizeRating(rating)||rating;if(normalized==="again")recordMistake(current,"flashcard","Again",current.back);const updated=updateWordLearning(current.id,normalized,{mode:"cards"});current=updated||db.words.find(w=>w.id===current.id);if(normalized==="good"||normalized==="easy")markMistakeCorrect(current.id);const feedback=learningPresentation()?.rating(current,normalized);toast(feedback?`${feedback.label} · ${feedback.review}`:`${normalized[0].toUpperCase()+normalized.slice(1)} saved`);if(autoNext)setTimeout(()=>nextCard(),700)}
+function markCard(rating,autoNext=false){if(!current)return;const normalized=learningEngine()?.normalizeRating(rating)||rating;if(normalized==="again")recordMistake(current,"flashcard","Again",current.back);const updated=updateWordLearning(current.id,normalized,{mode:"cards"});current=updated||db.words.find(w=>w.id===current.id);if(normalized==="good"||normalized==="easy")markMistakeCorrect(current.id);const feedback=learningPresentation()?.rating(current,normalized);toast(feedback?`${feedback.label} · ${feedback.review}`:`${normalized[0].toUpperCase()+normalized.slice(1)} saved`);if(autoNext)flashTimers.push(setTimeout(()=>nextCard(),700))}
 function toggleCardStar(){if(current)toggleStar(current.id)}
 function updateStudyStar(){let b=$("studyStar");if(b)b.textContent=current&&current.saved?"★ Saved":"☆ Save"}
 function clearFlashTimers(){flashTimers.forEach(t=>clearTimeout(t));flashTimers=[]}
@@ -970,7 +1039,7 @@ function playFlashAutoCycle(){clearFlashTimers();if($("flashAutoMode").value!=="
 function updateWordLearning(id,rating,context={}){const engine=learningEngine();const at=new Date();const eventId=context.eventId||learningEventId();let updated=null;db.words=db.words.map(w=>{if(w.id!==id)return w;updated=engine?engine.calculateLearningUpdate(w,{rating,mode:context.mode||"study",at}):w;return updated});if(!updated)return null;persist();const event={eventId,wordId:id,rating:engine?.normalizeRating(rating)||rating,mode:context.mode||"study",answeredAt:at.toISOString(),localWord:{...updated}};try{window.tnRecordLearningResult?.(event)}catch(e){console.warn("Learning sync queued locally",e)}try{renderHome();window.tnLibraryRender?.();updateStudyProgress()}catch(e){}return updated}
 function quizLearningWeight(w){return learningEngine()?.learningWeight(w)??1}
 function quizAdaptiveOrder(words){return [...words].sort((a,b)=>((Math.random()/Math.max(.1,quizLearningWeight(a)))-(Math.random()/Math.max(.1,quizLearningWeight(b)))))}
-function quizPool(){let list=$("quizList").value,scope=$("quizScope").value;let words=db.words.filter(w=>w.listId===list);if(scope==="mistakes"){const ids=new Set(ensureMistakes().map(entry=>entry.wordId));words=db.words.filter(w=>ids.has(w.id))}else{if(scope==="hard")words=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard");if(scope==="due")words=words.filter(isDue);if(scope==="star")words=words.filter(w=>w.saved)}return words}
+function quizPool(){let list=$("quizList").value,scope=$("quizScope").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(scope==="mistakes"){const ids=new Set(ensureMistakes().map(entry=>entry.wordId));words=db.words.filter(w=>ids.has(w.id))}else{if(scope==="hard")words=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard");if(scope==="due")words=words.filter(isDue);if(scope==="star")words=words.filter(w=>w.saved)}return words}
 function quizOrderedWords(words){
   const order=$("quizOrderMode")?.value||"random";
   if(order==="playlist")return [...words];
@@ -981,6 +1050,7 @@ function quizOrderedWords(words){
 }
 function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const QUIZ_FEEDBACK_SPEED_KEY="tangonest_quiz_feedback_speed_v1";
+const QUIZ_AUTO_ADVANCE_MIGRATION_KEY="tangonest_quiz_auto_advance_rc18_v1";
 function ensureQuizFeedbackDefault(){
   const el=$("quizAutoAdvance");
   if(!el)return;
@@ -988,10 +1058,14 @@ function ensureQuizFeedbackDefault(){
     el.addEventListener("change",()=>{try{localStorage.setItem(QUIZ_FEEDBACK_SPEED_KEY,el.value)}catch(e){}});
     el.__tnFeedbackSpeedBound=true;
   }
-  let saved="";
-  try{saved=localStorage.getItem(QUIZ_FEEDBACK_SPEED_KEY)||""}catch(e){}
+  let saved="",migrated=false;
+  try{
+    migrated=localStorage.getItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY)==="complete";
+    saved=localStorage.getItem(QUIZ_FEEDBACK_SPEED_KEY)||"";
+    if(!migrated){saved="auto";localStorage.setItem(QUIZ_FEEDBACK_SPEED_KEY,saved);localStorage.setItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY,"complete")}
+  }catch(e){}
   const values=[...el.options].map(option=>option.value);
-  el.value=values.includes(saved)?saved:"manual";
+  el.value=values.includes(saved)?saved:"auto";
   const custom=$("quizNextDelay");
   if(custom&&!custom.value)custom.value="1.5";
 }
@@ -1003,11 +1077,7 @@ function updateQuizModeSettings(forceDefaults=false){
     const visible=modes.includes("all")||modes.includes(type)||(type==="listening"&&difficulty==="hard"&&modes.includes("listening-hard"));
     node.hidden=!visible;
   });
-  if(type==="typing"&&$("quizAutoAdvance")){
-    $("quizAutoAdvance").value="manual";
-  }
   if(type==="listening"){
-    if($("quizAutoAdvance"))$("quizAutoAdvance").value="manual";
     if($("quizAudioAfter"))$("quizAudioAfter").value="off";
     if(difficulty==="hard"){
       if(forceDefaults||$("listeningReplayLimit")?.value==="unlimited")$("listeningReplayLimit").value="1";
@@ -1024,9 +1094,9 @@ function placeTypingArea(inListeningCard){
   const target=inListeningCard?$("listeningInputSlot"):$("typingAreaHome");
   if(target&&area.parentElement!==target)target.appendChild(area);
 }
-function resetQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();quiz={queue:[],wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:"choice",direction:"front",total:0,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};if($("quizType"))$("quizType").value="choice";updateQuizModeSettings();placeTypingArea(false);$("quizSetup").style.display="block";$("quizRun").style.display="none";$("quizEnd").style.display="none";if($("listeningPanel"))$("listeningPanel").style.display="none";resetQuizAnswerVisualState()}
-function startQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();updateQuizModeSettings();let words=smartSessionQueue.length?[...smartSessionQueue]:quizPool();smartSessionQueue=[];let requested=parseInt($("quizCount").value,10)||10;if(requested<1)requested=1;if(!words.length)return toast("No words");let actual=Math.min(requested,words.length);if(actual<requested)toast(`Only ${actual} words available`);quiz={queue:quizOrderedWords(words).slice(0,actual),wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:$("quizType").value||"choice",direction:$("quizDirection").value,total:actual,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};$("quizSetup").style.display="none";$("quizRun").style.display="block";$("quizEnd").style.display="none";showQuizQuestion()}
-function resetQuizAnswerVisualState(){quiz.selectedAnswer=null;document.querySelectorAll(".choice").forEach(b=>{b.disabled=false;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){}});const result=$("quizResult");if(result){result.className="result-box";result.textContent=""}const answer=$("quizQuestionAnswer");if(answer){answer.className="quiz-question-answer";answer.textContent=""}const card=document.querySelector(".quiz-question");if(card){card.classList.remove("is-answered","has-long-answer","is-listening")}}
+function resetQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();quiz={queue:[],wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:"choice",direction:"front",total:0,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};if($("quizType"))$("quizType").value="choice";updateQuizModeSettings();placeTypingArea(false);$("quizSetup").style.display="block";$("quizRun").style.display="none";$("quizEnd").style.display="none";$("pageQuiz")?.classList.remove("quiz-focus-active");if($("listeningPanel"))$("listeningPanel").style.display="none";resetQuizAnswerVisualState()}
+function startQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();updateQuizModeSettings();let words=smartSessionQueue.length?[...smartSessionQueue]:quizPool();smartSessionQueue=[];let requested=parseInt($("quizCount").value,10)||10;if(requested<1)requested=1;if(!words.length)return toast("No words");let actual=Math.min(requested,words.length);quiz={queue:quizOrderedWords(words).slice(0,actual),wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:$("quizType").value||"choice",direction:$("quizDirection").value,total:actual,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};$("quizSetup").style.display="none";$("quizRun").style.display="grid";$("quizEnd").style.display="none";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion();window.scrollTo(0,0)}
+function resetQuizAnswerVisualState(){quiz.selectedAnswer=null;document.querySelectorAll(".choice").forEach(b=>{b.disabled=false;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){}});$("choiceArea")?.classList.remove("is-answered");const result=$("quizResult");if(result){result.className="result-box";result.textContent=""}const answer=$("quizQuestionAnswer");if(answer){answer.className="quiz-question-answer";answer.textContent=""}const skip=$("quizSkipButton");if(skip)skip.hidden=false;const card=document.querySelector(".quiz-question");if(card){card.classList.remove("is-answered","has-long-answer","is-listening")}}
 function quizQuestionKey(word){if(!word)return "";const text=quiz.type==="listening"?listeningPromptText(word):(quiz.direction==="back"?word.back:word.front);return normalize(text)}
 function avoidConsecutiveDuplicateQuestion(){if(!quiz.queue||quiz.queue.length<=1)return;const current=quiz.queue[quiz.index];if(!current)return;const prevId=quiz.previousQuestionId||"";const prevKey=quiz.previousQuestionKey||"";const sameId=prevId&&current.id===prevId;const sameKey=prevKey&&quizQuestionKey(current)===prevKey;if(!sameId&&!sameKey)return;const swapIndex=quiz.queue.findIndex((w,i)=>i>quiz.index&&w&&w.id!==prevId&&quizQuestionKey(w)!==prevKey);if(swapIndex>-1){const tmp=quiz.queue[quiz.index];quiz.queue[quiz.index]=quiz.queue[swapIndex];quiz.queue[swapIndex]=tmp;return}const fallback=quiz.queue.find(w=>w&&w.id!==prevId&&quizQuestionKey(w)!==prevKey);if(fallback)quiz.queue[quiz.index]=fallback}
 function listeningPromptText(word=quiz.current){if(!word)return"";return word.front}
@@ -1113,15 +1183,15 @@ function renderChoices(){
   pool.splice(3);
   let choices=shuffle([correct,...pool]);
   quiz.currentChoices=choices;
-  $("choiceArea").innerHTML=choices.map((c,index)=>`<button type="button" class="choice" onclick="chooseAnswer(this,quiz.currentChoices[${index}])">${esc(c)}</button>`).join("");
+  $("choiceArea").innerHTML=choices.map((c,index)=>`<button type="button" class="choice" data-shortcut="${index+1}" onclick="chooseAnswer(this,quiz.currentChoices[${index}])" aria-label="Answer ${index+1}: ${esc(c)}">${esc(c)}</button>`).join("");
 }
 function chooseAnswer(btn,ans){if(quiz.answered)return;quiz.selectedAnswer=ans;let ok=normalize(ans)===normalize(correctAnswer());[...document.querySelectorAll(".choice")].forEach(b=>{b.disabled=true;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){};if(normalize(b.textContent)===normalize(correctAnswer()))b.classList.add("correct")});btn.classList.add("selected");if(!ok)btn.classList.add("wrong");finishAnswer(ok)}
 function quizLearningMessage(word,ok){if(!word)return"";const view=learningPresentation();const state=view?.state(word);const review=view?.review(word);return [state?.label,review?.label,!ok?"This word will appear more often.":""].filter(Boolean).join(" · ")}
-function quizFeedbackHtml(ok,word){const answer=correctAnswer();const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||"No answer";const learning=quizLearningMessage(word,ok);return `<div class="quiz-feedback-copy"><strong>${ok?"Correct":"Incorrect"}</strong><span>Your answer: ${esc(selected)}</span>${ok?"":`<span>Correct answer: ${esc(answer)}</span>`}${learning?`<span class="quiz-level-note">${esc(learning)}</span>`:""}</div><button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">Next</button>`}
-function renderQuizQuestionAnswer(ok,word){const box=$("quizQuestionAnswer");if(!box||!quiz.current)return;const answer=correctAnswer();const selected=quiz.selectedAnswer||"";const learning=quizLearningMessage(word,ok);const learningText=learning?`<div class="quiz-answer-block quiz-answer-meta"><span>Learning</span><strong>${esc(learning)}</strong></div>`:"";const card=document.querySelector(".quiz-question");if(card){const long=[answer,selected].some(v=>String(v||"").length>32||String(v||"").includes("\n"));card.classList.add("is-answered");card.classList.toggle("has-long-answer",long)}box.className=`quiz-question-answer show ${ok?"ok":"no"}`;if(quiz.type==="listening"){const pronunciation=wordPronunciation(quiz.current);box.innerHTML=`<div class="quiz-answer-status ${ok?"ok":"no"}">${ok?"Correct":"Incorrect"}</div><div class="quiz-answer-block"><span>Correct answer</span><strong>${esc(answer)}</strong></div>${pronunciation?`<div class="quiz-answer-block quiz-answer-meta"><span>Pronunciation</span><strong>${esc(pronunciation)}</strong></div>`:""}${!ok&&selected?`<div class="quiz-answer-block"><span>Your answer</span><em>${esc(selected)}</em></div>`:""}${learningText}<div class="quiz-answer-actions"><button type="button" class="quiz-answer-audio" onclick="speakQuizFront()">Replay front audio</button></div>`;return}box.innerHTML=`<div class="quiz-answer-status ${ok?"ok":"no"}">${ok?"Correct":"Incorrect"}</div><div class="quiz-answer-block"><span>Correct answer</span><strong>${esc(answer)}</strong></div>${!ok&&selected?`<div class="quiz-answer-block"><span>Your answer</span><em>${esc(selected)}</em></div>`:""}${learningText}<div class="quiz-answer-actions"><button type="button" class="quiz-answer-audio" onclick="speakQuizFront()">Play front</button><button type="button" class="quiz-answer-audio" onclick="speakQuizBack()">Play back</button></div>`}
-function finishAnswer(ok){if(quiz.answered)return;quiz.answered=true;quiz.previousQuestionId=quiz.current?.id||quiz.previousQuestionId;quiz.previousQuestionKey=quizQuestionKey(quiz.current)||quiz.previousQuestionKey;clearInterval(quizTimerInterval);const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";let fresh=null;if(ok){quiz.score++;fresh=updateWordLearning(quiz.current.id,"good",{mode:quiz.type||"quiz"});markMistakeCorrect(quiz.current.id);$("quizResult").className="result-box show ok";$("quizResult").innerHTML=quizFeedbackHtml(true,fresh)}else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());fresh=updateWordLearning(quiz.current.id,"again",{mode:quiz.type||"quiz"});$("quizResult").className="result-box show no";$("quizResult").innerHTML=quizFeedbackHtml(false,fresh);quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}renderQuizQuestionAnswer(ok,fresh);$("quizScore").textContent=quiz.score+" / "+quiz.total;if($("quizAudioAfter").value==="on")setTimeout(()=>{try{speakQuizFront()}catch(e){}},80);if(isAutoAdvance())scheduleNext(ok)}
-function isAutoAdvance(){const mode=$("quizAutoAdvance")?.value||"1.5";return mode!=="manual"&&mode!=="off"}
-function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"1.5";let v=mode==="manual"||mode==="off"?parseFloat($("quizNextDelay")?.value||"1.5"):parseFloat(mode);if(!Number.isFinite(v))v=parseFloat($("quizNextDelay")?.value||"1.5");v=Math.max(1,Math.min(10,v));return Math.round(v*1000)}
+function quizFeedbackHtml(ok,word){const answer=correctAnswer();const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||"No answer";const learning=quizLearningMessage(word,ok);const auto=isAutoAdvance();const timing=auto?`<span class="quiz-auto-note">Next question in ${(nextDelay(ok)/1000).toFixed(1)}s</span>`:"";return `<div class="quiz-feedback-copy"><strong>${ok?"✓ Correct":"× Incorrect"}</strong><span>Your answer: ${esc(selected)}</span>${ok?"":`<span>Correct answer: ${esc(answer)}</span>`}${learning?`<span class="quiz-level-note">${esc(learning)}</span>`:""}${timing}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">Play answer</button><button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">Next now</button></div>`}
+function renderQuizQuestionAnswer(ok){const box=$("quizQuestionAnswer");if(!box||!quiz.current)return;const card=document.querySelector(".quiz-question");if(card)card.classList.add("is-answered");box.className=`quiz-question-answer show ${ok?"ok":"no"}`;box.innerHTML=`<div class="quiz-answer-status ${ok?"ok":"no"}">${ok?"✓ Correct":"× Incorrect"}</div>`}
+function finishAnswer(ok){if(quiz.answered)return;quiz.answered=true;quiz.previousQuestionId=quiz.current?.id||quiz.previousQuestionId;quiz.previousQuestionKey=quizQuestionKey(quiz.current)||quiz.previousQuestionKey;clearInterval(quizTimerInterval);const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";let fresh=null;if(ok){quiz.score++;fresh=updateWordLearning(quiz.current.id,"good",{mode:quiz.type||"quiz"});markMistakeCorrect(quiz.current.id);$("quizResult").className="result-box show ok";$("quizResult").innerHTML=quizFeedbackHtml(true,fresh)}else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());fresh=updateWordLearning(quiz.current.id,"again",{mode:quiz.type||"quiz"});$("quizResult").className="result-box show no";$("quizResult").innerHTML=quizFeedbackHtml(false,fresh);quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}$("choiceArea")?.classList.add("is-answered");renderQuizQuestionAnswer(ok);const skip=$("quizSkipButton");if(skip)skip.hidden=true;$("quizScore").textContent=quiz.score+" / "+quiz.total;if($("quizAudioAfter").value==="on")setTimeout(()=>{try{speakQuizFront()}catch(e){}},80);if(isAutoAdvance())scheduleNext(ok)}
+function isAutoAdvance(){const mode=$("quizAutoAdvance")?.value||"auto";return mode!=="manual"&&mode!=="off"}
+function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"auto";if(mode==="auto")return ok?1000:1600;let v=mode==="manual"||mode==="off"?1.5:parseFloat(mode);if(!Number.isFinite(v))v=1.5;v=Math.max(.7,Math.min(10,v));return Math.round(v*1000)}
 function scheduleNext(ok){clearTimeout(quizAutoTimer);quizAutoTimer=setTimeout(()=>advanceQuiz(),nextDelay(ok))}
 function advanceQuiz(){clearQuizTimers();if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}quiz.index++;if(quiz.index>=quiz.queue.length)return endQuiz();showQuizQuestion()}
 function nextQuizQuestion(){if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}advanceQuiz()}
@@ -1148,11 +1218,11 @@ function renderQuizSummary(){
     <div class="wide"><strong>${esc(next)}</strong></div>
   `;
 }
-function endQuiz(){clearQuizTimers();$("quizRun").style.display="none";$("quizEnd").style.display="block";$("quizEndText").textContent=`Score: ${quiz.score} / ${quiz.total}`;renderQuizSummary();renderWrongList();render()}
+function endQuiz(){clearQuizTimers();$("quizRun").style.display="none";$("quizEnd").style.display="block";$("pageQuiz")?.classList.remove("quiz-focus-active");$("quizEndText").textContent=`Score: ${quiz.score} / ${quiz.total}`;renderQuizSummary();renderWrongList();render()}
 function renderWrongList(){let box=$("quizWrongList"),wrong=quiz.allWrong||[];if(!wrong.length){box.innerHTML='<div class="empty">No wrong answers. Great job!</div>';return}box.innerHTML='<h2 style="margin-top:8px">Wrong Answers</h2>'+wrong.map(item=>{let w=db.words.find(x=>x.id===item.id)||item,q=quiz.direction==="front"?w.front:w.back,a=quiz.direction==="front"?w.back:w.front,lang=safeLang(quiz.direction==="front"?w.frontLang:w.backLang);let id=jsArg(w.id);return`<div class="quiz-wrong-card"><button type="button" class="quiz-wrong-copy" onclick="openDetail(${id})"><span class="quiz-wrong-front">${esc(q)}</span><span class="quiz-wrong-back">Answer: ${esc(a)}</span></button><div class="quiz-wrong-actions"><button type="button" onclick="speak(${jsArg(q)},${jsArg(lang)})" aria-label="Play word audio">Play</button><button type="button" class="${w.saved?'starred':''}" onclick="toggleQuizWrongStar(${id})">${w.saved?'★ Saved':'☆ Save'}</button><button type="button" onclick="openDetail(${id})">Detail</button></div></div>`}).join("")}
 function toggleQuizWrongStar(id){toggleStar(id);renderWrongList()}
-function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="block";showQuizQuestion()}
-function audioWords(){let list=$("audioList").value,order=$("audioOrder").value;let words=db.words.filter(w=>w.listId===list);if(order==="star")words=words.filter(w=>w.saved);if(order==="due")words=words.filter(isDue);if(order==="hard")words=[...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));if(order==="random")words=shuffle(words);return words}
+function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion()}
+function audioWords(){let list=$("audioList").value,order=$("audioOrder").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(order==="star")words=words.filter(w=>w.saved);if(order==="due")words=words.filter(isDue);if(order==="hard")words=[...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));if(order==="random")words=shuffle(words);return words}
 function startAudio(){stopAudio();audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioIndex=0;audioPaused=false;playAudioCurrent()}
 function pauseAudio(){audioPaused=true;clearTimeout(audioTimer);speechSynthesis.cancel();toast("Paused")}
 function stopAudio(){clearTimeout(audioTimer);speechSynthesis.cancel();audioPaused=false;audioIndex=0;$("audioNow").textContent="---";$("audioSub").textContent="Start"}
@@ -1201,7 +1271,7 @@ function importDataText(){
 function clearLocalCache(){
   if(typeof window.tnClearLocalCache==="function")return window.tnClearLocalCache();
   if(!confirm("Clear this browser cache? Cloud data will be loaded again after sync."))return;
-  try{localStorage.removeItem(KEY);localStorage.removeItem(SHADOW_KEY)}catch(e){}
+  tnPurgeUserStorage(tnActiveStorageUserId);
   db=tnEmptyData("manual-clear-local-cache");shareDb();resetCard();resetQuiz();render();toast("Local cache cleared");
 }
 function deleteAllAccountData(){
@@ -1218,9 +1288,9 @@ const VOICE_PREF_KEY="tangonest_voice_preferences_v1";
 const VOICE_LANGUAGE_SETTINGS=[
   {lang:"en-US",label:"English",sample:"Hello, this is English."},
   {lang:"ja-JP",label:"Japanese",sample:"こんにちは。日本語です。"},
-  {lang:"zh-CN",label:"Chinese",sample:"你好，这是中文。"},
-  {lang:"ko-KR",label:"Korean",sample:"안녕하세요. 한국어입니다."},
   {lang:"fr-FR",label:"French",sample:"Bonjour, ceci est le français."},
+  {lang:"ko-KR",label:"Korean",sample:"안녕하세요. 한국어입니다."},
+  {lang:"zh-CN",label:"Chinese",sample:"你好，这是中文。"},
   {lang:"es-ES",label:"Spanish",sample:"Hola, esto es español."}
 ];
 function loadVoicePrefs(){try{return JSON.parse(localStorage.getItem(VOICE_PREF_KEY)||"{}")||{}}catch(e){return{}}}
@@ -1531,12 +1601,16 @@ render();resetQuiz();
 
 const TN_SESSION_KEY="tangonest_learning_session_v1";
 function getLastSession(){
-  try{return JSON.parse(localStorage.getItem(TN_SESSION_KEY)||"{}")}catch(e){return{}}
+  const key=TN_LOCAL_QA_MODE?TN_SESSION_KEY:tnSessionStorageKey();
+  if(!key)return{};
+  try{return JSON.parse(localStorage.getItem(key)||"{}")}catch(e){return{}}
 }
 function setLastSession(patch){
+  const key=TN_LOCAL_QA_MODE?TN_SESSION_KEY:tnSessionStorageKey();
+  if(!key)return;
   const current=getLastSession();
   const next={...current,...patch,updatedAt:new Date().toISOString()};
-  localStorage.setItem(TN_SESSION_KEY,JSON.stringify(next));
+  localStorage.setItem(key,JSON.stringify(next));
 }
 function selectedValue(id){
   const el=$(id);
@@ -1608,17 +1682,40 @@ function updateHeroPreview(){
 const TN_RECENT_PLAYLIST_KEY="tangonest_recent_playlist_v1";
 function rememberRecentPlaylist(value){
   if(!value)return;
-  try{localStorage.setItem(TN_RECENT_PLAYLIST_KEY,value)}catch(e){}
+  const key=TN_LOCAL_QA_MODE?TN_RECENT_PLAYLIST_KEY:tnRecentPlaylistStorageKey();
+  if(key)try{localStorage.setItem(key,value)}catch(e){}
 }
 function restoreRecentPlaylist(){
   let value="";
-  try{value=localStorage.getItem(TN_RECENT_PLAYLIST_KEY)||""}catch(e){}
+  const key=TN_LOCAL_QA_MODE?TN_RECENT_PLAYLIST_KEY:tnRecentPlaylistStorageKey();
+  if(key)try{value=localStorage.getItem(key)||""}catch(e){}
   if(!value)return;
   ["addList","bulkList"].forEach(id=>{
     const el=$(id);
     if(el&&[...el.options].some(option=>option.value===value))el.value=value;
   });
 }
+function resetAccountUiState(){
+  clearFlashTimers();
+  clearQuizTimers();
+  clearTimeout(audioTimer);
+  try{speechSynthesis.cancel()}catch(e){}
+  audioQueue=[];
+  audioIndex=0;
+  audioPaused=false;
+  current=null;
+  flipped=false;
+  selectedIds.clear();
+  smartSessionQueue=[];
+  resetCard();
+  resetQuiz();
+  try{window.tnLibraryResetAccountState?.()}catch(e){}
+  const now=$("audioNow");
+  const sub=$("audioSub");
+  if(now)now.textContent="---";
+  if(sub)sub.textContent="Start";
+}
+window.tnResetAccountUiState=resetAccountUiState;
 function setupCoreInteractions(){
   if(window.__tnCoreInteractions)return;
   window.__tnCoreInteractions=true;
@@ -1635,6 +1732,19 @@ function setupCoreInteractions(){
     const tag=String(target?.tagName||"").toLowerCase();
     const inField=["input","textarea","select"].includes(tag);
     const createActive=$("pageAdd")?.classList.contains("active");
+    const quizActive=$("pageQuiz")?.classList.contains("active")&&$("quizRun")?.style.display!=="none"&&quiz.current;
+    if(quizActive&&!event.defaultPrevented){
+      if(quiz.answered&&!inField&&(event.key==="Enter"||event.code==="Space")){
+        event.preventDefault();
+        nextQuizQuestion();
+        return;
+      }
+      if(!quiz.answered&&quiz.type==="choice"&&!inField&&/^[1-4]$/.test(event.key)){
+        const choice=$("choiceArea")?.querySelector(`.choice[data-shortcut="${event.key}"]`);
+        if(choice){event.preventDefault();choice.click()}
+        return;
+      }
+    }
     if(createActive&&(event.metaKey||event.ctrlKey)&&event.key==="Enter"){
       event.preventDefault();
       $("addWordBtn")?.click();
@@ -1671,8 +1781,9 @@ setTimeout(enhanceTangoNestApp,120);
 
 
 setTimeout(()=>{
-  if(typeof go==="function"&&!go.__wrappedForSession){
-    const originalGo=go;
+  const installedGo=window.go;
+  if(typeof installedGo==="function"&&!installedGo.__wrappedForSession){
+    const originalGo=installedGo;
     window.go=function(page){
       originalGo(page);
       const modeMap={quiz:"quiz",audio:"audio",cards:"cards",list:"list",add:"add",home:"home"};
@@ -1680,9 +1791,11 @@ setTimeout(()=>{
       updateHeroPreview();
     };
     window.go.__wrappedForSession=true;
+    if(originalGo.__tnLibraryStable)window.go.__tnLibraryStable=true;
   }
-  if(typeof showPage==="function"&&!showPage.__wrappedForSession){
-    const originalShow=showPage;
+  const installedShowPage=window.showPage;
+  if(typeof installedShowPage==="function"&&!installedShowPage.__wrappedForSession){
+    const originalShow=installedShowPage;
     window.showPage=function(page){
       originalShow(page);
       const modeMap={quiz:"quiz",audio:"audio",cards:"cards",list:"list",add:"add",home:"home"};

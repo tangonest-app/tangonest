@@ -1,12 +1,13 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg5";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg6";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
   "./index.html",
   "./config-rc19-fdg1.js",
   "./default-playlist-rc19-fdg1.js",
+  "./example-fields-rc19-fdg1.js",
   "./style-rc19-fdg1.css",
   "./ui/forest-desk-glass-rc19-fdg1.css",
   "./app-rc19-fdg1.js",

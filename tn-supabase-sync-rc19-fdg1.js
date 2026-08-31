@@ -83,6 +83,7 @@
   let accountCleanStartPromise = null;
   let accountCleanStartUserId = "";
   let accountCleanStartGeneration = -1;
+  let exampleRepairUserId = "";
   let authGeneration = 0;
 
   function accountStorageKey(userId,kind){
@@ -750,7 +751,7 @@
   }
 
   function toLocalWord(row){
-    return {
+    const local={
       id:row.id,
       listId:row.playlist_id || "",
       front:row.front || "",
@@ -779,6 +780,25 @@
       createdAt:row.created_at || nowIso(),
       updatedAt:row.updated_at || row.created_at || nowIso()
     };
+    try{return window.TangoNestExampleFields?.normalizeWord(local)||local}catch(error){return local}
+  }
+
+  function exampleFieldsNeedRepair(rows){
+    if(!Array.isArray(rows)||!window.TangoNestExampleFields)return false;
+    return rows.some(row=>{
+      const normalized=window.TangoNestExampleFields.normalizeFields(row.memo,row.pronunciation);
+      return normalized.changed;
+    });
+  }
+
+  async function repairExampleFieldsInCloud(rows,userId,generation){
+    if(!userId||exampleRepairUserId===userId||!exampleFieldsNeedRepair(rows))return;
+    exampleRepairUserId=userId;
+    const result=await client.rpc("tn_clean_example_fields");
+    assertActiveRequest(userId,generation);
+    if(result.error){
+      console.warn("Example field cleanup was applied locally but could not be saved to cloud.",result.error);
+    }
   }
 
   function wordRowFromLocal(word,playlistId,userId=currentUser?.id){
@@ -1026,6 +1046,14 @@
         assertActiveRequest(loadUserId,loadGeneration);
         if(wordsResult.error)errors.push({scope:"words",error:wordsResult.error});
         else wordRows=wordsResult.data || [];
+
+        if(wordRows!==null){
+          try{await repairExampleFieldsInCloud(wordRows,loadUserId,loadGeneration)}
+          catch(error){
+            if(error?.staleAccountRequest)throw error;
+            console.warn("Example field cloud repair skipped",error);
+          }
+        }
 
         if(playlistRows!==null&&wordRows!==null){
           try{
@@ -1811,12 +1839,13 @@
               playlist_id:playlist || null,
               pos:safeText(row.pos) || null,
               gender:safeText(row.gender) || null,
-              memo:safeText(row.memo) || null
+              memo:safeText(row.memo) || null,
+              pronunciation:safeText(row.pronunciation) || null
             },account);
           }else{
             await client.from("tn_words").insert(wordRowFromLocal({
               front:row.front,back:row.back,frontLang,backLang,listId:playlist,
-              memo:row.memo,pos:row.pos,gender:row.gender,tags:"",status:"new",level:1,nextReview:today()
+              memo:row.memo,pronunciation:row.pronunciation,pos:row.pos,gender:row.gender,tags:"",status:"new",level:1,nextReview:today()
             },playlist,account.userId));
             assertActiveRequest(account.userId,account.generation);
           }
@@ -1830,6 +1859,7 @@
           backLang,
           listId:playlist,
           memo:row.memo,
+          pronunciation:row.pronunciation,
           pos:row.pos,
           gender:row.gender,
           tags:"",
@@ -1934,7 +1964,9 @@
     const listIds = new Set(safeLists.map(list => list.id));
     const words = incoming.words
       .filter(word => safeText(word?.front) && safeText(word?.back))
-      .map((word,index) => ({
+      .map((word,index) => {
+        const normalized=window.TangoNestExampleFields?.normalizeWord(word)||word;
+        return {
         listId:listIds.has(String(word.listId || "")) ? String(word.listId) : "",
         front:safeText(word.front),
         back:safeText(word.back),
@@ -1943,8 +1975,8 @@
         pos:safeText(word.pos),
         gender:safeText(word.gender),
         tags:safeText(word.tags),
-        memo:safeText(word.memo),
-        pronunciation:safeText(word.pronunciation),
+        memo:safeText(normalized.memo),
+        pronunciation:safeText(normalized.pronunciation),
         status:["new","learned","hard"].includes(word.status) ? word.status : "new",
         saved:!!word.saved,
         level:Math.max(1,Math.min(5,Number(word.level || 1))),
@@ -1955,7 +1987,7 @@
         lastAnsweredAt:word.lastAnsweredAt || "",
         lastWrongAt:word.lastWrongAt || "",
         position:Number.isFinite(Number(word.position)) ? Number(word.position) : index
-      }));
+      }});
     return {
       ui:incoming.ui || "en",
       prefs:{
