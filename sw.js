@@ -1,22 +1,24 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-uihotfix2";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg1";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
   "./index.html",
-  "./config-rc19-hotfix2.js",
-  "./default-playlist-rc19-hotfix2.js",
-  "./style-rc19-hotfix2.css",
-  "./ui/study-focus-rc19-hotfix2.css",
-  "./app-rc19-hotfix2.js",
-  "./learning-engine-rc19-hotfix2.js",
-  "./tn-supabase-sync-rc19-hotfix2.js",
-  "./tn-library-management-rc19-hotfix2.js",
-  "./tn-learning-flow-rc19-hotfix2.js",
-  "./ui/learning-presentation-rc19-hotfix2.js",
-  "./ui/runtime-rc19-hotfix2.js",
-  "./manifest-rc19-hotfix2.json",
+  "./config-rc19-fdg1.js",
+  "./default-playlist-rc19-fdg1.js",
+  "./style-rc19-fdg1.css",
+  "./ui/forest-desk-glass-rc19-fdg1.css",
+  "./app-rc19-fdg1.js",
+  "./learning-engine-rc19-fdg1.js",
+  "./tn-supabase-sync-rc19-fdg1.js",
+  "./tn-library-management-rc19-fdg1.js",
+  "./tn-learning-flow-rc19-fdg1.js",
+  "./ui/learning-presentation-rc19-fdg1.js",
+  "./ui/runtime-rc19-fdg1.js",
+  "./manifest-rc19-fdg1.json",
+  "./assets/botanical-corner.svg",
+  "./assets/forest-study-login-v1.png",
   "./favicon.png",
   "./favicon.ico",
   "./apple-touch-icon.png",
