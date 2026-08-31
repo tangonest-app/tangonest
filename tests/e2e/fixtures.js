@@ -4,12 +4,12 @@ const DATA_KEY="tangonest_production_stable_v1";
 const SHADOW_KEY="tangonest_last_good_data_v1";
 const PAGE_KEY="tangonest_last_page_v2";
 
-function buildData(wordCount=6){
+function buildData(wordCount=6,listCount=1){
   const at="2026-08-24T01:00:00.000Z";
   const lists=[
-    {id:"qa-list-1",name:"Everyday English",createdAt:at,updatedAt:at},
-    {id:"qa-list-2",name:"Travel and Conversation Essentials",createdAt:at,updatedAt:at}
+    {id:"qa-list-1",name:"My Words",isDefault:true,systemKey:"default-my-words",createdAt:at,updatedAt:at}
   ];
+  if(listCount>1)lists.push({id:"qa-list-2",name:"Chinese Travel and Daily Conversation",isDefault:false,createdAt:at,updatedAt:at});
   const samples=[
     ["serendipity","思いがけない幸運","noun",1,0,"","2026-08-24"],
     ["consider","検討する","verb",2,2,"again","2026-08-24"],
@@ -24,7 +24,7 @@ function buildData(wordCount=6){
     const level=index<samples.length?sample[3]:Math.min(5,1+(index%5));
     return {
       id:`qa-word-${index+1}`,
-      listId:index%2?"qa-list-2":"qa-list-1",
+      listId:listCount>1&&index%2===1?"qa-list-2":"qa-list-1",
       front:index<samples.length?sample[0]:`word ${String(index+1).padStart(5,"0")}`,
       back:index<samples.length?sample[1]:`meaning ${index+1}`,
       frontLang:"en-US",
@@ -48,7 +48,7 @@ function buildData(wordCount=6){
   });
   return {
     schemaVersion:2,
-    dataVersion:"1.0.0-rc.11",
+    dataVersion:"1.0.0-rc.18",
     ui:"en",
     prefs:{frontLang:"en-US",backLang:"ja-JP"},
     lists,
@@ -58,14 +58,51 @@ function buildData(wordCount=6){
   };
 }
 
-async function installTestState(page,{wordCount=6,pageName="home"}={}){
-  const data=buildData(wordCount);
+async function installTestState(page,{wordCount=6,listCount=1,pageName="home"}={}){
+  const data=buildData(wordCount,listCount);
   await page.route("https://cdn.jsdelivr.net/**",route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={};"}));
   await page.addInitScript(({data,dataKey,shadowKey,pageKey,pageName})=>{
-    if(!localStorage.getItem(dataKey))localStorage.setItem(dataKey,JSON.stringify(data));
-    if(!localStorage.getItem(shadowKey))localStorage.setItem(shadowKey,JSON.stringify(data));
+    const serialized=JSON.stringify(data);
+    if(!localStorage.getItem(dataKey))localStorage.setItem(dataKey,serialized);
+    if(serialized.length<=1500000&&!localStorage.getItem(shadowKey))localStorage.setItem(shadowKey,serialized);
     if(!localStorage.getItem(pageKey))localStorage.setItem(pageKey,pageName);
   },{data,dataKey:DATA_KEY,shadowKey:SHADOW_KEY,pageKey:PAGE_KEY,pageName});
+}
+
+const NAV_IDS={
+  home:["navHome","mnavHome"],
+  create:["navAdd","mnavAdd"],
+  library:["navWords","mnavWords"],
+  cards:["navStudy","mnavStudy"],
+  quiz:["navQuiz","mnavQuiz"],
+  listen:["navAudio","mnavAudio"],
+  settings:["navManage","mnavManage"]
+};
+
+async function navigateToPage(page,name){
+  const ids=NAV_IDS[name];
+  if(!ids)throw new Error(`Unknown page navigation: ${name}`);
+  for(const id of ids){
+    const button=page.locator(`#${id}`);
+    if(await button.isVisible()){
+      await button.click();
+      return;
+    }
+  }
+  if(name==="create"){
+    await page.locator("#mnavWords").click();
+    await page.locator("#mnavAdd").waitFor({state:"visible"});
+    await page.locator("#mnavAdd").click();
+    return;
+  }
+  throw new Error(`No visible navigation control for ${name}`);
+}
+
+async function selectLanguage(page,id,value){
+  const trigger=page.locator(`[data-language-picker-trigger="${id}"]`);
+  await trigger.click();
+  await page.locator(`[data-language-picker="${id}"] .tn-language-picker-option[data-value="${value}"]`).click();
+  await expect(page.locator(`#${id}`)).toHaveValue(value);
 }
 
 async function openTestApp(page,options={}){
@@ -73,7 +110,7 @@ async function openTestApp(page,options={}){
   await page.goto("/?qa=1");
   await expect(page.locator(".app")).toBeVisible();
   await expect(page.locator("#authScreen")).toBeHidden();
-  await expect(page.locator("#wc")).toHaveText(String(options.wordCount||6));
+  await expect(page.locator("#wc")).toHaveText(String(options.wordCount??6));
 }
 
 const test=base.extend({
@@ -88,4 +125,4 @@ const test=base.extend({
   }
 });
 
-module.exports={test,expect,buildData,installTestState,openTestApp};
+module.exports={test,expect,buildData,installTestState,openTestApp,navigateToPage,selectLanguage};
