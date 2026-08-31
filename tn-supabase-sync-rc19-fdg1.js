@@ -1241,6 +1241,12 @@
         if(!activeRequest(incomingUser.id,boundaryGeneration))return;
         showApp();
         navigate(mode==="login"?"home":savedPage());
+        if(mode==="login"){
+          requestAnimationFrame(() => {
+            const homeNav=window.matchMedia?.("(max-width: 900px)").matches ? $("mnavHome") : $("navHome");
+            homeNav?.focus({preventScroll:true});
+          });
+        }
         if(!initializationError)subscribeRealtime();
         initializedUserId=incomingUser.id;
         if(initializationError){

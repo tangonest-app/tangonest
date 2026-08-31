@@ -436,6 +436,13 @@
     document.title=`${labels[1]} · TangoNest`;
     try{window.tnUpdateShellContext?.(page)}catch(error){}
     stabilizeHeader();
+    if(page==="create"&&window.matchMedia?.("(min-width: 901px)").matches){
+      const focusFront=()=>{
+        try{$("front")?.focus({preventScroll:true})}catch(error){}
+      };
+      if(typeof queueMicrotask==="function")queueMicrotask(focusFront);
+      else Promise.resolve().then(focusFront);
+    }
   }
 
   function installStableNavigation(){
