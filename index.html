@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg7">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg7">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg8">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg8">
 
 <script>
 (function(){
@@ -14,10 +14,10 @@
 </script>
 
 
-<link rel="icon" type="image/png" href="./favicon.png?v=1.0.0-rc.19-fdg7">
-<link rel="icon" href="./favicon.ico?v=1.0.0-rc.19-fdg7">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1.0.0-rc.19-fdg7">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg7">
+<link rel="icon" type="image/png" href="./favicon.png?v=1.0.0-rc.19-fdg8">
+<link rel="icon" href="./favicon.ico?v=1.0.0-rc.19-fdg8">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1.0.0-rc.19-fdg8">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg8">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -36,6 +36,7 @@ html.auth-ready #authScreen{display:none;pointer-events:none;visibility:hidden;o
 #authScreen h1{margin:0 0 9px;color:#103a2c;font-family:"Iowan Old Style",Georgia,serif;font-size:36px;line-height:1.08;font-weight:600;letter-spacing:0}#authScreen p{margin:0 0 14px;color:#5f695f;font-family:"Iowan Old Style",Georgia,serif;font-size:15px;line-height:1.5}#authScreen label{display:block;margin:10px 0 5px;color:#46564b;font-size:12px;font-weight:700}
 #authScreen input{display:block;width:100%;height:48px;padding:0 13px;border:1px solid #c2b493;border-radius:5px;background:rgba(255,250,240,.9);color:#173126;font-size:16px;outline:none;-webkit-appearance:none}#authScreen input:focus{border-color:#225d43;box-shadow:0 0 0 3px rgba(34,93,67,.13)}
 .auth-message{margin:13px 0;padding:10px 12px;border:1px solid #cbd7c4;border-radius:5px;background:rgba(233,238,226,.82);color:#315c43;font-size:12px;font-weight:620}.auth-message.error{border-color:#dfbdb4;background:#f8ece8;color:#93483f}.auth-message.success{background:#e8f1e6;color:#39704c}.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.auth-session-loading{display:none;min-height:280px;place-content:center;justify-items:center;gap:12px;text-align:center}.auth-session-loading strong{font-family:"Iowan Old Style",Georgia,serif;font-size:25px;font-weight:600;color:#103a2c}.auth-session-loading small{color:#59685b;font-size:13px}.auth-session-spinner{width:34px;height:34px;border:2px solid rgba(34,93,67,.2);border-top-color:#225d43;border-radius:50%;animation:tnAuthSpin .8s linear infinite}@keyframes tnAuthSpin{to{transform:rotate(360deg)}}html.tn-auth-loading #authInteractive{display:none}html.tn-auth-loading #authSessionLoading{display:grid}
 #authScreen button{min-height:48px;border:0;border-radius:5px;font-size:14px;font-weight:680;cursor:pointer;touch-action:manipulation}#loginButton{background:#225d43;color:#fffaf0}#signupButton{border:1px solid #bcae8e;background:rgba(255,250,240,.82);color:#173126}.guest-button{width:100%;margin-top:10px;padding-bottom:env(safe-area-inset-bottom,8px);background:transparent;color:#59685b}.auth-password-field{position:relative}.auth-password-field input{padding-right:76px}#togglePasswordButton{position:absolute;right:5px;top:4px;min-height:40px;height:40px;padding:0 10px;background:transparent;color:#225d43;font-size:12px}.auth-help-row{display:flex;justify-content:flex-end;margin:5px 0 1px}#forgotPasswordButton{min-height:34px;height:34px;padding:0;background:transparent;color:#225d43;font-size:12px}.auth-actions button:disabled,#forgotPasswordButton:disabled{cursor:wait;opacity:.68}
 html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;pointer-events:none;visibility:hidden;opacity:0;z-index:-1}
 @media(max-height:700px){#authScreen{align-items:flex-start;padding-block:8px}.auth-card{padding:18px}#authScreen h1{font-size:27px}.auth-kicker{display:none}.auth-mode-label{margin-top:3px;margin-bottom:7px}}
@@ -48,7 +49,8 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
 <section id="authScreen" class="auth-screen" aria-labelledby="authTitle">
   <div class="auth-card">
-    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg7" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
+    <div id="authInteractive" class="auth-interactive">
+    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg8" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
     <div id="authModeLabel" class="auth-mode-label">Local</div>
     <div class="auth-kicker">WELCOME TO YOUR STUDY</div>
     <h1 id="authTitle">Return to your words.</h1>
@@ -61,12 +63,18 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       <div class="auth-actions"><button id="loginButton" type="submit">Login</button><button id="signupButton" type="button">Create account</button><button id="updatePasswordButton" type="button" hidden>Update password</button></div>
     </form>
     <button id="guestButton" type="button" class="guest-button">Continue as guest</button>
+    </div>
+    <div id="authSessionLoading" class="auth-session-loading" role="status" aria-live="polite">
+      <span class="auth-session-spinner" aria-hidden="true"></span>
+      <strong>Opening your library...</strong>
+      <small>Restoring your secure session.</small>
+    </div>
   </div>
 </section>
 
 <div class="app" inert aria-hidden="true">
   <aside class="app-sidebar">
-    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg7" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg8" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
     <nav class="nav" aria-label="Primary navigation">
       <span class="nav-section-label">Workspace</span>
       <button id="navHome" class="active" type="button" onclick="go('home')">Home</button>
@@ -82,7 +90,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   </aside>
   <div class="app-workspace">
     <header class="header">
-      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg7" alt=""></span></div>
+      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg8" alt=""></span></div>
       <div class="page-heading"><span id="appPageEyebrow">Forest Desk</span><strong id="appPageTitle">Home</strong></div>
       <div class="stats" aria-label="Library summary">
         <div class="stat"><b id="wc">0</b><span>Words</span></div><div class="stat"><b id="listCount">0</b><span>Lists</span></div><div class="stat"><b id="lc">0</b><span>Learned</span></div><div class="stat"><b id="hc">0</b><span>Hard</span></div>
@@ -168,7 +176,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
     <div class="quiz-card"><div class="card"><h2>Quiz Mode</h2><p class="desc">Practice your vocabulary with clear answer feedback before moving on.</p>
       <div id="quizSetup">
         <div class="row3"><div data-quiz-setting="all"><label for="quizList">Library</label><select id="quizList"></select></div><div data-quiz-setting="all"><label for="quizType">Quiz Type</label><select id="quizType" onchange="updateQuizModeSettings()"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div data-quiz-setting="choice typing"><label for="quizDirection">Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
-        <div class="row3"><div data-quiz-setting="all"><label for="quizCount">Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode">Question order</label><select id="quizOrderMode"><option value="random" selected>Random mix</option><option value="playlist">Playlist order</option><option value="weak">Needs practice first</option><option value="due">Due reviews first</option><option value="newest">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance">After answering</label><select id="quizAutoAdvance"><option value="auto" selected>Auto · smart timing</option><option value="manual">Wait for Next</option><option value="2.5">Slow · 2.5s</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="all"><label for="quizCount">Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode">Question order</label><select id="quizOrderMode"><option value="random" selected>Random mix</option><option value="playlist">Playlist order</option><option value="weak">Needs practice first</option><option value="due">Due reviews first</option><option value="newest">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance">After answering</label><select id="quizAutoAdvance"><option value="manual" selected>Wait for Next</option><option value="auto">Auto · smart timing</option><option value="2.5">Slow · 2.5s</option></select></div></div>
         <div class="row3"><div data-quiz-setting="choice typing"><label for="quizAudioAfter">After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div data-quiz-setting="choice typing"><label for="quizHardMode">Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div data-quiz-setting="choice typing"><label for="quizTimeLimit">Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
         <div class="row4"><div data-quiz-setting="listening"><label for="listeningDifficulty">Listening mode</label><select id="listeningDifficulty" onchange="updateQuizModeSettings(true)"><option value="normal" selected>Normal · unlimited</option><option value="hard">Hard · timed</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningReplayLimit">Replay limit</label><select id="listeningReplayLimit"><option value="unlimited" selected>Unlimited</option><option value="1">Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningTimerMode">Listening timer</label><select id="listeningTimerMode"><option value="off" selected>Off</option><option value="10">Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option></select></div><div data-quiz-setting="listening"><label for="listeningHintMode">Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
         <div class="row"><div data-quiz-setting="all"><label for="quizScope">Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div></div>
@@ -176,7 +184,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </div>
       <div id="quizRun" style="display:none">
         <div class="quiz-top"><div class="quiz-count" id="quizProgress">1 / 10</div><div class="quiz-count" id="quizScore">0 / 10</div></div>
-        <div class="quiz-question"><div><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div></div></div>
+        <div class="quiz-question" id="quizQuestionCard"><div class="quiz-flip-inner"><div id="quizQuestionFront" class="quiz-face quiz-face-front"><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div></div><div id="quizQuestionBack" class="quiz-face quiz-face-back" aria-hidden="true"><span class="quiz-reveal-kicker">ANSWER</span><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div><span class="quiz-reveal-note">Review the answer, then continue when you are ready.</span></div></div></div>
         <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel">Time limit: Off</span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
         <div id="typingAreaHome"><div id="typingArea"><label class="sr-only" for="quizAnswer">Your answer</label><input id="quizAnswer" placeholder="Type answer" onkeydown="handleQuizAnswerKey(event)"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()">Check</button><button class="btn blue" onclick="speakQuizQuestion()">▶ Question</button></div></div></div>
         <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box" role="status" aria-live="polite"></div>
@@ -301,15 +309,15 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <button id="appUpdateButton" type="button" hidden>Update</button>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg7"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
 </body>
 </html>

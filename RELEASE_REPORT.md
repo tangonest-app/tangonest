@@ -95,13 +95,12 @@ become an authentication logout.
 ## Known Issues
 
 - No known UI release blocker remains in the verified local package.
-- Live production Supabase credentials and real cross-device accounts were not
-  modified or exercised by this visual release. Existing production acceptance
-  requirements in `RC19_ACCOUNT_ISOLATION_QA_REPORT.md` still apply.
+- The production learning-data reset remains a deliberate, one-time destructive
+  operation and must be confirmed immediately before it is run in Supabase.
 
 ## Manual Follow-up
 
-1. Upload the contents of `TangoNest_ForestDeskGlass_UI_READY` to the GitHub
+1. Upload the contents of `TangoNest_ForestDeskGlass_FDG8_READY` to the GitHub
    Pages repository root.
 2. Wait for GitHub Pages deployment to complete.
 3. Open the public URL once with a hard reload so the new Service Worker shell
@@ -151,3 +150,24 @@ become an authentication logout.
 - Final FDG7 acceptance: 150 Playwright checks passed across desktop Chromium,
   mobile Chromium, and WebKit; 6 intended project-specific checks were skipped;
   0 failed. All 80 responsive QA screenshots were regenerated successfully.
+
+## FDG8 Ordinary Playlists, Stable Auth, And Quiz Flip
+
+- The internally selected primary playlist is no longer special in the UI.
+  Every playlist, including the initial one, exposes the same Rename and Delete
+  actions. Deleting it promotes another list or creates one empty `New Playlist`.
+- Name-based repair and merge behavior was removed. `French`, `Chinese`, renamed
+  playlists, and duplicate user-chosen names are preserved until the user acts.
+- Session restoration now shows one reserved loading state. Email and password
+  controls appear only after Supabase confirms there is no valid session, so the
+  login form no longer flashes and disappears during startup.
+- Quiz answers remain on screen until `Next now` is pressed. The fixed-size
+  question surface flips to a brass-edged answer face without moving the page,
+  choices, feedback area, or subsequent controls.
+- `SUPABASE_FDG8_PLAYLIST_RESET.sql` contains the one-time authorized production
+  reset. It keeps Auth identities, removes all words and playlists, and creates
+  exactly one empty `New Playlist` per existing account, followed by verification
+  counts.
+- Final FDG8 acceptance: syntax/unit/static checks passed; 150 Playwright checks
+  passed across desktop Chromium, mobile Chromium, and WebKit; 6 intentionally
+  skipped; 0 failed. All 80 responsive QA screenshots were regenerated.

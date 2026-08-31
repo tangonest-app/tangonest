@@ -1,7 +1,7 @@
 # TangoNest Forest Desk Glass
 
 TangoNest is a vocabulary library for collecting, organizing, reviewing,
-quizzing, and listening to words. This `1.0.0-rc.19-fdg7` package applies the
+quizzing, and listening to words. This `1.0.0-rc.19-fdg8` package applies the
 Forest Desk Glass interface while preserving the existing account-scoped data,
 learning, playlist, Auth, sync, and PWA behavior.
 

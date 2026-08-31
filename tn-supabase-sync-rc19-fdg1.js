@@ -15,11 +15,10 @@
   const LEGACY_PENDING_KEY = "tangonest_pending_mutations_v1";
   const LEGACY_RECENT_PLAYLIST_KEY = "tangonest_recent_playlist_v1";
   const ACCOUNT_CLEAN_START_PREFIX = "tangonest_account_isolation_reset_v2:";
-  const DEFAULT_PLAYLIST_NAME = "My Words";
+  const DEFAULT_PLAYLIST_NAME = "New Playlist";
   const LOCAL_DEFAULT_PLAYLIST_ID = "local-my-words";
   const CLOUD_PAGE_SIZE = 1000;
   const BULK_INSERT_SIZE = 250;
-  const LEGACY_EMPTY_PLAYLIST_NAMES = new Set(["new playlist","starter","default","chinese"]);
   const LEGACY_AUTH_KEYS = [
     "tangonest_sync_email_v1",
     "tangonest_sync_hash_v1",
@@ -707,48 +706,17 @@
       id:row.id,
       name:row.name || "Untitled Playlist",
       isDefault:!!row.is_default,
-      systemKey:row.is_default ? "default-my-words" : "",
+      systemKey:row.is_default ? "primary-playlist" : "",
       createdAt:row.created_at || nowIso(),
       updatedAt:row.updated_at || row.created_at || nowIso(),
       contentUpdatedAt:row.content_updated_at || row.updated_at || row.created_at || nowIso()
     };
   }
 
-  function timestamp(value){
-    const parsed=Date.parse(value||"");
-    return Number.isFinite(parsed)?parsed:null;
-  }
-
-  function isLegacyDefaultRepairPair(row,canonical){
-    if(!row||!canonical||row.id===canonical.id)return false;
-    if(!LEGACY_EMPTY_PLAYLIST_NAMES.has(safeText(row.name).toLowerCase()))return false;
-    const created=timestamp(row.created_at);
-    const updated=timestamp(row.updated_at);
-    const name=safeText(row.name).toLowerCase();
-    if(name!=="chinese"&&created!==null&&updated!==null&&Math.abs(updated-created)<=5000)return true;
-    if(updated===null)return false;
-    return [timestamp(canonical.created_at),timestamp(canonical.updated_at)]
-      .some(value=>value!==null&&Math.abs(updated-value)<=5000);
-  }
-
-  async function repairLegacyDefaultRows(playlistRows,wordRows,userId){
-    if(!Array.isArray(playlistRows)||!Array.isArray(wordRows)||!userId)return playlistRows;
-    const canonical=playlistRows.find(row=>row.is_default)
-      ||playlistRows.find(row=>safeText(row.name).toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase());
-    if(!canonical)return playlistRows;
-    const usedPlaylistIds=new Set(wordRows.map(row=>safeText(row.playlist_id)).filter(Boolean));
-    const candidates=playlistRows.filter(row=>!usedPlaylistIds.has(safeText(row.id))&&isLegacyDefaultRepairPair(row,canonical));
-    if(!candidates.length)return playlistRows;
-    const removedIds=new Set();
-    for(const candidate of candidates){
-      const result=await client.from("tn_playlists")
-        .delete()
-        .eq("id",candidate.id)
-        .eq("user_id",userId);
-      if(result.error)throw result.error;
-      removedIds.add(candidate.id);
-    }
-    return playlistRows.filter(row=>!removedIds.has(row.id));
+  async function repairLegacyDefaultRows(playlistRows){
+    // Playlist names are user data. Never infer that French, Chinese, Starter,
+    // or any other empty list is a generated row and silently delete it.
+    return Array.isArray(playlistRows)?playlistRows:[];
   }
 
   function toLocalWord(row){
@@ -887,25 +855,9 @@
       assertActiveRequest(userId,account.generation);
       if(existing.error)throw existing.error;
       const rows=existing.data||[];
-      const namedRows=rows.filter(row=>safeText(row.name).toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase());
-      const named=rows.find(row=>row.is_default)||namedRows[0]||null;
-      for(const duplicate of namedRows){
-        if(!named||duplicate.id===named.id)continue;
-        const moved=await client.from("tn_words")
-          .update({playlist_id:named.id,content_updated_at:nowIso(),updated_at:nowIso()})
-          .eq("playlist_id",duplicate.id)
-          .eq("user_id",userId);
-        assertActiveRequest(userId,account.generation);
-        if(moved.error)throw moved.error;
-        const removed=await client.from("tn_playlists")
-          .delete()
-          .eq("id",duplicate.id)
-          .eq("user_id",userId);
-        assertActiveRequest(userId,account.generation);
-        if(removed.error)throw removed.error;
-      }
+      const primary=rows.find(row=>row.is_default)||rows[0]||null;
       for(const row of existing.data||[]){
-        if(!row.is_default||row.id===named?.id)continue;
+        if(!row.is_default||row.id===primary?.id)continue;
         const demoted=await client.from("tn_playlists")
           .update({is_default:false})
           .eq("id",row.id)
@@ -913,10 +865,10 @@
         assertActiveRequest(userId,account.generation);
         if(demoted.error)throw demoted.error;
       }
-      if(named){
+      if(primary){
         const promoted=await client.from("tn_playlists")
           .update({is_default:true})
-          .eq("id",named.id)
+          .eq("id",primary.id)
           .eq("user_id",userId)
           .select("*")
           .single();
@@ -1422,7 +1374,6 @@
       const input = $("newList");
       name = safeText(name || input?.value);
       if(!name)return toast("Playlist name is required");
-      if(name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase())return toast("My Words already exists and is reserved as the default playlist.");
       const result = await client.from("tn_playlists")
         .insert({user_id:account.userId,name})
         .select("*")
@@ -1446,7 +1397,6 @@
       if(!id || !name){toast("Playlist name is required");return false}
       const list=data.lists?.find(item=>item.id===id);
       if(!list){toast("Playlist not found");return false}
-      if(!list.isDefault&&name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase()){toast("My Words is reserved as the default playlist.");return false}
       if(data.lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast("A playlist with this name already exists.");return false}
       list.name=name;
       list.updatedAt=nowIso();
@@ -1463,7 +1413,6 @@
       if(!id || !name){toast("Playlist name is required");return false}
       const list=getDb().lists?.find(item=>item.id===id);
       if(!list){toast("Playlist not found");return false}
-      if(!list.isDefault&&name.toLowerCase()===DEFAULT_PLAYLIST_NAME.toLowerCase()){toast("My Words is reserved as the default playlist.");return false}
       if(getDb().lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast("A playlist with this name already exists.");return false}
       const result = await client.from("tn_playlists")
         .update({name,updated_at:nowIso()})
@@ -1492,7 +1441,6 @@
       const db = getDb();
       const list = db.lists.find(item => item.id === id);
       if(!list)return toast("Playlist not found");
-      if(list.isDefault)return toast("My Words is the default playlist and cannot be deleted.");
       if(!options.confirmed&&!confirm(`Delete "${list.name}"? Its words will remain in All Words as unfiled words.`))return;
       if(typeof client.rpc === "function"){
         const rpcResult = await client.rpc("tn_delete_playlist",{p_playlist_id:id});
@@ -1516,6 +1464,21 @@
 
   async function deletePlaylistFallback(id,db,account){
     assertActiveRequest(account.userId,account.generation);
+    const target=(db.lists||[]).find(list=>list.id===id);
+    if(target?.isDefault){
+      const demoted=await client.from("tn_playlists")
+        .update({is_default:false,updated_at:nowIso()})
+        .eq("id",id)
+        .eq("user_id",account.userId);
+      if(demoted.error)return {error:demoted.error};
+      assertActiveRequest(account.userId,account.generation);
+      const replacement=(db.lists||[]).find(list=>list.id!==id);
+      const replacementResult=replacement
+        ?await client.from("tn_playlists").update({is_default:true,updated_at:nowIso()}).eq("id",replacement.id).eq("user_id",account.userId)
+        :await client.from("tn_playlists").insert({user_id:account.userId,name:DEFAULT_PLAYLIST_NAME,is_default:true});
+      if(replacementResult.error)return {error:replacementResult.error};
+      assertActiveRequest(account.userId,account.generation);
+    }
     const affectedIds=(db.words || []).filter(word => word.listId === id).map(word => word.id);
     const move = await client.from("tn_words")
       .update({playlist_id:null,content_updated_at:nowIso(),updated_at:nowIso()})

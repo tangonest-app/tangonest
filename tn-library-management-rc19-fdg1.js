@@ -3,7 +3,7 @@
 
   const WORD_RENDER_LIMIT = 100;
   const LOCAL_DEFAULT_PLAYLIST_ID = "local-my-words";
-  const DEFAULT_PLAYLIST_NAME = "My Words";
+  const DEFAULT_PLAYLIST_NAME = "New Playlist";
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const engine = () => window.TangoNestLearningEngine || null;
@@ -297,8 +297,8 @@
               <button type="button" data-playlist-mode="cards" data-playlist-id="${esc(list.id)}" aria-label="Study ${esc(list.name)} with cards">Cards</button>
               <button type="button" data-playlist-mode="listen" data-playlist-id="${esc(list.id)}" aria-label="Listen to ${esc(list.name)}">Listen</button>
               <button type="button" data-rename-playlist="${esc(list.id)}" aria-label="Rename ${esc(list.name)}">Rename</button>
-              ${isDefaultList(list)?'<span class="tn-default-playlist-label">Default</span>':`<button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>`}
-              ${isDefaultList(list)?"":`<button type="button" class="tn-playlist-menu-btn" data-menu-playlist="${esc(list.id)}" aria-label="More actions for ${esc(list.name)}">...</button>`}
+              <button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>
+              <button type="button" class="tn-playlist-menu-btn" data-menu-playlist="${esc(list.id)}" aria-label="More actions for ${esc(list.name)}">...</button>
             </div>
           </article>
         `;}).join("")}
