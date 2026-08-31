@@ -6,10 +6,38 @@
     && new URLSearchParams(location.search).get("qa")==="1";
   let waitingWorker=null;
   let updateRequested=false;
+  const pageLabels={
+    home:["Forest Desk","Home"],
+    create:["Collection","Add Words"],
+    library:["Collection","Library"],
+    cards:["Practice","Cards"],
+    quiz:["Practice","Quiz"],
+    listen:["Practice","Listen"],
+    settings:["TangoNest","Settings"]
+  };
+
+  function normalizePage(page){
+    const value=String(page||"").toLowerCase().replace(/^page/,"");
+    return {add:"create",words:"library",study:"cards",audio:"listen",manage:"settings"}[value]||value||"home";
+  }
+
+  function updateShellContext(page){
+    const current=normalizePage(page);
+    const labels=pageLabels[current]||pageLabels.home;
+    const eyebrow=$("appPageEyebrow");
+    const title=$("appPageTitle");
+    if(eyebrow)eyebrow.textContent=labels[0];
+    if(title)title.textContent=labels[1];
+    document.title=`${labels[1]} · TangoNest`;
+  }
+
+  window.tnUpdateShellContext=updateShellContext;
 
   const shortcutPage=new URLSearchParams(location.search).get("page");
   if(["home","create","library","cards","quiz","listen","settings"].includes(shortcutPage||"")){
     try{localStorage.setItem("tangonest_last_page_v2",shortcutPage)}catch(error){}
+    const defer=typeof queueMicrotask==="function" ? queueMicrotask : callback=>Promise.resolve().then(callback);
+    defer(()=>window.tnStableNavigate?.(shortcutPage));
   }
 
   function updateBanner(){
@@ -45,7 +73,8 @@
   async function registerServiceWorker(){
     if(localQa||!("serviceWorker" in navigator)||!/^https?:$/.test(location.protocol))return;
     try{
-      const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./"});
+      const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./",updateViaCache:"none"});
+      await registration.update();
       watchRegistration(registration);
       registration.update().catch(()=>{});
     }catch(error){
@@ -65,5 +94,6 @@
   });
 
   updateBanner();
+  updateShellContext(document.querySelector(".page.active")?.id.replace(/^page/,"")||shortcutPage||"home");
   registerServiceWorker();
 })();
