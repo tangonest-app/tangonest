@@ -31,7 +31,7 @@ assert.match(serviceWorker,/request\.method!=="GET"/);
 assert.match(serviceWorker,/url\.origin!==BASE\.origin/);
 assert.match(serviceWorker,/SHELL_PATHS\.has\(url\.pathname\)/);
 assert.match(serviceWorker,/async function staticResponse[\s\S]+await fetch\(request\)[\s\S]+return cached\|\|Response\.error\(\)/,"Versioned assets use network-first with offline fallback");
-assert.match(serviceWorker,/tangonest-shell-v1\.0\.0-rc\.19-fdg4/);
+assert.match(serviceWorker,/tangonest-shell-v1\.0\.0-rc\.19-fdg5/);
 assert.match(serviceWorker,/\.\/default-playlist-rc19-fdg1\.js/);
 assert.match(serviceWorker,/\.\/assets\/botanical-corner\.svg/);
 assert.match(serviceWorker,/\.\/assets\/forest-study-login-v1\.png/);
@@ -50,8 +50,8 @@ const pngSize=file=>{
 for(const [file,size] of [["favicon.png",64],["apple-touch-icon.png",180],["icon-192.png",192],["icon-512.png",512],["icon-1024.png",1024]]){
   assert.deepEqual(pngSize(file),[size,size],`${file} must keep its declared square size`);
 }
-assert.match(html,/class="auth-logo"[^>]*><img src="\.\/icon-192\.png\?v=1\.0\.0-rc\.19-fdg4"/);
-assert.match(html,/class="brand-mark"[^>]*><img src="\.\/icon-192\.png\?v=1\.0\.0-rc\.19-fdg4"/);
+assert.match(html,/class="auth-logo"[^>]*><img src="\.\/icon-192\.png\?v=1\.0\.0-rc\.19-fdg5"/);
+assert.match(html,/class="brand-mark"[^>]*><img src="\.\/icon-192\.png\?v=1\.0\.0-rc\.19-fdg5"/);
 assert.match(style,/@media\(prefers-reduced-motion:reduce\)/);
 assert.equal((style.match(/^:root\{/gm)||[]).length,1);
 assert.doesNotMatch(style,/letter-spacing\s*:\s*-/);
@@ -119,9 +119,9 @@ for(const match of html.matchAll(/<(input|select|textarea)\b([^>]*)>/gi)){
 
 const version=config.match(/appVersion:"([^"]+)"/)?.[1];
 assert.equal(version,"1.0.0-rc.19");
-assert.match(html,/1\.0\.0-rc\.19-fdg4/,"The icon refresh must bust all earlier asset caches");
+assert.match(html,/1\.0\.0-rc\.19-fdg5/,"The responsive polish must bust all earlier asset caches");
 for(const asset of ["style-rc19-fdg1.css","ui/forest-desk-glass-rc19-fdg1.css","default-playlist-rc19-fdg1.js","app-rc19-fdg1.js","learning-engine-rc19-fdg1.js","tn-supabase-sync-rc19-fdg1.js","tn-library-management-rc19-fdg1.js","tn-learning-flow-rc19-fdg1.js","ui/learning-presentation-rc19-fdg1.js","ui/runtime-rc19-fdg1.js"]){
-  assert.match(html,new RegExp(`${asset.replace(/[.]/g,"\\.")}\\?v=${version.replace(/[.]/g,"\\.")}-fdg4`),`Cache-safe deployed asset: ${asset}`);
+  assert.match(html,new RegExp(`${asset.replace(/[.]/g,"\\.")}\\?v=${version.replace(/[.]/g,"\\.")}-fdg5`),`Cache-safe deployed asset: ${asset}`);
 }
 
 const deployedCopies=new Map([
