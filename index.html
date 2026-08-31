@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg3">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg3">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg4">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg4">
 
 <script>
 (function(){
@@ -14,10 +14,10 @@
 </script>
 
 
-<link rel="icon" type="image/png" href="./favicon.png">
-<link rel="icon" href="./favicon.ico">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg3">
+<link rel="icon" type="image/png" href="./favicon.png?v=1.0.0-rc.19-fdg4">
+<link rel="icon" href="./favicon.ico?v=1.0.0-rc.19-fdg4">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1.0.0-rc.19-fdg4">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg4">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -32,7 +32,7 @@ html.auth-ready #authScreen{display:none;pointer-events:none;visibility:hidden;o
 #authScreen,#authScreen *{box-sizing:border-box;pointer-events:auto;touch-action:auto}
 .auth-card{position:relative;width:min(500px,100%);margin:auto;padding:28px;border:1px solid rgba(255,250,240,.58);border-radius:10px;background:rgba(255,250,240,.75);box-shadow:0 26px 80px rgba(5,24,17,.38);color:#173126;backdrop-filter:blur(22px) saturate(.82)}
 .auth-card::before{content:"";position:absolute;inset:9px;border:1px solid rgba(177,138,66,.24);border-radius:6px;pointer-events:none}
-.auth-brand{position:relative;display:flex;align-items:center;gap:13px;margin-bottom:8px}.auth-logo{display:grid;place-items:center;width:48px;height:48px;border:1px solid #ad8a4f;border-radius:50%;background:#103a2c;color:#e9d49e;font-family:"Iowan Old Style",Georgia,serif;font-size:13px;font-weight:700}.auth-title{color:#103a2c;font-family:"Iowan Old Style",Georgia,serif;font-size:30px;line-height:1;font-weight:600}.auth-subtitle{margin-top:4px;color:#536157;font-family:"Iowan Old Style",Georgia,serif;font-size:13px;font-style:italic}.auth-mode-label{display:inline-flex;margin:7px 0 12px 61px;padding:5px 11px;border:1px solid rgba(89,104,91,.2);border-radius:999px;background:rgba(241,234,219,.76);color:#59685b;font-size:11px;font-weight:700}.auth-kicker{display:inline-flex;margin-bottom:10px;color:#80662f;font-size:10px;font-weight:750;letter-spacing:.13em}
+.auth-brand{position:relative;display:flex;align-items:center;gap:13px;margin-bottom:8px}.auth-logo{display:grid;place-items:center;width:48px;height:48px;overflow:hidden;border:1px solid #ad8a4f;border-radius:12px;background:#103a2c;color:#e9d49e;font-family:"Iowan Old Style",Georgia,serif;font-size:13px;font-weight:700}.auth-logo img{display:block;width:100%;height:100%;border-radius:inherit;object-fit:cover}.auth-title{color:#103a2c;font-family:"Iowan Old Style",Georgia,serif;font-size:30px;line-height:1;font-weight:600}.auth-subtitle{margin-top:4px;color:#536157;font-family:"Iowan Old Style",Georgia,serif;font-size:13px;font-style:italic}.auth-mode-label{display:inline-flex;margin:7px 0 12px 61px;padding:5px 11px;border:1px solid rgba(89,104,91,.2);border-radius:999px;background:rgba(241,234,219,.76);color:#59685b;font-size:11px;font-weight:700}.auth-kicker{display:inline-flex;margin-bottom:10px;color:#80662f;font-size:10px;font-weight:750;letter-spacing:.13em}
 #authScreen h1{margin:0 0 9px;color:#103a2c;font-family:"Iowan Old Style",Georgia,serif;font-size:36px;line-height:1.08;font-weight:600;letter-spacing:0}#authScreen p{margin:0 0 14px;color:#5f695f;font-family:"Iowan Old Style",Georgia,serif;font-size:15px;line-height:1.5}#authScreen label{display:block;margin:10px 0 5px;color:#46564b;font-size:12px;font-weight:700}
 #authScreen input{display:block;width:100%;height:48px;padding:0 13px;border:1px solid #c2b493;border-radius:5px;background:rgba(255,250,240,.9);color:#173126;font-size:16px;outline:none;-webkit-appearance:none}#authScreen input:focus{border-color:#225d43;box-shadow:0 0 0 3px rgba(34,93,67,.13)}
 .auth-message{margin:13px 0;padding:10px 12px;border:1px solid #cbd7c4;border-radius:5px;background:rgba(233,238,226,.82);color:#315c43;font-size:12px;font-weight:620}.auth-message.error{border-color:#dfbdb4;background:#f8ece8;color:#93483f}.auth-message.success{background:#e8f1e6;color:#39704c}.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -48,7 +48,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
 <section id="authScreen" class="auth-screen" aria-labelledby="authTitle">
   <div class="auth-card">
-    <div class="auth-brand"><div class="auth-logo">TN</div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
+    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg4" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
     <div id="authModeLabel" class="auth-mode-label">Local</div>
     <div class="auth-kicker">WELCOME TO YOUR STUDY</div>
     <h1 id="authTitle">Return to your words.</h1>
@@ -66,7 +66,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
 <div class="app" inert aria-hidden="true">
   <aside class="app-sidebar">
-    <div class="brand"><div class="brand-mark">TN</div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg4" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
     <nav class="nav" aria-label="Primary navigation">
       <span class="nav-section-label">Workspace</span>
       <button id="navHome" class="active" type="button" onclick="go('home')">Home</button>
@@ -82,7 +82,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   </aside>
   <div class="app-workspace">
     <header class="header">
-      <div class="mobile-brand" aria-label="TangoNest"><span class="brand-mark">TN</span></div>
+      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg4" alt=""></span></div>
       <div class="page-heading"><span id="appPageEyebrow">Forest Desk</span><strong id="appPageTitle">Home</strong></div>
       <div class="stats" aria-label="Library summary">
         <div class="stat"><b id="wc">0</b><span>Words</span></div><div class="stat"><b id="listCount">0</b><span>Lists</span></div><div class="stat"><b id="lc">0</b><span>Learned</span></div><div class="stat"><b id="hc">0</b><span>Hard</span></div>
@@ -295,14 +295,14 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <button id="appUpdateButton" type="button" hidden>Update</button>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg3"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg4"></script>
 </body>
 </html>
