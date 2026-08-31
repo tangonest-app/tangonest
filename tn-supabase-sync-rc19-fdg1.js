@@ -83,6 +83,7 @@
   let accountCleanStartPromise = null;
   let accountCleanStartUserId = "";
   let accountCleanStartGeneration = -1;
+  let bulkImportInFlight = false;
   let exampleRepairUserId = "";
   let authGeneration = 0;
 
@@ -1809,9 +1810,12 @@
   }
 
   async function bulkImport(mode){
+    if(bulkImportInFlight)return toast("Bulk Add is already running");
     let account=null;
     let insertedIds=[];
     let targetInfo=null;
+    let progressStarted=false;
+    let progressTotal=0;
     try{
       account=await requireAccountContext();
       if(mode === "replace"){
@@ -1837,6 +1841,10 @@
       }
       if(!rows.length)return toast("No new words to add");
       if(typeof window.requestBulkDestinationConfirmation==="function"&&!window.requestBulkDestinationConfirmation(rows,mode))return;
+      bulkImportInFlight=true;
+      progressStarted=true;
+      progressTotal=rows.length;
+      window.tnBulkProgress?.start?.(rows.length);
       const playlist = selectedPlaylistId("bulkList");
       rememberPlaylist(playlist);
       const frontLang = safeLang($("bulkFrontLang")?.value,"en-US");
@@ -1891,6 +1899,7 @@
         loadTimer=null;
         for(let start=0;start<payload.length;start+=BULK_INSERT_SIZE){
           const chunk=payload.slice(start,start+BULK_INSERT_SIZE);
+          window.tnBulkProgress?.update?.(start,payload.length,`Saving batch ${Math.floor(start/BULK_INSERT_SIZE)+1} of ${Math.ceil(payload.length/BULK_INSERT_SIZE)}`);
           const result=await client.from("tn_words").insert(chunk).select("id");
           if(result.error){
             throw new Error(`Bulk Add stopped at row ${start+1}: ${result.error.message||result.error}`);
@@ -1901,6 +1910,7 @@
           }
           if(Array.isArray(result.data))insertedIds.push(...result.data.map(row=>row.id).filter(Boolean));
           insertedCount+=Array.isArray(result.data)?result.data.length:chunk.length;
+          window.tnBulkProgress?.update?.(insertedCount,payload.length,`Saved batch ${Math.floor(start/BULK_INSERT_SIZE)+1} of ${Math.ceil(payload.length/BULK_INSERT_SIZE)}`);
         }
         if(insertedCount!==payload.length)throw new Error(`Bulk Add saved ${insertedCount} of ${payload.length} rows.`);
       }
@@ -1910,16 +1920,21 @@
       loadTimer=null;
       await loadCloud({force:true,silent:true});
       if(insertedIds.length)storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo.playlistId,playlistName:targetInfo.playlistName,createdAt:nowIso()});
+      window.tnBulkProgress?.finish?.(rows.length);
       toast(`${rows.length} added`);
     }catch(error){
-      if(error?.staleAccountRequest)return;
+      if(error?.staleAccountRequest){if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Account changed · import stopped safely");return}
       if(account&&insertedIds.length&&activeRequest(account.userId,account.generation)){
         storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo?.playlistId||"",playlistName:targetInfo?.playlistName||"the selected playlist",createdAt:nowIso()});
         try{await loadCloud({force:true,silent:true})}catch(loadError){}
+        if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Import paused · undo is available");
         toast(`Bulk Add stopped after ${insertedIds.length} words. Undo is available below.`);
         return;
       }
+      if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Import could not be completed");
       toast(userError(error,"Couldn't add these words. Check the entries and try again."));
+    }finally{
+      if(progressStarted)bulkImportInFlight=false;
     }
   }
 

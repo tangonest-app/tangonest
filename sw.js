@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg8";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg9";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",

@@ -762,6 +762,28 @@ function renderHome(){
   set("dashLearned",Math.round((learned/Math.max(1,db.words.length))*100)+"%");
   set("dashDue",due.length);
   set("dashHard",hard);
+  const memoryPath=$("homeMemoryPath");
+  if(memoryPath){
+    const stages={new:0,learning:0,review:0,mastered:0};
+    (db.words||[]).forEach(word=>{
+      const reviewCount=Number(word.reviewCount||word.seen||0);
+      const level=Number(word.level||1);
+      const interval=Number(word.reviewIntervalDays||0);
+      const streak=Number(word.consecutiveCorrect||0);
+      if(learningEngine()?.isMasteredWord(word)||word.status==="learned")stages.mastered++;
+      else if(reviewCount===0&&String(word.learningState||"new")==="new")stages.new++;
+      else if(interval>=7||streak>=3||level>=4)stages.review++;
+      else stages.learning++;
+    });
+    const total=Math.max(1,db.words.length);
+    const items=[
+      {key:"new",label:"New",note:"Seeds",count:stages.new},
+      {key:"learning",label:"Learning",note:"Taking root",count:stages.learning},
+      {key:"review",label:"Review",note:"Growing",count:stages.review},
+      {key:"mastered",label:"Mastered",note:"Established",count:stages.mastered}
+    ];
+    memoryPath.innerHTML=db.words.length?`<div class="tn-memory-track" aria-hidden="true">${items.map(item=>`<i class="${item.key}" style="--tn-memory-share:${(item.count/total).toFixed(4)}"></i>`).join("")}</div><div class="tn-memory-stages">${items.map(item=>`<div><span class="tn-memory-dot ${item.key}"></span><b>${item.count}</b><strong>${item.label}</strong><small>${item.note}</small></div>`).join("")}</div>`:`<div class="tn-memory-empty"><strong>Your memory path begins with one word.</strong><button type="button" class="btn" onclick="appShow('add')">Add the first word</button></div>`;
+  }
   const todayPlan=$("todayPlan");
   if(todayPlan){
     const newCount=session.new;
@@ -939,6 +961,9 @@ function bulkParseStats(){
 }
 let approvedBulkConfirmationKey="";
 let lastLocalBulkUndo=null;
+let localBulkImportInFlight=false;
+let bulkDockTimer=0;
+let bulkProgressHideTimer=0;
 function bulkDestination(){
   const listId=$("bulkList")?.value||"";
   const list=db.lists.find(item=>item.id===listId);
@@ -970,12 +995,47 @@ function requestBulkDestinationConfirmation(rows,mode){
   const panel=$("bulkTargetConfirm");
   if(!panel)return true;
   const target=bulkDestination();
+  const duplicatePanel=$("bulkDuplicatePanel");
+  if(duplicatePanel)duplicatePanel.classList.remove("show");
   panel.hidden=false;
-  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">Confirm destination</span><strong>${esc(target.listName)}</strong><small>${rows.length} words · ${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>Go back</button><button type="button" data-bulk-approve>Import here</button></div>`;
+  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">Confirm destination</span><strong id="bulkConfirmTitle">${esc(target.listName)}</strong><small>${rows.length} words · ${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>Go back</button><button type="button" data-bulk-approve>Import here</button></div>`;
   panel.querySelector("[data-bulk-cancel]")?.addEventListener("click",hideBulkDestinationConfirmation);
   panel.querySelector("[data-bulk-approve]")?.addEventListener("click",()=>{approvedBulkConfirmationKey=key;window.bulkImport(mode||undefined)});
+  setTimeout(()=>panel.querySelector("[data-bulk-approve]")?.focus({preventScroll:true}),0);
   return false;
 }
+function setBulkProgress(current,total,label,state="working"){
+  const panel=$("bulkProgressPanel");
+  if(!panel)return;
+  clearTimeout(bulkProgressHideTimer);
+  const safeTotal=Math.max(1,Number(total)||1);
+  const safeCurrent=Math.max(0,Math.min(safeTotal,Number(current)||0));
+  const percent=Math.max(0,Math.min(100,Math.round(safeCurrent/safeTotal*100)));
+  panel.hidden=false;
+  panel.dataset.state=state;
+  if($("bulkProgressLabel"))$("bulkProgressLabel").textContent=label||"Saving your words";
+  if($("bulkProgressDetail"))$("bulkProgressDetail").textContent=state==="done"?`${safeCurrent} words are safely in your collection.`:state==="error"?"Nothing else will be changed until you try again.":`${safeCurrent} of ${safeTotal} words saved · keep this tab open.`;
+  if($("bulkProgressPercent"))$("bulkProgressPercent").textContent=`${percent}%`;
+  if($("bulkProgressFill"))$("bulkProgressFill").style.transform=`scaleX(${percent/100})`;
+}
+function beginBulkProgress(total){setBulkProgress(0,total,"Preparing your collection","working")}
+function updateBulkProgress(current,total,label){setBulkProgress(current,total,label||"Planting words in your library","working")}
+function finishBulkProgress(total){setBulkProgress(total,total,"Import complete","done");bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},1400)}
+function failBulkProgress(current,total,message){setBulkProgress(current,total,message||"Import paused","error");bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},3200)}
+function bulkProgressBusy(){return localBulkImportInFlight||$("bulkProgressPanel")?.dataset.state==="working"}
+window.tnBulkProgress={start:beginBulkProgress,update:updateBulkProgress,finish:finishBulkProgress,fail:failBulkProgress,busy:bulkProgressBusy};
+function updateBulkActionDock(){
+  const dock=$("bulkActionDock");
+  if(!dock)return;
+  const parsed=parseBulk($("bulkText")?.value||"");
+  dock.hidden=!parsed.length;
+  if($("bulkDockCount"))$("bulkDockCount").textContent=parsed.length?`${parsed.length} readable word${parsed.length===1?"":"s"}`:"Paste words to begin";
+  if($("bulkDockMeta"))$("bulkDockMeta").textContent=parsed.length>=500?"Large import ready · progress will be shown while every batch is saved.":"Preview checks duplicates and the destination before saving.";
+  if($("bulkRegisterBtn"))$("bulkRegisterBtn").textContent=parsed.length?`Review & Import ${parsed.length}`:"Review & Import";
+}
+function queueBulkActionDock(){clearTimeout(bulkDockTimer);bulkDockTimer=setTimeout(updateBulkActionDock,120)}
+function clearBulkInput(){if($("bulkText"))$("bulkText").value="";clearBulkPreview();updateBulkActionDock()}
+window.clearBulkInput=clearBulkInput;
 function showBulkUndo(info){
   const panel=$("bulkUndoPanel");
   if(!panel)return;
@@ -996,27 +1056,32 @@ function clearBulkPreview(){
   let b=$("bulkPreview");if(b){b.style.display="none";b.innerHTML=""}
   let d=$("bulkDuplicatePanel");if(d){d.classList.remove("show");d.innerHTML=""}
   hideBulkDestinationConfirmation();
+  updateBulkActionDock();
 }
 function renderDuplicatePanel(rows){
   const panel=$("bulkDuplicatePanel");
   if(!panel)return;
   const dup=rows.filter(r=>r.frontDuplicate);
   if(!dup.length){panel.classList.remove("show");panel.innerHTML="";return;}
+  const visible=dup.slice(0,60);
   panel.classList.add("show");
-  panel.innerHTML=`<div class="dup-title">Duplicate front words found: ${dup.length}</div>
+  panel.innerHTML=`<div class="dup-panel-head"><div id="bulkDuplicateTitle" class="dup-title">Duplicate front words found: ${dup.length}</div><button type="button" class="dup-close" data-dup-close aria-label="Close duplicate review">Close</button></div>
   <p class="desc">Frontが同じ単語があります。自動スキップせず、下のボタンで登録方法を選んでください。</p>
-  <div class="dup-list">`+dup.map(r=>{
+  <div class="dup-list">`+visible.map(r=>{
     let ex=r.existing;
     return `<div class="dup-item"><b>${esc(r.front)}</b>
       <span class="badge">New: ${esc(r.back)} / ${esc(r.pos||"—")}</span>
       ${ex?`<span class="badge yellow">Existing: ${esc(ex.back)} / ${esc(ex.pos||"—")}</span>`:"<span class='badge'>Duplicate in pasted rows</span>"}
     </div>`
-  }).join("")+`</div>
+  }).join("")+(dup.length>visible.length?`<div class="dup-more">${dup.length-visible.length} more duplicate rows are included in this decision.</div>`:"")+`</div>
   <div class="dup-actions">
-    <button class="btn red" onclick="bulkImport('skip')">Skip Exact Duplicates</button>
-    <button class="btn green" onclick="bulkImport('addBoth')">Add Both</button>
-    <button class="btn blue" onclick="bulkImport('replace')">Replace Existing</button>
+    <button class="btn red" type="button" data-bulk-mode="skip">Skip Exact Duplicates</button>
+    <button class="btn green" type="button" data-bulk-mode="addBoth">Add Both</button>
+    <button class="btn blue" type="button" data-bulk-mode="replace">Replace Existing</button>
   </div>`;
+  panel.querySelector("[data-dup-close]")?.addEventListener("click",()=>panel.classList.remove("show"));
+  panel.querySelectorAll("[data-bulk-mode]").forEach(button=>button.addEventListener("click",()=>window.bulkImport(button.dataset.bulkMode)));
+  setTimeout(()=>panel.querySelector("[data-bulk-mode='addBoth']")?.focus({preventScroll:true}),0);
 }
 function previewBulk(){
   let stats=bulkParseStats(),rows=stats.rows,box=$("bulkPreview");
@@ -1024,9 +1089,11 @@ function previewBulk(){
   if(!rows.length){box.innerHTML='<div class="empty"><h3>No readable words</h3><p>Each row needs at least Front and Back.</p></div>';return}
   renderDuplicatePanel(rows);
   const target=bulkDestination();
-  box.innerHTML=`<div class="tn-bulk-preview-target"><b>Import to ${esc(target.listName)}</b><span>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</span></div><div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div><div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+rows.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
+  const visible=rows.slice(0,60);
+  box.innerHTML=`<div class="tn-bulk-preview-target"><b>Import to ${esc(target.listName)}</b><span>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</span></div><div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div>${rows.length>visible.length?`<p class="tn-bulk-preview-limit">Showing the first ${visible.length} rows. All ${rows.length} validated rows will be imported.</p>`:""}<div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+visible.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
 }
-function bulkImport(mode){
+async function bulkImport(mode){
+  if(localBulkImportInFlight)return toast("Bulk Add is already running");
   let rows=bulkRows();
   if(!rows.length)return toast("No readable words");
   const hasFrontDup=rows.some(r=>r.frontDuplicate);
@@ -1061,10 +1128,24 @@ function bulkImport(mode){
   }
   if(!rows.length)return toast("No new words to add");
   if(!requestBulkDestinationConfirmation(rows,mode))return;
-  const additions=rows.map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}));
-  db.words=[...db.words,...additions];
-  lastLocalBulkUndo={type:"ids",ids:additions.map(word=>word.id),count:additions.length};
-  $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:additions.length,playlistName:target.listName});toast(`${additions.length} added`);
+  localBulkImportInFlight=true;
+  beginBulkProgress(rows.length);
+  try{
+    const additions=[];
+    const chunkSize=200;
+    for(let start=0;start<rows.length;start+=chunkSize){
+      const chunk=rows.slice(start,start+chunkSize).map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}));
+      additions.push(...chunk);
+      updateBulkProgress(additions.length,rows.length,`Preparing batch ${Math.floor(start/chunkSize)+1}`);
+      await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+    }
+    db.words=[...db.words,...additions];
+    lastLocalBulkUndo={type:"ids",ids:additions.map(word=>word.id),count:additions.length};
+    $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:additions.length,playlistName:target.listName});finishBulkProgress(additions.length);toast(`${additions.length} added`);
+  }catch(error){
+    failBulkProgress(0,rows.length,"Import could not be completed");
+    toast("Couldn't add these words. Please try again.");
+  }finally{localBulkImportInFlight=false}
 }
 try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;window.requestBulkDestinationConfirmation=requestBulkDestinationConfirmation;window.showBulkUndo=showBulkUndo;window.clearBulkUndo=clearBulkUndo;window.undoLastBulkImport=undoLastBulkImport;window.updateBulkDestinationSummary=updateBulkDestinationSummary;}catch(e){}
 function posBadge(pos){return pos?`<span class="badge ${["noun","verb","adjective","adverb","phrase"].includes(pos)?pos:""}">${esc(pos)}</span>`:""}
@@ -1115,7 +1196,7 @@ function quizOrderedWords(words){
 }
 function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const QUIZ_FEEDBACK_SPEED_KEY="tangonest_quiz_feedback_speed_v1";
-const QUIZ_AUTO_ADVANCE_MIGRATION_KEY="tangonest_quiz_manual_feedback_fdg8_v1";
+const QUIZ_AUTO_ADVANCE_MIGRATION_KEY="tangonest_quiz_auto_feedback_fdg9_v1";
 function ensureQuizFeedbackDefault(){
   const el=$("quizAutoAdvance");
   if(!el)return;
@@ -1127,12 +1208,10 @@ function ensureQuizFeedbackDefault(){
   try{
     migrated=localStorage.getItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY)==="complete";
     saved=localStorage.getItem(QUIZ_FEEDBACK_SPEED_KEY)||"";
-    if(!migrated){saved="manual";localStorage.setItem(QUIZ_FEEDBACK_SPEED_KEY,saved);localStorage.setItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY,"complete")}
+    if(!migrated){saved="auto";localStorage.setItem(QUIZ_FEEDBACK_SPEED_KEY,saved);localStorage.setItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY,"complete")}
   }catch(e){}
   const values=[...el.options].map(option=>option.value);
-  el.value=values.includes(saved)?saved:"manual";
-  const custom=$("quizNextDelay");
-  if(custom&&!custom.value)custom.value="1.5";
+  el.value=values.includes(saved)?saved:"auto";
 }
 function updateQuizModeSettings(forceDefaults=false){
   const type=$("quizType")?.value||"choice";
@@ -1251,11 +1330,11 @@ function renderChoices(){
 }
 function chooseAnswer(btn,ans){if(quiz.answered)return;quiz.selectedAnswer=ans;let ok=normalize(ans)===normalize(correctAnswer());[...document.querySelectorAll(".choice")].forEach(b=>{b.disabled=true;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){};if(normalize(b.textContent)===normalize(correctAnswer()))b.classList.add("correct")});btn.classList.add("selected");if(!ok)btn.classList.add("wrong");finishAnswer(ok)}
 function quizLearningMessage(word,ok){if(!word)return"";const view=learningPresentation();const state=view?.state(word);const review=view?.review(word);return [state?.label,review?.label,!ok?"This word will appear more often.":""].filter(Boolean).join(" · ")}
-function quizFeedbackHtml(ok,word){const answer=correctAnswer();const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||"No answer";const learning=quizLearningMessage(word,ok);const auto=isAutoAdvance();const timing=auto?`<span class="quiz-auto-note">Next question in ${(nextDelay(ok)/1000).toFixed(1)}s</span>`:"";return `<div class="quiz-feedback-copy"><strong>${ok?"✓ Correct":"× Incorrect"}</strong><span>Your answer: ${esc(selected)}</span>${ok?"":`<span>Correct answer: ${esc(answer)}</span>`}${learning?`<span class="quiz-level-note">${esc(learning)}</span>`:""}${timing}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">Play answer</button><button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">Next now</button></div>`}
+function quizFeedbackHtml(ok,word){const answer=correctAnswer();const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||"No answer";const learning=quizLearningMessage(word,ok);const auto=isAutoAdvance();const delay=nextDelay(ok);const timing=auto?`<span class="quiz-auto-note">Next question in ${(delay/1000).toFixed(1)}s<i style="--quiz-auto-delay:${delay}ms"></i></span>`:"";return `<div class="quiz-feedback-copy"><strong>${ok?"✓ Correct":"× Incorrect"}</strong><span>Your answer: ${esc(selected)}</span>${ok?"":`<span>Correct answer: ${esc(answer)}</span>`}${learning?`<span class="quiz-level-note">${esc(learning)}</span>`:""}${timing}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">Play answer</button><button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">Next now</button></div>`}
 function renderQuizQuestionAnswer(ok){const box=$("quizQuestionAnswer");if(!box||!quiz.current)return;const card=$("quizQuestionCard");if(card)card.classList.add("is-answered");const front=$("quizQuestionFront");const back=$("quizQuestionBack");if(front)front.setAttribute("aria-hidden","true");if(back)back.setAttribute("aria-hidden","false");box.className=`quiz-question-answer show ${ok?"ok":"no"}`;box.innerHTML=`<div class="quiz-answer-status ${ok?"ok":"no"}">${ok?"✓ Correct":"× Incorrect"}</div><strong class="quiz-reveal-answer">${esc(correctAnswer())}</strong>${ok?"":`<span class="quiz-reveal-selected">You chose: ${esc(quiz.selectedAnswer||$("quizAnswer")?.value||"No answer")}</span>`}`}
 function finishAnswer(ok){if(quiz.answered)return;quiz.answered=true;quiz.previousQuestionId=quiz.current?.id||quiz.previousQuestionId;quiz.previousQuestionKey=quizQuestionKey(quiz.current)||quiz.previousQuestionKey;clearInterval(quizTimerInterval);const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";let fresh=null;if(ok){quiz.score++;fresh=updateWordLearning(quiz.current.id,"good",{mode:quiz.type||"quiz"});markMistakeCorrect(quiz.current.id);$("quizResult").className="result-box show ok";$("quizResult").innerHTML=quizFeedbackHtml(true,fresh)}else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());fresh=updateWordLearning(quiz.current.id,"again",{mode:quiz.type||"quiz"});$("quizResult").className="result-box show no";$("quizResult").innerHTML=quizFeedbackHtml(false,fresh);quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}$("choiceArea")?.classList.add("is-answered");renderQuizQuestionAnswer(ok);const skip=$("quizSkipButton");if(skip)skip.hidden=true;$("quizScore").textContent=quiz.score+" / "+quiz.total;if($("quizAudioAfter").value==="on")setTimeout(()=>{try{speakQuizFront()}catch(e){}},80);if(isAutoAdvance())scheduleNext(ok)}
-function isAutoAdvance(){const mode=$("quizAutoAdvance")?.value||"manual";return mode!=="manual"&&mode!=="off"}
-function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"auto";if(mode==="auto")return ok?1000:1600;let v=mode==="manual"||mode==="off"?1.5:parseFloat(mode);if(!Number.isFinite(v))v=1.5;v=Math.max(.7,Math.min(10,v));return Math.round(v*1000)}
+function isAutoAdvance(){const mode=$("quizAutoAdvance")?.value||"auto";return mode!=="manual"&&mode!=="off"}
+function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"auto";if(mode==="auto")return ok?2200:3200;let v=mode==="manual"||mode==="off"?2.5:parseFloat(mode);if(!Number.isFinite(v))v=2.5;v=Math.max(1.2,Math.min(10,v));return Math.round(v*1000)}
 function scheduleNext(ok){clearTimeout(quizAutoTimer);quizAutoTimer=setTimeout(()=>advanceQuiz(),nextDelay(ok))}
 function advanceQuiz(){clearQuizTimers();if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}quiz.index++;if(quiz.index>=quiz.queue.length)return endQuiz();showQuizQuestion()}
 function nextQuizQuestion(){if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}advanceQuiz()}
@@ -1792,6 +1871,8 @@ function setupCoreInteractions(){
       el.addEventListener("change",()=>{rememberRecentPlaylist(el.value);if(id==="bulkList"){hideBulkDestinationConfirmation();updateBulkDestinationSummary()}});
     }
   });
+  const bulkText=$("bulkText");
+  if(bulkText&&!bulkText.dataset.bulkDock){bulkText.dataset.bulkDock="1";bulkText.addEventListener("input",queueBulkActionDock)}
   document.addEventListener("keydown",event=>{
     if(event.isComposing)return;
     const target=event.target;
@@ -1841,6 +1922,7 @@ function enhanceTangoNestApp(){
   setupCoreInteractions();
   restoreRecentPlaylist();
   updateBulkDestinationSummary();
+  updateBulkActionDock();
   ["bulkFrontLang","bulkBackLang"].forEach(id=>$(id)?.addEventListener("change",()=>{hideBulkDestinationConfirmation();updateBulkDestinationSummary()}));
   updateHeroPreview();
   if(typeof updateBrandContext==="function")updateBrandContext();

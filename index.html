@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg8">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg8">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg9">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg9">
 
 <script>
 (function(){
@@ -14,10 +14,10 @@
 </script>
 
 
-<link rel="icon" type="image/png" href="./favicon.png?v=1.0.0-rc.19-fdg8">
-<link rel="icon" href="./favicon.ico?v=1.0.0-rc.19-fdg8">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1.0.0-rc.19-fdg8">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg8">
+<link rel="icon" type="image/png" href="./favicon.png?v=1.0.0-rc.19-fdg9">
+<link rel="icon" href="./favicon.ico?v=1.0.0-rc.19-fdg9">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1.0.0-rc.19-fdg9">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg9">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -50,7 +50,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 <section id="authScreen" class="auth-screen" aria-labelledby="authTitle">
   <div class="auth-card">
     <div id="authInteractive" class="auth-interactive">
-    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg8" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
+    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg9" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
     <div id="authModeLabel" class="auth-mode-label">Local</div>
     <div class="auth-kicker">WELCOME TO YOUR STUDY</div>
     <h1 id="authTitle">Return to your words.</h1>
@@ -74,7 +74,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
 <div class="app" inert aria-hidden="true">
   <aside class="app-sidebar">
-    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg8" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg9" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
     <nav class="nav" aria-label="Primary navigation">
       <span class="nav-section-label">Workspace</span>
       <button id="navHome" class="active" type="button" onclick="go('home')">Home</button>
@@ -90,7 +90,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   </aside>
   <div class="app-workspace">
     <header class="header">
-      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg8" alt=""></span></div>
+      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg9" alt=""></span></div>
       <div class="page-heading"><span id="appPageEyebrow">Forest Desk</span><strong id="appPageTitle">Home</strong></div>
       <div class="stats" aria-label="Library summary">
         <div class="stat"><b id="wc">0</b><span>Words</span></div><div class="stat"><b id="listCount">0</b><span>Lists</span></div><div class="stat"><b id="lc">0</b><span>Learned</span></div><div class="stat"><b id="hc">0</b><span>Hard</span></div>
@@ -116,6 +116,14 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
         <div><b id="totalLearned">0</b><span>Learned</span></div>
         <div><b id="totalHard">0</b><span>Hard</span></div>
       </div>
+    </section>
+    <section class="card tn-memory-path-card" aria-labelledby="memoryPathTitle">
+      <div class="tn-memory-path-heading">
+        <div><span class="section-eyebrow">MEMORY PATH</span><h2 id="memoryPathTitle">How your words are taking root</h2></div>
+        <button class="text-action" type="button" onclick="startSmartSession('today')">Review what is due</button>
+      </div>
+      <p class="desc">A quiet overview of the journey from first encounter to lasting recall.</p>
+      <div id="homeMemoryPath" class="tn-memory-path" aria-live="polite"></div>
     </section>
     <div class="home-dashboard-grid">
       <section class="card tn-today-card"><div class="section-heading"><div><span class="section-eyebrow">DAILY REVIEW</span><h2>Today’s Session</h2></div></div><p class="desc">A focused mix of due, weak, and new words.</p><div id="todayPlan" class="tn-today-plan"></div></section>
@@ -146,7 +154,16 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       <div class="row3"><div><label for="bulkFrontLang">Front language</label><select id="bulkFrontLang"></select></div><div><label for="bulkBackLang">Back language</label><select id="bulkBackLang"></select></div><div><label for="bulkList">Save to list</label><select id="bulkList"></select></div></div>
       <div id="bulkTargetSummary" class="tn-bulk-target-summary" aria-live="polite"></div>
       <label class="sr-only" for="bulkText">Words to import</label><textarea id="bulkText" placeholder="front word	back meaning	POS	gender	example sentence"></textarea>
-      <div class="actions"><button class="btn blue" onclick="previewBulk()">Preview</button><button class="btn primary" onclick="bulkImport()">Bulk Register</button><button class="btn" onclick="$('bulkText').value='';clearBulkPreview()">Clear</button></div><div id="bulkTargetConfirm" class="tn-bulk-confirm" hidden></div><div id="bulkUndoPanel" class="tn-bulk-undo" aria-live="polite" hidden></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel"></div>
+      <div id="bulkActionDock" class="tn-bulk-action-dock" hidden>
+        <div class="tn-bulk-dock-copy"><strong id="bulkDockCount">Paste words to begin</strong><small id="bulkDockMeta">Preview checks every row before saving.</small></div>
+        <div class="actions"><button class="btn blue" type="button" onclick="previewBulk()">Preview</button><button id="bulkRegisterBtn" class="btn primary" type="button" onclick="window.bulkImport()">Review &amp; Import</button><button class="btn" type="button" onclick="clearBulkInput()">Clear</button></div>
+      </div>
+      <div id="bulkTargetConfirm" class="tn-bulk-confirm" role="dialog" aria-modal="true" aria-labelledby="bulkConfirmTitle" hidden></div><div id="bulkUndoPanel" class="tn-bulk-undo" aria-live="polite" hidden></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel" role="dialog" aria-modal="true" aria-labelledby="bulkDuplicateTitle"></div>
+    </div>
+    <div id="bulkProgressPanel" class="tn-bulk-progress" role="status" aria-live="polite" hidden>
+      <div class="tn-bulk-progress-mark" aria-hidden="true"><span></span></div>
+      <div class="tn-bulk-progress-copy"><strong id="bulkProgressLabel">Preparing your collection</strong><small id="bulkProgressDetail">Keep this tab open while TangoNest saves every word.</small><div class="tn-bulk-progress-track"><i id="bulkProgressFill"></i></div></div>
+      <b id="bulkProgressPercent">0%</b>
     </div>
   </section>
 
@@ -176,7 +193,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
     <div class="quiz-card"><div class="card"><h2>Quiz Mode</h2><p class="desc">Practice your vocabulary with clear answer feedback before moving on.</p>
       <div id="quizSetup">
         <div class="row3"><div data-quiz-setting="all"><label for="quizList">Library</label><select id="quizList"></select></div><div data-quiz-setting="all"><label for="quizType">Quiz Type</label><select id="quizType" onchange="updateQuizModeSettings()"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div data-quiz-setting="choice typing"><label for="quizDirection">Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
-        <div class="row3"><div data-quiz-setting="all"><label for="quizCount">Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode">Question order</label><select id="quizOrderMode"><option value="random" selected>Random mix</option><option value="playlist">Playlist order</option><option value="weak">Needs practice first</option><option value="due">Due reviews first</option><option value="newest">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance">After answering</label><select id="quizAutoAdvance"><option value="manual" selected>Wait for Next</option><option value="auto">Auto · smart timing</option><option value="2.5">Slow · 2.5s</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="all"><label for="quizCount">Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode">Question order</label><select id="quizOrderMode"><option value="random" selected>Random mix</option><option value="playlist">Playlist order</option><option value="weak">Needs practice first</option><option value="due">Due reviews first</option><option value="newest">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance">After answering</label><select id="quizAutoAdvance"><option value="auto" selected>Auto · smart (2.2–3.2s)</option><option value="1.5">Quick · 1.5s</option><option value="2.5">Calm · 2.5s</option><option value="4">Review · 4.0s</option><option value="manual">Wait for Next</option></select></div></div>
         <div class="row3"><div data-quiz-setting="choice typing"><label for="quizAudioAfter">After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div data-quiz-setting="choice typing"><label for="quizHardMode">Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div data-quiz-setting="choice typing"><label for="quizTimeLimit">Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
         <div class="row4"><div data-quiz-setting="listening"><label for="listeningDifficulty">Listening mode</label><select id="listeningDifficulty" onchange="updateQuizModeSettings(true)"><option value="normal" selected>Normal · unlimited</option><option value="hard">Hard · timed</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningReplayLimit">Replay limit</label><select id="listeningReplayLimit"><option value="unlimited" selected>Unlimited</option><option value="1">Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningTimerMode">Listening timer</label><select id="listeningTimerMode"><option value="off" selected>Off</option><option value="10">Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option></select></div><div data-quiz-setting="listening"><label for="listeningHintMode">Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
         <div class="row"><div data-quiz-setting="all"><label for="quizScope">Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div></div>
@@ -205,12 +222,15 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
     <div class="card">
       <h2>Settings</h2>
       <p class="desc">Account, learning, audio, sync, backup, and data safety.</p>
-      <div class="progress-grid">
-        <div class="progress-card"><b id="mgNew">0</b><span>New</span></div>
-        <div class="progress-card"><b id="mgDue">0</b><span>Due</span></div>
-        <div class="progress-card"><b id="mgNoPOS">0</b><span>No POS</span></div>
-        <div class="progress-card"><b id="mgSaved">0</b><span>Saved</span></div>
-      </div>
+      <details class="tn-settings-fold tn-settings-health">
+        <summary><span><strong>Collection health</strong><small>New, due, saved, and missing POS totals.</small></span><span class="tn-settings-manage">View</span></summary>
+        <div class="progress-grid">
+          <div class="progress-card"><b id="mgNew">0</b><span>New</span></div>
+          <div class="progress-card"><b id="mgDue">0</b><span>Due</span></div>
+          <div class="progress-card"><b id="mgNoPOS">0</b><span>No POS</span></div>
+          <div class="progress-card"><b id="mgSaved">0</b><span>Saved</span></div>
+        </div>
+      </details>
 
       <div class="tn-settings-section-title"><span>Account & Sync</span><em>Keep PC and phone aligned automatically.</em></div>
       <div class="tn-settings-pair">
@@ -254,19 +274,21 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
       <div class="tn-settings-section-title"><span>Preferences & Data</span><em>Audio, backup, and portable vocabulary data.</em></div>
       <div class="tn-settings-pair">
-      <div class="tn-settings-panel">
-        <h2>Data Transfer</h2>
-        <p class="desc">Export is a safe backup. Import replaces the signed-in account's cloud vocabulary, then refreshes this device.</p>
-        <div class="actions">
-          <button class="btn blue" onclick="exportDataText()">Export / Copy Data</button>
-          <button class="btn yellow" onclick="downloadBackupFile()">Download Backup</button>
-          <button class="btn green" onclick="importDataText()">Import to Cloud</button>
+      <details class="tn-settings-panel tn-settings-fold" id="tnDataTransferDetails">
+        <summary><span><strong>Data Transfer</strong><small>Backup, export, or restore your vocabulary.</small></span><span class="tn-settings-manage">Manage</span></summary>
+        <div class="tn-settings-fold-body">
+          <p class="desc">Export is a safe backup. Import replaces the signed-in account's cloud vocabulary, then refreshes this device.</p>
+          <div class="actions">
+            <button class="btn blue" onclick="exportDataText()">Export / Copy Data</button>
+            <button class="btn yellow" onclick="downloadBackupFile()">Download Backup</button>
+            <button class="btn green" onclick="importDataText()">Import to Cloud</button>
+          </div>
+          <div class="sync-box">
+            <label for="syncDataBox">Export / Import Text</label>
+            <textarea id="syncDataBox" placeholder="Exported data will appear here. Paste TangoNest backup JSON here to import."></textarea>
+          </div>
         </div>
-        <div class="sync-box">
-          <label for="syncDataBox">Export / Import Text</label>
-          <textarea id="syncDataBox" placeholder="Exported data will appear here. Paste TangoNest backup JSON here to import."></textarea>
-        </div>
-      </div>
+      </details>
 
       <details class="tn-settings-panel tn-voice-panel">
         <summary>
@@ -285,16 +307,17 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </details>
       </div>
 
-      <div class="tn-settings-section-title danger"><span>Danger Zone</span><em>Use only when you mean it.</em></div>
-      <div class="danger-zone">
-        <h2>Danger Zone</h2>
-        <p class="desc">Clear this browser's cache or permanently delete the logged-in account's TangoNest cloud data.</p>
-        <div class="actions">
-          <button class="btn blue" onclick="go('words')">Edit Words</button>
-          <button class="btn yellow" onclick="clearLocalCache()">Clear Local Cache</button>
-          <button class="btn red" onclick="deleteAllAccountData()">Delete All Account Data</button>
+      <details class="danger-zone tn-settings-fold">
+        <summary><span><strong>Danger Zone</strong><small>Cache and permanent account data controls.</small></span><span class="tn-settings-manage">Open carefully</span></summary>
+        <div class="tn-settings-fold-body">
+          <p class="desc">Clear this browser's cache or permanently delete the logged-in account's TangoNest cloud data.</p>
+          <div class="actions">
+            <button class="btn blue" onclick="go('words')">Edit Words</button>
+            <button class="btn yellow" onclick="clearLocalCache()">Clear Local Cache</button>
+            <button class="btn red" onclick="deleteAllAccountData()">Delete All Account Data</button>
+          </div>
         </div>
-      </div>
+      </details>
     </div>
   </section>
     </main>
@@ -309,15 +332,15 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <button id="appUpdateButton" type="button" hidden>Update</button>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg8"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
 </body>
 </html>

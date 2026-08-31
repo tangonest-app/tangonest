@@ -1,7 +1,7 @@
 # TangoNest Forest Desk Glass
 
 TangoNest is a vocabulary library for collecting, organizing, reviewing,
-quizzing, and listening to words. This `1.0.0-rc.19-fdg8` package applies the
+quizzing, and listening to words. This `1.0.0-rc.19-fdg9` package applies the
 Forest Desk Glass interface while preserving the existing account-scoped data,
 learning, playlist, Auth, sync, and PWA behavior.
 
@@ -53,7 +53,7 @@ Before deploying rc.19, run the root-level
 `TANGONEST_RC19_PRODUCTION_MIGRATION.sql` once in the Supabase SQL Editor. It
 is the release-specific copy of `SUPABASE_SCHEMA_CURRENT.sql` and performs the
 authorized learning-data reset, ownership constraints, grants, RLS policies,
-and one independent `My Words` playlist per Auth user. The reset deletes
+and one independent `New Playlist` per Auth user. The reset deletes
 TangoNest words, playlists, and learning events; it never deletes
 `auth.users`. Its migration marker prevents the global reset from running
 again.
@@ -66,7 +66,7 @@ Real Auth, RLS, RPC, Realtime, and cross-device acceptance tests require a confi
 
 Each release must update the version in `config.js`, asset query parameters in `index.html`, and `CACHE_VERSION` in `sw.js`. A waiting Service Worker is activated only after the user accepts the update banner.
 
-Deploy the contents of `TangoNest_ForestDeskGlass_UI_READY` to the GitHub Pages
+Deploy the contents of `TangoNest_ForestDeskGlass_FDG9_READY` to the GitHub Pages
 branch. Do not upload `node_modules`, `test-results`, or temporary QA artifacts.
 
 ## Main files
