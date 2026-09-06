@@ -1,9 +1,11 @@
 # TangoNest Forest Desk Glass
 
 TangoNest is a vocabulary library for collecting, organizing, reviewing,
-quizzing, and listening to words. This `1.0.0-rc.19-fdg10` review candidate improves the
+quizzing, and listening to words. The published `1.0.0-rc.19-fdg10` release improves the
 Forest Desk Glass interface while preserving the existing account-scoped data,
 learning, playlist, Auth, sync, and PWA behavior.
+
+Published and verified on September 6, 2026. See [the publication record](FDG10_PUBLICATION.md) for deployment evidence and the remaining physical-device acceptance limits.
 
 ## Run locally
 
@@ -43,7 +45,7 @@ TN_TEST_EMAIL="qa@example.com" TN_TEST_PASSWORD="..." npm run test:integration:a
 
 The smoke test never stores credentials in the repository. It checks wrong-password rejection, existing-user login, both primary table reads, token refresh, logout, and re-login.
 
-GitHub Actions runs unit, static, performance, desktop, mobile, WebKit, accessibility, and visual checks on pushes and pull requests.
+FDG10 release tests were run in the development workspace. This repository's current GitHub Pages job publishes the site; it does not run those full product tests. Older source and test files retained in this repository are not the FDG10 test evidence. Active production asset paths are listed in `index.html` and `sw.js`.
 
 ## Supabase
 
