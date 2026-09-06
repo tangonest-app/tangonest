@@ -6,6 +6,8 @@
     && new URLSearchParams(location.search).get("qa")==="1";
   let waitingWorker=null;
   let updateRequested=false;
+  let currentHistoryPage="";
+  let followingHistory=false;
   const pageLabels={
     home:["Forest Desk","Home"],
     create:["Collection","Add Words"],
@@ -21,7 +23,7 @@
     return {add:"create",words:"library",study:"cards",audio:"listen",manage:"settings"}[value]||value||"home";
   }
 
-  function updateShellContext(page){
+  function updateShellContext(page,writeHistory=true){
     const current=normalizePage(page);
     const labels=pageLabels[current]||pageLabels.home;
     const eyebrow=$("appPageEyebrow");
@@ -29,9 +31,21 @@
     if(eyebrow)eyebrow.textContent=labels[0];
     if(title)title.textContent=labels[1];
     document.title=`${labels[1]} · TangoNest`;
+    if(writeHistory&&current!==currentHistoryPage&&pageLabels[current]){
+      const url=new URL(location.href);
+      url.searchParams.set("page",current);
+      if(!currentHistoryPage||followingHistory)history.replaceState({tnPage:current},"",url);
+      else history.pushState({tnPage:current},"",url);
+      currentHistoryPage=current;
+    }
   }
 
   window.tnUpdateShellContext=updateShellContext;
+  window.addEventListener("popstate",()=>{
+    const page=new URLSearchParams(location.search).get("page")||"home";
+    followingHistory=true;
+    try{window.tnStableNavigate?.(page)}finally{followingHistory=false;}
+  });
 
   const shortcutPage=new URLSearchParams(location.search).get("page");
   if(["home","create","library","cards","quiz","listen","settings"].includes(shortcutPage||"")){
@@ -76,7 +90,6 @@
       const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./",updateViaCache:"none"});
       await registration.update();
       watchRegistration(registration);
-      registration.update().catch(()=>{});
     }catch(error){
       console.warn("TangoNest offline support could not start",error);
     }
@@ -89,11 +102,16 @@
   });
   $("appUpdateButton")?.addEventListener("click",()=>{
     if(!waitingWorker)return;
+    if(window.tnBulkProgress?.busy?.()){
+      window.toast?.("Finish or stop Bulk Add before updating the app.");
+      return;
+    }
     updateRequested=true;
     waitingWorker.postMessage({type:"SKIP_WAITING"});
   });
 
   updateBanner();
-  updateShellContext(document.querySelector(".page.active")?.id.replace(/^page/,"")||shortcutPage||"home");
+  // Auth restore owns the initial route, not the hidden Home shell.
+  updateShellContext(shortcutPage||document.querySelector(".page.active")?.id.replace(/^page/,"")||"home",false);
   registerServiceWorker();
 })();

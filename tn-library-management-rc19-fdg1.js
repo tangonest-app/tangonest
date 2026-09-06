@@ -332,6 +332,10 @@
       mount.innerHTML = activeView === "playlists" ? playlistsView() : wordsView(activeView);
       bindLibraryUi();
       updateHeaderCounts();
+      if($("tnWordDetailPanel")?.classList.contains("show")&&returnFocus.detail?.wordId){
+        if(validIds.has(returnFocus.detail.wordId))renderWordDetail(returnFocus.detail.wordId);
+        else hideWordDetail();
+      }
     }finally{renderingLibrary=false}
   }
 
@@ -562,13 +566,16 @@
       panel.className = "tn-word-detail-panel";
       document.body.appendChild(panel);
     }
-    returnFocus.detail={element:trigger||document.activeElement,wordId:id};
+    const focusedAction=panel.classList.contains("show")&&panel.contains(document.activeElement)
+      ? document.activeElement.getAttributeNames().find(name=>name.startsWith("data-")) : null;
+    if(!panel.classList.contains("show"))returnFocus.detail={element:trigger||document.activeElement,wordId:id};
     panel.innerHTML = `
       <div class="tn-word-detail-card" role="dialog" aria-modal="true" aria-labelledby="tnWordDetailTitle">
         <button type="button" class="tn-detail-close" data-close-word-detail>Close</button>
         <div class="tn-detail-kicker">${esc(languageLabel(word.frontLang))} -> ${esc(languageLabel(word.backLang))}</div>
         <h2 id="tnWordDetailTitle">${esc(word.front)}</h2>
         <p class="tn-detail-meaning">${esc(word.back)}</p>
+        ${word.pronunciation?`<p class="tn-detail-pronunciation"><span>Pronunciation</span> ${esc(word.pronunciation)}</p>`:""}
         <div class="tn-detail-actions">
           <button type="button" data-detail-audio="${esc(word.id)}">${iconAudio()} Audio</button>
           <button type="button" data-detail-fav="${esc(word.id)}">${word.saved ? "★ Saved" : "☆ Save"}</button>
@@ -592,7 +599,8 @@
       </div>
     `;
     panel.classList.add("show");
-    setTimeout(()=>panel.querySelector("[data-close-word-detail]")?.focus({preventScroll:true}),0);
+    if(focusedAction)panel.querySelector(`[${focusedAction}]`)?.focus({preventScroll:true});
+    else setTimeout(()=>panel.querySelector("[data-close-word-detail]")?.focus({preventScroll:true}),0);
   }
 
   function hideWordDetail(){

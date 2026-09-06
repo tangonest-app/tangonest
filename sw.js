@@ -1,31 +1,37 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg9";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg10";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
   "./index.html",
-  "./config-rc19-fdg1.js",
-  "./default-playlist-rc19-fdg1.js",
-  "./example-fields-rc19-fdg1.js",
   "./style-rc19-fdg1.css",
   "./ui/forest-desk-glass-rc19-fdg1.css",
-  "./app-rc19-fdg1.js",
+  "./assets/icons/fdg10/icon-32.png",
+  "./assets/icons/fdg10/favicon.ico",
+  "./assets/icons/fdg10/icon-180.png",
+  "./assets/icons/fdg10/icon-152.png",
+  "./manifest-rc19-fdg1.json",
+  "./assets/icons/fdg10/icon-192.png",
+  "./vendor/supabase-2.115.0.js",
+  "./config-rc19-fdg1.js",
+  "./default-playlist-rc19-fdg1.js",
   "./learning-engine-rc19-fdg1.js",
+  "./ui/learning-presentation-rc19-fdg1.js",
+  "./example-fields-rc19-fdg1.js",
+  "./bulk-format.js",
+  "./app-rc19-fdg1.js",
   "./tn-supabase-sync-rc19-fdg1.js",
   "./tn-library-management-rc19-fdg1.js",
   "./tn-learning-flow-rc19-fdg1.js",
-  "./ui/learning-presentation-rc19-fdg1.js",
   "./ui/runtime-rc19-fdg1.js",
-  "./manifest-rc19-fdg1.json",
+  "./assets/icons/fdg10/icon-512.png",
+  "./assets/icons/fdg10/maskable-512.png",
   "./assets/botanical-corner.svg",
   "./assets/forest-study-login-v1.png",
   "./favicon.png",
   "./favicon.ico",
-  "./apple-touch-icon.png",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon-1024.png"
+  "./apple-touch-icon.png"
 ].map(path=>new URL(path,BASE).href);
 const SHELL_PATHS=new Set(SHELL.map(url=>new URL(url).pathname));
 
@@ -54,12 +60,14 @@ async function navigationResponse(request){
     }
     return response;
   }catch(error){
-    return (await caches.match(new URL("./",BASE).href,{ignoreSearch:true})) || Response.error();
+    const cache=await caches.open(CACHE_VERSION);
+    return (await cache.match(new URL("./",BASE).href,{ignoreSearch:true})) || Response.error();
   }
 }
 
 async function staticResponse(request){
-  const cached=await caches.match(request,{ignoreSearch:true});
+  const cache=await caches.open(CACHE_VERSION);
+  const cached=await cache.match(request,{ignoreSearch:true});
   try{
     const response=await fetch(request);
     if(response.ok){

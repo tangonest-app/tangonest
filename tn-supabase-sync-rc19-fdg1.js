@@ -80,9 +80,6 @@
   let defaultPlaylistPromise = null;
   let defaultPlaylistUserId = "";
   let defaultPlaylistVerifiedUserId = "";
-  let accountCleanStartPromise = null;
-  let accountCleanStartUserId = "";
-  let accountCleanStartGeneration = -1;
   let bulkImportInFlight = false;
   let exampleRepairUserId = "";
   let authGeneration = 0;
@@ -303,46 +300,6 @@
     return false;
   }
 
-  async function applyAccountCleanStartOnce(){
-    const account=await requireAccountContext();
-    const userId=account.userId;
-    const localMarker=ACCOUNT_CLEAN_START_PREFIX+userId;
-    try{
-      if(localStorage.getItem(localMarker)==="complete")return {applied:false,localComplete:true};
-    }catch(e){}
-    if(accountCleanStartPromise&&accountCleanStartUserId===userId&&accountCleanStartGeneration===account.generation)return accountCleanStartPromise;
-
-    accountCleanStartUserId=userId;
-    accountCleanStartGeneration=account.generation;
-    const task=(async()=>{
-      if(typeof client.rpc!=="function")throw new Error("Account clean-start RPC is unavailable. Run SUPABASE_SCHEMA_CURRENT.sql once.");
-      const result=await client.rpc("tn_apply_account_isolation_reset_v2");
-      if(result.error){
-        const missing=/function|schema cache|not found|404/i.test(result.error.message||"");
-        if(missing)throw new Error("TangoNest database setup is out of date. Run SUPABASE_SCHEMA_CURRENT.sql once, then log in again.");
-        throw result.error;
-      }
-      assertActiveRequest(userId,account.generation);
-
-      clearUserCache({discardPendingUserId:userId,purgeScopedUserId:userId});
-      try{localStorage.setItem(localMarker,"complete");}catch(e){}
-      resetDefaultPlaylistGuard();
-      adoptDb(emptyData("account-isolation-reset-v2"));
-      writeCache(getDb());
-      renderAll();
-      return result.data||{applied:false};
-    })();
-    accountCleanStartPromise=task;
-    try{return await task;}
-    finally{
-      if(accountCleanStartPromise===task){
-        accountCleanStartPromise=null;
-        accountCleanStartUserId="";
-        accountCleanStartGeneration=-1;
-      }
-    }
-  }
-
   function adoptAccountCache(userId,reason){
     window.tnSetActiveUserScope?.(userId);
     const scoped=readAccountCache(userId) || emptyData(reason || "account-cache-empty");
@@ -496,9 +453,13 @@
   }
 
   function renderAll(){
-    try{ if(typeof window.render === "function")window.render(); }catch(error){ console.warn(error); }
-    try{ if(typeof window.tnLibraryRender === "function")window.tnLibraryRender(); }catch(error){ console.warn(error); }
-    try{ if(typeof window.renderMistakeNotebook === "function")window.renderMistakeNotebook(); }catch(e){}
+    try{
+      if(typeof window.render === "function")window.render();
+      else{
+        window.tnLibraryRender?.();
+        window.renderMistakeNotebook?.();
+      }
+    }catch(error){console.warn(error);}
     updateCloudUi(lastSyncState);
   }
 
@@ -646,6 +607,10 @@
   }
 
   function savedPage(){
+    try{
+      const page=normalizePage(new URLSearchParams(location.search).get("page")||"");
+      if(["home","create","library","cards","quiz","listen","settings"].includes(page)&&new URLSearchParams(location.search).has("page"))return page;
+    }catch(error){}
     try{return normalizePage(localStorage.getItem(PAGE_KEY) || "home");}catch(e){return "home";}
   }
 
@@ -948,6 +913,7 @@
         await flushPendingMutations();
         assertActiveRequest(loadUserId,loadGeneration);
         if(readPending().length){
+          lastCloudFetchOk=false;
           updateCloudUi("Pending");
           if(!options.silent)toast("Pending learning changes will retry before cloud reload.");
           return getDb();
@@ -1160,9 +1126,6 @@
     activeCloudLoadUserId="";
     sessionLoadPromise=null;
     sessionLoadUserId="";
-    accountCleanStartPromise=null;
-    accountCleanStartUserId="";
-    accountCleanStartGeneration=-1;
     flushingPending=false;
     loading=false;
     cloudCounts={words:null,lists:null,userId:""};
@@ -1209,15 +1172,13 @@
     const task=(async() => {
       let initializationError=null;
       try{
-        await applyAccountCleanStartOnce();
         assertActiveRequest(incomingUser.id,boundaryGeneration);
         await loadCloud({silent:mode!=="login",force:true,allowPartial:false});
       }catch(error){
         if(error?.staleAccountRequest)return;
         initializationError=error;
-        const empty=emptyData("account-load-failed-safe-empty");
-        empty.meta.userId=incomingUser.id;
-        adoptDb(empty);
+        // adoptAccountCache already selected this user's cache. A data failure
+        // must not erase that cache or the valid authentication session.
         updateCloudUi("Error");
         renderAll();
         toast(dataErrorMessage(error));
@@ -1787,8 +1748,44 @@
   function restoreBulkUndo(){
     const info=readBulkUndo();
     if(info)window.showBulkUndo?.(info);
+    showBulkRecovery();
+  }
+  function readBulkJob(userId=currentUser?.id){
+    try{const job=JSON.parse(localStorage.getItem(accountStorageKey(userId,"bulk-import"))||"null");return job?.userId===userId&&Array.isArray(job.payload)?job:null}catch(error){return null}
+  }
+  function storeBulkJob(job){
+    // Persist identifiers before sending a batch, so a lost response is
+    // recoverable by looking up those same identifiers after a reload.
+    localStorage.setItem(accountStorageKey(job.userId,"bulk-import"),JSON.stringify(job));
+  }
+  function showBulkRecovery(){
+    const panel=$("bulkRecovery"),job=readBulkJob();
+    if(!panel)return;
+    panel.hidden=!job;
+    if(!job){panel.innerHTML="";return;}
+    panel.innerHTML='<div><strong>Unfinished import</strong><small></small></div><button type="button" data-resume-bulk>Resume import</button><button type="button" data-close-bulk-recovery>Keep saved words and close</button>';
+    panel.querySelector("small").textContent=`${job.confirmed.length} of ${job.payload.length} words confirmed in ${job.target.playlistName}. Saved rows will not be repeated.`;
+    panel.querySelector("[data-close-bulk-recovery]").onclick=()=>{
+      if(bulkImportInFlight)return;
+      localStorage.removeItem(accountStorageKey(currentUser.id,"bulk-import"));
+      showBulkRecovery();
+      toast("Saved words were kept. Remaining rows were not imported.");
+    };
+    panel.querySelector("[data-resume-bulk]").onclick=()=>{
+      if(bulkImportInFlight)return;
+      if($("bulkText"))$("bulkText").value=job.text;
+      if($("bulkFormat"))$("bulkFormat").value=job.format;
+      for(const [id,value] of [["bulkList",job.target.playlistId],["bulkFrontLang",job.target.frontLang],["bulkBackLang",job.target.backLang]]){
+        if($(id)){$(id).value=value;$(id).dispatchEvent(new Event("change",{bubbles:true}));}
+      }
+      window.updateBulkAssistant?.();
+      window.updateBulkDestinationSummary?.();
+      window.updateBulkActionDock?.();
+      bulkImport(job.mode);
+    };
   }
   async function undoLastBulkImport(){
+    if(bulkImportInFlight)return toast("Wait for the current import to stop before undoing it.");
     try{
       const account=await requireAccountContext();
       const info=readBulkUndo(account.userId);
@@ -1801,6 +1798,11 @@
         assertActiveRequest(account.userId,account.generation);
       }
       clearCloudBulkUndo(account.userId);
+      const job=readBulkJob(account.userId);
+      if(job&&job.confirmed.some(id=>ids.includes(id))){
+        localStorage.removeItem(accountStorageKey(account.userId,"bulk-import"));
+        showBulkRecovery();
+      }
       await loadCloud({force:true,silent:true});
       toast(`${ids.length} imported words removed`);
     }catch(error){
@@ -1811,26 +1813,34 @@
 
   async function bulkImport(mode){
     if(bulkImportInFlight)return toast("Bulk Add is already running");
+    bulkImportInFlight=true;
     let account=null;
     let insertedIds=[];
     let targetInfo=null;
     let progressStarted=false;
     let progressTotal=0;
+    let job=null;
     try{
       account=await requireAccountContext();
       if(mode === "replace"){
         return toast("Cloud Replace is disabled for bulk safety. Use Skip or Add Both, or edit a word directly.");
       }
       if(typeof window.bulkRows !== "function")return toast("Bulk parser is not ready");
+      if(window.bulkParseStats?.().invalid){window.previewBulk?.();return toast("Fix the highlighted rows before importing.");}
       let rows = window.bulkRows();
+      const previousJob=readBulkJob(account.userId);
+      const sourceText=$("bulkText")?.value||"";
+      const sameJob=previousJob&&previousJob.text===sourceText&&previousJob.target.playlistId===selectedPlaylistId("bulkList")&&previousJob.target.frontLang===$("bulkFrontLang")?.value&&previousJob.target.backLang===$("bulkBackLang")?.value&&previousJob.format===($("bulkFormat")?.value||"complete");
+      if(previousJob&&!sameJob){showBulkRecovery();return toast("Resume the unfinished import before starting another one.");}
+      if(sameJob){mode=previousJob.mode;}
       if(!rows.length)return toast("No readable words");
       const hasFrontDup = rows.some(row => row.frontDuplicate);
-      if(hasFrontDup && !mode){
-        try{ if(typeof window.previewBulk === "function")window.previewBulk(); }catch(e){}
+      if(hasFrontDup && !mode && !sameJob){
+        try{ if(typeof window.previewBulk === "function")window.previewBulk(true); }catch(e){}
         return toast("Duplicate words need confirmation");
       }
-      if(mode === "skip" || !mode)rows = rows.filter(row => !row.duplicate);
-      if(mode === "addBoth"){
+      if(!sameJob&&(mode === "skip" || !mode))rows = rows.filter(row => !row.duplicate);
+      if(!sameJob&&mode === "addBoth"){
         const seen = new Set();
         rows = rows.filter(row => {
           const key = [row.front,row.back,row.pos].map(value => String(value || "").trim().toLowerCase()).join("||");
@@ -1841,7 +1851,6 @@
       }
       if(!rows.length)return toast("No new words to add");
       if(typeof window.requestBulkDestinationConfirmation==="function"&&!window.requestBulkDestinationConfirmation(rows,mode))return;
-      bulkImportInFlight=true;
       progressStarted=true;
       progressTotal=rows.length;
       window.tnBulkProgress?.start?.(rows.length);
@@ -1850,35 +1859,9 @@
       const frontLang = safeLang($("bulkFrontLang")?.value,"en-US");
       const backLang = safeLang($("bulkBackLang")?.value,"ja-JP");
       targetInfo={playlistId:playlist,playlistName:getDb().lists.find(list=>list.id===playlist)?.name||"No playlist",frontLang,backLang};
-      if(mode === "replace"){
-        for(const row of rows){
-          const existing = getDb().words.find(word =>
-            word.listId === playlist &&
-            String(word.front || "").trim().toLowerCase() === String(row.front || "").trim().toLowerCase()
-          );
-          if(existing){
-            await updateWordRemote(existing.id,{
-              front:row.front,
-              back:row.back,
-              front_lang:frontLang,
-              back_lang:backLang,
-              playlist_id:playlist || null,
-              pos:safeText(row.pos) || null,
-              gender:safeText(row.gender) || null,
-              memo:safeText(row.memo) || null,
-              pronunciation:safeText(row.pronunciation) || null
-            },account);
-          }else{
-            await client.from("tn_words").insert(wordRowFromLocal({
-              front:row.front,back:row.back,frontLang,backLang,listId:playlist,
-              memo:row.memo,pronunciation:row.pronunciation,pos:row.pos,gender:row.gender,tags:"",status:"new",level:1,nextReview:today()
-            },playlist,account.userId));
-            assertActiveRequest(account.userId,account.generation);
-          }
-        }
-      }else if(rows.length){
+      if(rows.length){
         const existingCount = getDb().words.filter(word => word.listId === playlist).length;
-        const payload = rows.map((row,index) => wordRowFromLocal({
+        const payload = sameJob?previousJob.payload:rows.map((row,index) => ({...wordRowFromLocal({
           front:row.front,
           back:row.back,
           frontLang,
@@ -1893,48 +1876,76 @@
           level:1,
           nextReview:today(),
           position:existingCount + index
-        },playlist,account.userId));
+        },playlist,account.userId),id:newId()}));
+        job=sameJob?previousJob:{userId:account.userId,text:sourceText,format:$("bulkFormat")?.value||"complete",mode:mode||"skip",target:targetInfo,payload,confirmed:[]};
+        storeBulkJob(job);
+        progressTotal=payload.length;
+        insertedIds=[...job.confirmed];
         let insertedCount=0;
         clearTimeout(loadTimer);
         loadTimer=null;
         for(let start=0;start<payload.length;start+=BULK_INSERT_SIZE){
-          const chunk=payload.slice(start,start+BULK_INSERT_SIZE);
+          assertActiveRequest(account.userId,account.generation);
+          if(window.tnBulkProgress?.cancelled?.())throw new Error("Import stopped after the current batch.");
+          let chunk=payload.slice(start,start+BULK_INSERT_SIZE);
+          if(sameJob){
+            const present=await client.from("tn_words").select("id").eq("user_id",account.userId).in("id",chunk.map(row=>row.id));
+            assertActiveRequest(account.userId,account.generation);
+            if(present.error||!Array.isArray(present.data))throw present.error||new Error("Could not verify saved import rows.");
+            const ids=new Set(present.data.map(row=>row.id));
+            insertedIds=[...new Set([...insertedIds,...ids])];
+            chunk=chunk.filter(row=>!ids.has(row.id));
+            insertedCount+=ids.size;
+          }
           window.tnBulkProgress?.update?.(start,payload.length,`Saving batch ${Math.floor(start/BULK_INSERT_SIZE)+1} of ${Math.ceil(payload.length/BULK_INSERT_SIZE)}`);
-          const result=await client.from("tn_words").insert(chunk).select("id");
+          const result=chunk.length?await client.from("tn_words").insert(chunk).select("id"):{data:[],error:null};
           if(result.error){
             throw new Error(`Bulk Add stopped at row ${start+1}: ${result.error.message||result.error}`);
           }
           assertActiveRequest(account.userId,account.generation);
-          if(Array.isArray(result.data)&&result.data.length!==chunk.length){
-            throw new Error(`Bulk Add saved ${result.data.length} of ${chunk.length} rows in batch ${Math.floor(start/BULK_INSERT_SIZE)+1}.`);
-          }
           if(Array.isArray(result.data))insertedIds.push(...result.data.map(row=>row.id).filter(Boolean));
-          insertedCount+=Array.isArray(result.data)?result.data.length:chunk.length;
+          insertedIds=[...new Set(insertedIds)];
+          job.confirmed=insertedIds;
+          storeBulkJob(job);
+          if(insertedIds.length)storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,...targetInfo,createdAt:nowIso()});
+          if(!Array.isArray(result.data)||result.data.length!==chunk.length||result.data.some(row=>!chunk.some(item=>item.id===row.id))){
+            throw new Error("The server did not confirm every row. Resume to verify the saved batch.");
+          }
+          insertedCount+=result.data.length;
           window.tnBulkProgress?.update?.(insertedCount,payload.length,`Saved batch ${Math.floor(start/BULK_INSERT_SIZE)+1} of ${Math.ceil(payload.length/BULK_INSERT_SIZE)}`);
         }
         if(insertedCount!==payload.length)throw new Error(`Bulk Add saved ${insertedCount} of ${payload.length} rows.`);
       }
-      if($("bulkText"))$("bulkText").value = "";
-      try{ if(typeof window.clearBulkPreview === "function")window.clearBulkPreview(); }catch(e){}
       clearTimeout(loadTimer);
       loadTimer=null;
       await loadCloud({force:true,silent:true});
+      assertActiveRequest(account.userId,account.generation);
+      if(!lastCloudFetchOk)throw new Error("Words were sent, but the library could not be refreshed. Resume to verify.");
+      const refreshedIds=new Set(getDb().words.map(word=>word.id));
+      if(job?.payload.some(row=>!refreshedIds.has(row.id)))throw new Error("Some saved rows are not visible yet. Resume to verify before completing the import.");
+      localStorage.removeItem(accountStorageKey(account.userId,"bulk-import"));
+      showBulkRecovery();
+      if($("bulkText"))$("bulkText").value = "";
+      try{window.clearBulkPreview?.()}catch(e){}
       if(insertedIds.length)storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo.playlistId,playlistName:targetInfo.playlistName,createdAt:nowIso()});
-      window.tnBulkProgress?.finish?.(rows.length);
-      toast(`${rows.length} added`);
+      window.tnBulkProgress?.finish?.(progressTotal);
+      toast(`${progressTotal} added`);
     }catch(error){
       if(error?.staleAccountRequest){if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Account changed · import stopped safely");return}
       if(account&&insertedIds.length&&activeRequest(account.userId,account.generation)){
         storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo?.playlistId||"",playlistName:targetInfo?.playlistName||"the selected playlist",createdAt:nowIso()});
         try{await loadCloud({force:true,silent:true})}catch(loadError){}
         if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Import paused · undo is available");
-        toast(`Bulk Add stopped after ${insertedIds.length} words. Undo is available below.`);
+        showBulkRecovery();
+        toast(`Import paused: ${insertedIds.length} words confirmed. Resume to check the rest, or undo the confirmed words.`);
         return;
       }
       if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Import could not be completed");
+      showBulkRecovery();
       toast(userError(error,"Couldn't add these words. Check the entries and try again."));
     }finally{
-      if(progressStarted)bulkImportInFlight=false;
+      bulkImportInFlight=false;
+      window.updateBulkActionDock?.();
     }
   }
 

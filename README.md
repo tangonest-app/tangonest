@@ -1,7 +1,7 @@
 # TangoNest Forest Desk Glass
 
 TangoNest is a vocabulary library for collecting, organizing, reviewing,
-quizzing, and listening to words. This `1.0.0-rc.19-fdg9` package applies the
+quizzing, and listening to words. This `1.0.0-rc.19-fdg10` review candidate improves the
 Forest Desk Glass interface while preserving the existing account-scoped data,
 learning, playlist, Auth, sync, and PWA behavior.
 
@@ -49,14 +49,15 @@ GitHub Actions runs unit, static, performance, desktop, mobile, WebKit, accessib
 
 Browser code reads the project URL and publishable key from `config.js`. Never add a `service_role` key to this repository.
 
-Before deploying rc.19, run the root-level
-`TANGONEST_RC19_PRODUCTION_MIGRATION.sql` once in the Supabase SQL Editor. It
-is the release-specific copy of `SUPABASE_SCHEMA_CURRENT.sql` and performs the
-authorized learning-data reset, ownership constraints, grants, RLS policies,
-and one independent `New Playlist` per Auth user. The reset deletes
-TangoNest words, playlists, and learning events; it never deletes
-`auth.users`. Its migration marker prevents the global reset from running
-again.
+For an existing FDG9 installation, review and execute `SUPABASE_FDG10_SAFETY.sql`
+before deploying. It disables two legacy automatic reset RPCs without deleting
+or changing words, playlists, learning events, or Auth accounts. It is repeatable.
+Do not run historical reset scripts such as `SUPABASE_FDG8_PLAYLIST_RESET.sql`.
+
+For a new database, `SUPABASE_SCHEMA_CURRENT.sql` is the canonical schema;
+`TANGONEST_RC19_PRODUCTION_MIGRATION.sql` is its generated equivalent. Neither
+performs a global learning-data reset in this release. A full schema migration
+is not required merely to install the FDG10 UI or Bulk Add assistant.
 
 Real Auth, RLS, RPC, Realtime, and cross-device acceptance tests require a configured Supabase project. Local E2E uses an isolated browser fixture and never writes production cloud data.
 
@@ -64,10 +65,17 @@ Real Auth, RLS, RPC, Realtime, and cross-device acceptance tests require a confi
 
 `manifest.json` and `sw.js` use relative paths so the app works below a GitHub Pages project path such as `/tangonest/`. The Service Worker caches only the static app shell. Supabase, Auth, API responses, and user data are never cached by the Service Worker.
 
-Each release must update the version in `config.js`, asset query parameters in `index.html`, and `CACHE_VERSION` in `sw.js`. A waiting Service Worker is activated only after the user accepts the update banner.
+Edit `release.json`, then run `npm run prepare:release` to synchronize versions,
+asset paths, active compatibility files, the manifest, and the Service Worker.
+The Supabase browser SDK is pinned locally under `vendor/` and included in the
+offline shell. Auth and REST responses are never included. A waiting Service
+Worker is activated only after the user accepts the update banner.
 
-Deploy the contents of `TangoNest_ForestDeskGlass_FDG9_READY` to the GitHub Pages
-branch. Do not upload `node_modules`, `test-results`, or temporary QA artifacts.
+See `FDG10_UPDATE_GUIDE.md` for safe deployment and acceptance steps. The
+`TangoNest_FDG10_REVIEW_CANDIDATE` package is deliberately not labeled READY:
+production Auth/RLS acceptance and physical-device PWA icon checks require
+access outside the local fixture. Never deploy `qa/`, `node_modules`, or
+`test-results`. The mock fixture is test-only and is not included in that package.
 
 ## Main files
 
@@ -75,6 +83,8 @@ branch. Do not upload `node_modules`, `test-results`, or temporary QA artifacts.
 - `style.css` - legacy-compatible base and feature styles
 - `ui/forest-desk-glass.css` - Forest Desk Glass tokens, shell, responsive layout, and component theme
 - `app.js` - local data and core feature behavior
+- `bulk-format.js` - shared Bulk Add fields, parser, validation, samples, and prompt
+- `release.json` - release version, icon directory, and pinned SDK version
 - `default-playlist.js` - shared, idempotent default-playlist normalization
 - `learning-engine.js` - learning state transitions
 - `tn-supabase-sync.js` - Auth, cloud CRUD, queue, and Realtime integration
@@ -83,4 +93,5 @@ branch. Do not upload `node_modules`, `test-results`, or temporary QA artifacts.
 - `ui/` - presentation and PWA runtime helpers
 - `tests/` - unit, static, E2E, accessibility, visual, and performance QA
 - `SUPABASE_SCHEMA_CURRENT.sql` - canonical production schema and migration
-- `RELEASE_REPORT.md` - design, regression, and deployment acceptance summary
+- `FDG10_AUDIT_NOTES.md` - current audit, evidence, and release limitations
+- `FDG10_UPDATE_GUIDE.md` - deployment and verification instructions

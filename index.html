@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg9">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg9">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg10">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg10">
 
 <script>
 (function(){
@@ -14,10 +14,11 @@
 </script>
 
 
-<link rel="icon" type="image/png" href="./favicon.png?v=1.0.0-rc.19-fdg9">
-<link rel="icon" href="./favicon.ico?v=1.0.0-rc.19-fdg9">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1.0.0-rc.19-fdg9">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg9">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/fdg10/icon-32.png">
+<link rel="icon" href="./assets/icons/fdg10/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/fdg10/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./assets/icons/fdg10/icon-152.png">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg10">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -50,7 +51,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 <section id="authScreen" class="auth-screen" aria-labelledby="authTitle">
   <div class="auth-card">
     <div id="authInteractive" class="auth-interactive">
-    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg9" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
+    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
     <div id="authModeLabel" class="auth-mode-label">Local</div>
     <div class="auth-kicker">WELCOME TO YOUR STUDY</div>
     <h1 id="authTitle">Return to your words.</h1>
@@ -74,7 +75,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
 <div class="app" inert aria-hidden="true">
   <aside class="app-sidebar">
-    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg9" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
     <nav class="nav" aria-label="Primary navigation">
       <span class="nav-section-label">Workspace</span>
       <button id="navHome" class="active" type="button" onclick="go('home')">Home</button>
@@ -90,7 +91,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   </aside>
   <div class="app-workspace">
     <header class="header">
-      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./icon-192.png?v=1.0.0-rc.19-fdg9" alt=""></span></div>
+      <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></span></div>
       <div class="page-heading"><span id="appPageEyebrow">Forest Desk</span><strong id="appPageTitle">Home</strong></div>
       <div class="stats" aria-label="Library summary">
         <div class="stat"><b id="wc">0</b><span>Words</span></div><div class="stat"><b id="listCount">0</b><span>Lists</span></div><div class="stat"><b id="lc">0</b><span>Learned</span></div><div class="stat"><b id="hc">0</b><span>Hard</span></div>
@@ -149,21 +150,31 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </div>
       <div class="card"><h2>Playlist</h2><label for="newList">New list name</label><input id="newList" placeholder="English A1"><div class="actions"><button class="btn primary full" onclick="createList()">Create</button></div><label for="renameListSelect">Rename list</label><select id="renameListSelect"></select><label class="sr-only" for="renameListInput">New playlist name</label><input id="renameListInput" placeholder="New name"><div class="actions"><button id="renameListButton" class="btn blue full" onclick="tnRenamePlaylist(document.getElementById('renameListSelect').value,document.getElementById('renameListInput').value)">Rename</button></div></div>
     </div>
-    <div class="card"><h2>Bulk Add</h2><p class="desc">Paste, preview, validate, then import. Use tabs, commas, or multi-space columns: Front / Back / POS / Gender / Example. For pronunciation, use Pronunciation | Example as the final fields.</p>
-      <div class="tn-bulk-flow"><span>1 Paste</span><span>2 Preview</span><span>3 Validate</span><span>4 Import</span></div>
+    <div class="card" id="bulkCard"><h2>Bulk Add</h2><p class="desc">Prepare your words, check the preview, and add them to your collection.</p>
+      <div class="tn-bulk-flow"><span>1 Format</span><span>2 Paste</span><span>3 Review</span><span>4 Import</span></div>
       <div class="row3"><div><label for="bulkFrontLang">Front language</label><select id="bulkFrontLang"></select></div><div><label for="bulkBackLang">Back language</label><select id="bulkBackLang"></select></div><div><label for="bulkList">Save to list</label><select id="bulkList"></select></div></div>
+      <div class="tn-bulk-assistant">
+        <div class="tn-bulk-format-row"><div><label for="bulkFormat">Choose format</label><select id="bulkFormat"></select></div><div><label for="bulkPromptCount">Prompt word count</label><input id="bulkPromptCount" type="number" min="1" max="1000" step="1" value="50"></div></div>
+        <p id="bulkFormatGuide" class="tn-bulk-format-guide"></p>
+        <p class="tn-bulk-format-note">TAB-separated, one word per line. Front and Back are required; keep empty optional columns. Existing comma, multi-space, and pronunciation | example rows also work in Legacy format.</p>
+        <div class="actions"><button class="btn" id="bulkCopyPrompt" type="button">Copy prompt for ChatGPT</button><button class="btn" id="bulkCopyFormat" type="button">Copy format</button><button class="btn" id="bulkInsertSample" type="button">Insert sample</button></div>
+        <p id="bulkAssistantStatus" role="status" aria-live="polite"></p>
+        <div id="bulkCopyFallback" hidden><label for="bulkCopyText">Select and copy this text</label><textarea id="bulkCopyText" readonly></textarea></div>
+      </div>
       <div id="bulkTargetSummary" class="tn-bulk-target-summary" aria-live="polite"></div>
-      <label class="sr-only" for="bulkText">Words to import</label><textarea id="bulkText" placeholder="front word	back meaning	POS	gender	example sentence"></textarea>
+      <div id="bulkRecovery" class="tn-bulk-undo" role="status" hidden></div>
+      <label for="bulkText">Words to import</label><textarea id="bulkText" aria-describedby="bulkFormatGuide" spellcheck="false"></textarea>
+      <div id="bulkTargetConfirm" class="tn-bulk-confirm" role="dialog" aria-modal="true" aria-labelledby="bulkConfirmTitle" hidden></div><div id="bulkUndoPanel" class="tn-bulk-undo" aria-live="polite" hidden></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel" role="dialog" aria-modal="true" aria-labelledby="bulkDuplicateTitle"></div>
       <div id="bulkActionDock" class="tn-bulk-action-dock" hidden>
         <div class="tn-bulk-dock-copy"><strong id="bulkDockCount">Paste words to begin</strong><small id="bulkDockMeta">Preview checks every row before saving.</small></div>
         <div class="actions"><button class="btn blue" type="button" onclick="previewBulk()">Preview</button><button id="bulkRegisterBtn" class="btn primary" type="button" onclick="window.bulkImport()">Review &amp; Import</button><button class="btn" type="button" onclick="clearBulkInput()">Clear</button></div>
       </div>
-      <div id="bulkTargetConfirm" class="tn-bulk-confirm" role="dialog" aria-modal="true" aria-labelledby="bulkConfirmTitle" hidden></div><div id="bulkUndoPanel" class="tn-bulk-undo" aria-live="polite" hidden></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel" role="dialog" aria-modal="true" aria-labelledby="bulkDuplicateTitle"></div>
     </div>
     <div id="bulkProgressPanel" class="tn-bulk-progress" role="status" aria-live="polite" hidden>
       <div class="tn-bulk-progress-mark" aria-hidden="true"><span></span></div>
       <div class="tn-bulk-progress-copy"><strong id="bulkProgressLabel">Preparing your collection</strong><small id="bulkProgressDetail">Keep this tab open while TangoNest saves every word.</small><div class="tn-bulk-progress-track"><i id="bulkProgressFill"></i></div></div>
       <b id="bulkProgressPercent">0%</b>
+      <button id="bulkCancelButton" type="button" class="btn" hidden>Stop after this batch</button>
     </div>
   </section>
 
@@ -320,6 +331,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </details>
     </div>
   </section>
+    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg10</p>
     </main>
   </div>
 </div>
@@ -331,16 +343,17 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <span id="networkStatusText">You are offline. Saved data remains available on this device.</span>
   <button id="appUpdateButton" type="button" hidden>Update</button>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg9"></script>
+<script src="./vendor/supabase-2.115.0.js"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./bulk-format.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
 </body>
 </html>

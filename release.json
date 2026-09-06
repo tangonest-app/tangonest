@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0-rc.19-fdg10",
+  "iconDirectory": "assets/icons/fdg10",
+  "iconMaster": "icon-1024.png",
+  "supabaseSdk": "2.115.0"
+}

@@ -498,7 +498,7 @@ function clearMistakes(){
 }
 function mistakeNotebookHtml(limit){
   const entries=mistakeEntriesSorted();
-  if(!entries.length)return '<div class="empty"><div><strong>No mistakes yet</strong><span>Your missed answers will collect here for focused review.</span></div><button type="button" class="btn" onclick="appShow(\'quiz\')">Start Quiz</button></div>';
+  if(!entries.length)return '<div class="empty"><div class="tn-mistakes-empty-copy"><strong>No mistakes yet</strong><span>Your missed answers will collect here for focused review.</span></div><button type="button" class="btn" onclick="appShow(\'quiz\')">Start Quiz</button></div>';
   const rows=entries.slice(0,limit||entries.length).map(entry=>{
     const live=(db.words||[]).find(word=>word.id===entry.wordId)||entry;
     const date=entry.lastWrongAt?new Date(entry.lastWrongAt).toLocaleDateString():"-";
@@ -765,13 +765,14 @@ function renderHome(){
   const memoryPath=$("homeMemoryPath");
   if(memoryPath){
     const stages={new:0,learning:0,review:0,mastered:0};
-    (db.words||[]).forEach(word=>{
-      const reviewCount=Number(word.reviewCount||word.seen||0);
+    (db.words||[]).forEach(source=>{
+      const word=learningEngine()?.normalizeWord(source)||source;
+      const reviewCount=Number(word.reviewCount||0);
       const level=Number(word.level||1);
       const interval=Number(word.reviewIntervalDays||0);
       const streak=Number(word.consecutiveCorrect||0);
-      if(learningEngine()?.isMasteredWord(word)||word.status==="learned")stages.mastered++;
-      else if(reviewCount===0&&String(word.learningState||"new")==="new")stages.new++;
+      if(learningEngine()?.isMasteredWord(word)??word.status==="learned")stages.mastered++;
+      else if(reviewCount===0)stages.new++;
       else if(interval>=7||streak>=3||level>=4)stages.review++;
       else stages.learning++;
     });
@@ -861,61 +862,7 @@ function splitBulkLine(line){
 }
 
 function parseBulk(text){
-  return String(text||"")
-    .split(/\r?\n/)
-    .map((line,i)=>({line:String(line||"").trim(),row:i+1}))
-    .filter(x=>x.line)
-    .map(({line,row})=>{
-      let exampleFromPipe="";
-      let before=line;
-      if(line.includes("|")){
-        const pieces=line.split("|");
-        before=pieces.shift().trim();
-        exampleFromPipe=pieces.join("|").trim();
-      }
-
-      let parts=splitBulkLine(before);
-      let front="",back="",pos="",gender="",memo="",pronunciation="";
-
-      if(parts.length>=5){
-        front=parts[0];
-        back=parts[1];
-        pos=parts[2];
-        gender=parts[3];
-        if(exampleFromPipe)pronunciation=parts.slice(4).join(" ");
-        else memo=parts.slice(4).join(" ");
-      }else if(parts.length===4){
-        front=parts[0];
-        back=parts[1];
-        pos=parts[2];
-        gender=parts[3];
-      }else if(parts.length===3){
-        front=parts[0];
-        back=parts[1];
-        pos=parts[2];
-      }else if(parts.length===2){
-        front=parts[0];
-        back=parts[1];
-      }else{
-        front=line;
-      }
-
-      if(exampleFromPipe){
-        memo=exampleFromPipe;
-      }
-
-      const normalized=window.TangoNestExampleFields?.normalizeFields(memo,pronunciation)||{memo,pronunciation};
-      return {
-        row,
-        front:cleanBulkValue(front),
-        back:cleanBulkValue(back),
-        pos:cleanBulkValue(pos),
-        gender:cleanBulkValue(gender),
-        memo:cleanBulkValue(normalized.memo),
-        pronunciation:cleanBulkValue(normalized.pronunciation)
-      };
-    })
-    .filter(r=>r.front && r.back);
+  return window.TangoNestBulkFormat.parse(text,$("bulkFormat")?.value||"complete").rows.filter(row=>!row.errors.length);
 }
 
 function duplicateMatch(row,listId){
@@ -943,27 +890,65 @@ function softDuplicateMatch(row,listId){
   return db.words.find(w=>w.listId===listId && String(w.front||"").trim().toLowerCase()===f);
 }
 function bulkRows(){
-  let listId=$("bulkList").value,seenExact=new Set(),seenFront=new Set();
-  return parseBulk($("bulkText").value).map(r=>{
-    let exactKey=[r.front,r.back,r.pos].map(x=>String(x||"").trim().toLowerCase()).join("||");
-    let frontKey=String(r.front||"").trim().toLowerCase();
-    let exactDuplicate=!!duplicateMatch(r,listId)||seenExact.has(exactKey);
-    let frontDuplicate=!!softDuplicateMatch(r,listId)||seenFront.has(frontKey);
-    seenExact.add(exactKey);
-    seenFront.add(frontKey);
-    return{...r,duplicate:exactDuplicate,frontDuplicate,existing:softDuplicateMatch(r,listId)||null};
-  });
+  return bulkParseStats().rows.filter(row=>!row.errors.length);
 }
 function bulkParseStats(){
-  const lines=String($("bulkText")?.value||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-  const rows=bulkRows();
-  return {lines:lines.length,valid:rows.length,invalid:Math.max(0,lines.length-rows.length),rows};
+  return window.TangoNestBulkFormat.analyze($("bulkText")?.value||"",{
+    format:$("bulkFormat")?.value||"complete",words:db.words,...bulkDestination(),
+    pos:[...($("pos")?.options||[])].map(option=>option.value).filter(Boolean),
+    genders:[...($("gender")?.options||[])].map(option=>option.value).filter(Boolean)
+  });
+}
+window.bulkParseStats=bulkParseStats;
+function updateBulkAssistant(){
+  const api=window.TangoNestBulkFormat,select=$("bulkFormat");
+  if(!api||!select)return;
+  if(!select.options.length)select.innerHTML=api.formats.map(format=>`<option value="${format.id}">${esc(format.label)}</option>`).join("");
+  $("bulkFormatGuide").textContent=api.formatText(select.value);
+  $("bulkText").placeholder=api.sample({...bulkDestination(),format:select.value});
+}
+window.updateBulkAssistant=updateBulkAssistant;
+window.updateBulkActionDock=updateBulkActionDock;
+async function copyBulkAssistant(kind){
+  const target=bulkDestination(),format=$("bulkFormat").value;
+  const api=window.TangoNestBulkFormat;
+  const text=kind==="format"?api.formatText(format):api.prompt({format,frontLabel:langName(target.frontLang),backLabel:langName(target.backLang),count:$("bulkPromptCount").value,pos:[...$("pos").options].map(option=>option.value).filter(Boolean),genders:[...$("gender").options].map(option=>option.value).filter(Boolean)});
+  try{
+    await navigator.clipboard.writeText(text);
+    $("bulkAssistantStatus").textContent=kind==="format"?"Format copied.":"Prompt copied. Paste it into your AI tool, then bring the word rows back here.";
+    $("bulkCopyFallback").hidden=true;
+  }catch(error){
+    $("bulkCopyFallback").hidden=false;
+    $("bulkCopyText").value=text;
+    $("bulkCopyText").focus();$("bulkCopyText").select();
+    $("bulkAssistantStatus").textContent="Clipboard access is unavailable. The text below is selected for copying.";
+  }
+}
+function insertBulkSample(){
+  if($("bulkText").value.trim()&&!confirm("Replace the pasted text with two sample rows?"))return;
+  $("bulkText").value=window.TangoNestBulkFormat.sample({...bulkDestination(),format:$("bulkFormat").value});
+  clearBulkPreview();previewBulk();
+  $("bulkAssistantStatus").textContent="Two sample rows inserted. Review them before importing.";
 }
 let approvedBulkConfirmationKey="";
 let lastLocalBulkUndo=null;
 let localBulkImportInFlight=false;
 let bulkDockTimer=0;
 let bulkProgressHideTimer=0;
+let bulkStopRequested=false;
+const bulkDisabledControls=new Set();
+function setBulkControlsBusy(busy){
+  if(busy){
+    $("bulkCard")?.querySelectorAll("input,select,textarea,button").forEach(control=>{
+      if(!control.disabled){bulkDisabledControls.add(control);control.disabled=true;}
+    });
+  }else{
+    bulkDisabledControls.forEach(control=>control.disabled=false);
+    bulkDisabledControls.clear();
+  }
+  const cancel=$("bulkCancelButton");
+  if(cancel){cancel.hidden=!busy;cancel.disabled=false;cancel.textContent="Stop after this batch";}
+}
 function bulkDestination(){
   const listId=$("bulkList")?.value||"";
   const list=db.lists.find(item=>item.id===listId);
@@ -976,7 +961,7 @@ function bulkDestination(){
 }
 function bulkConfirmationKey(rows,mode){
   const target=bulkDestination();
-  return JSON.stringify({listId:target.listId,frontLang:target.frontLang,backLang:target.backLang,mode:mode||"skip",rows:rows.map(row=>[row.front,row.back,row.pos])});
+  return JSON.stringify({...target,mode:mode||"skip",rows:rows.map(row=>window.TangoNestBulkFormat.fields.map(field=>row[field.key]))});
 }
 function updateBulkDestinationSummary(){
   const box=$("bulkTargetSummary");
@@ -998,7 +983,8 @@ function requestBulkDestinationConfirmation(rows,mode){
   const duplicatePanel=$("bulkDuplicatePanel");
   if(duplicatePanel)duplicatePanel.classList.remove("show");
   panel.hidden=false;
-  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">Confirm destination</span><strong id="bulkConfirmTitle">${esc(target.listName)}</strong><small>${rows.length} words · ${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>Go back</button><button type="button" data-bulk-approve>Import here</button></div>`;
+  const stats=bulkParseStats();
+  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">Confirm destination</span><strong id="bulkConfirmTitle">${esc(target.listName)}</strong><small>${rows.length} words · ${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small><small>${stats.warnings} warning rows · ${Math.max(0,stats.valid-rows.length)} skipped</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>Go back</button><button type="button" data-bulk-approve>Import ${rows.length} words here</button></div>`;
   panel.querySelector("[data-bulk-cancel]")?.addEventListener("click",hideBulkDestinationConfirmation);
   panel.querySelector("[data-bulk-approve]")?.addEventListener("click",()=>{approvedBulkConfirmationKey=key;window.bulkImport(mode||undefined)});
   setTimeout(()=>panel.querySelector("[data-bulk-approve]")?.focus({preventScroll:true}),0);
@@ -1014,24 +1000,27 @@ function setBulkProgress(current,total,label,state="working"){
   panel.hidden=false;
   panel.dataset.state=state;
   if($("bulkProgressLabel"))$("bulkProgressLabel").textContent=label||"Saving your words";
-  if($("bulkProgressDetail"))$("bulkProgressDetail").textContent=state==="done"?`${safeCurrent} words are safely in your collection.`:state==="error"?"Nothing else will be changed until you try again.":`${safeCurrent} of ${safeTotal} words saved · keep this tab open.`;
+  if($("bulkProgressDetail"))$("bulkProgressDetail").textContent=state==="done"?`${safeCurrent} words are safely in your collection.`:state==="error"?`${safeCurrent} of ${safeTotal} confirmed. Your import can be resumed without repeating saved rows.`:`${safeCurrent} of ${safeTotal} words saved · keep this tab open.`;
   if($("bulkProgressPercent"))$("bulkProgressPercent").textContent=`${percent}%`;
   if($("bulkProgressFill"))$("bulkProgressFill").style.transform=`scaleX(${percent/100})`;
 }
-function beginBulkProgress(total){setBulkProgress(0,total,"Preparing your collection","working")}
+function beginBulkProgress(total){bulkStopRequested=false;setBulkControlsBusy(true);setBulkProgress(0,total,"Preparing your collection","working")}
 function updateBulkProgress(current,total,label){setBulkProgress(current,total,label||"Planting words in your library","working")}
-function finishBulkProgress(total){setBulkProgress(total,total,"Import complete","done");bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},1400)}
-function failBulkProgress(current,total,message){setBulkProgress(current,total,message||"Import paused","error");bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},3200)}
+function finishBulkProgress(total){setBulkControlsBusy(false);setBulkProgress(total,total,"Import complete","done");updateBulkActionDock();bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},1400)}
+function failBulkProgress(current,total,message){setBulkControlsBusy(false);setBulkProgress(current,total,message||"Import paused","error");updateBulkActionDock()}
 function bulkProgressBusy(){return localBulkImportInFlight||$("bulkProgressPanel")?.dataset.state==="working"}
-window.tnBulkProgress={start:beginBulkProgress,update:updateBulkProgress,finish:finishBulkProgress,fail:failBulkProgress,busy:bulkProgressBusy};
+window.tnBulkProgress={start:beginBulkProgress,update:updateBulkProgress,finish:finishBulkProgress,fail:failBulkProgress,busy:bulkProgressBusy,cancelled:()=>bulkStopRequested};
 function updateBulkActionDock(){
   const dock=$("bulkActionDock");
   if(!dock)return;
-  const parsed=parseBulk($("bulkText")?.value||"");
-  dock.hidden=!parsed.length;
-  if($("bulkDockCount"))$("bulkDockCount").textContent=parsed.length?`${parsed.length} readable word${parsed.length===1?"":"s"}`:"Paste words to begin";
-  if($("bulkDockMeta"))$("bulkDockMeta").textContent=parsed.length>=500?"Large import ready · progress will be shown while every batch is saved.":"Preview checks duplicates and the destination before saving.";
-  if($("bulkRegisterBtn"))$("bulkRegisterBtn").textContent=parsed.length?`Review & Import ${parsed.length}`:"Review & Import";
+  const stats=bulkParseStats();
+  dock.hidden=!stats.lines;
+  if($("bulkDockCount"))$("bulkDockCount").textContent=`${stats.lines} rows detected`;
+  if($("bulkDockMeta"))$("bulkDockMeta").textContent=`${stats.ready} Ready · ${stats.warnings} Warnings · ${stats.invalid} Errors`;
+  if($("bulkRegisterBtn")){
+    $("bulkRegisterBtn").textContent=`Review & Import ${stats.valid}`;
+    $("bulkRegisterBtn").disabled=!!stats.invalid||!stats.valid||bulkProgressBusy();
+  }
 }
 function queueBulkActionDock(){clearTimeout(bulkDockTimer);bulkDockTimer=setTimeout(updateBulkActionDock,120)}
 function clearBulkInput(){if($("bulkText"))$("bulkText").value="";clearBulkPreview();updateBulkActionDock()}
@@ -1077,27 +1066,32 @@ function renderDuplicatePanel(rows){
   <div class="dup-actions">
     <button class="btn red" type="button" data-bulk-mode="skip">Skip Exact Duplicates</button>
     <button class="btn green" type="button" data-bulk-mode="addBoth">Add Both</button>
-    <button class="btn blue" type="button" data-bulk-mode="replace">Replace Existing</button>
+    <button class="btn blue" type="button" data-bulk-mode="replace" ${TN_LOCAL_QA_MODE?'':'disabled title="Cloud Replace is disabled to protect saved words. Edit individual words in Library."'}>Replace Existing</button>
   </div>`;
   panel.querySelector("[data-dup-close]")?.addEventListener("click",()=>panel.classList.remove("show"));
   panel.querySelectorAll("[data-bulk-mode]").forEach(button=>button.addEventListener("click",()=>window.bulkImport(button.dataset.bulkMode)));
   setTimeout(()=>panel.querySelector("[data-bulk-mode='addBoth']")?.focus({preventScroll:true}),0);
 }
-function previewBulk(){
+function previewBulk(reviewDuplicates=false){
   let stats=bulkParseStats(),rows=stats.rows,box=$("bulkPreview");
   box.style.display="block";
   if(!rows.length){box.innerHTML='<div class="empty"><h3>No readable words</h3><p>Each row needs at least Front and Back.</p></div>';return}
-  renderDuplicatePanel(rows);
+  if(!stats.invalid&&reviewDuplicates)renderDuplicatePanel(rows);
+  else $("bulkDuplicatePanel")?.classList.remove("show");
   const target=bulkDestination();
   const visible=rows.slice(0,60);
-  box.innerHTML=`<div class="tn-bulk-preview-target"><b>Import to ${esc(target.listName)}</b><span>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</span></div><div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div>${rows.length>visible.length?`<p class="tn-bulk-preview-limit">Showing the first ${visible.length} rows. All ${rows.length} validated rows will be imported.</p>`:""}<div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+visible.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
+  const fields=window.TangoNestBulkFormat.fields;
+  box.innerHTML=`<div class="tn-bulk-preview-target"><b>Import to ${esc(target.listName)}</b><span>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</span></div><div class="tn-bulk-summary" role="status"><span>${stats.ready} Ready</span><span>${stats.warnings} Warnings</span><span>${stats.invalid} Errors</span><span>${stats.valid} valid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span></div><p class="tn-bulk-validation-note">Errors must be corrected before importing. Warnings can be imported after review.</p>${rows.length>visible.length?`<p class="tn-bulk-preview-limit">Showing ${visible.length} of ${rows.length} rows. Every row is validated.</p>`:""}<div class="tablewrap" tabindex="0" role="region" aria-label="Bulk Add preview"><table><thead><tr><th>Row</th>${fields.map(field=>`<th>${field.label}</th>`).join("")}<th>Status</th></tr></thead><tbody>`+visible.map(r=>`<tr><td>${r.row}</td>${fields.map(field=>`<td dir="auto">${esc(r[field.key])}</td>`).join("")}<td><strong>${r.status==="error"?"Error":r.status==="warning"?"Warning":"Ready"}</strong><span class="tn-bulk-row-issues">${esc([...r.errors,...r.warnings].join(" "))}</span></td></tr>`).join("")+"</tbody></table></div>";
+  const issues=rows.filter(row=>row.errors.length);
+  if(issues.length)box.innerHTML+=`<div class="tn-bulk-errors" role="alert">${issues.slice(0,30).map(row=>`<p>Row ${row.row}: ${esc(row.errors.join(" "))}</p>`).join("")}${issues.length>30?`<p>${issues.length-30} additional rows need correction.</p>`:""}</div>`;
 }
 async function bulkImport(mode){
   if(localBulkImportInFlight)return toast("Bulk Add is already running");
+  if(bulkParseStats().invalid){previewBulk();return toast("Fix the highlighted rows before importing.")}
   let rows=bulkRows();
   if(!rows.length)return toast("No readable words");
   const hasFrontDup=rows.some(r=>r.frontDuplicate);
-  if(hasFrontDup&&!mode){previewBulk();return toast("Duplicate words need confirmation");}
+  if(hasFrontDup&&!mode){previewBulk(true);return toast("Duplicate words need confirmation");}
   let listId=$("bulkList").value,frontLang=$("bulkFrontLang").value,backLang=$("bulkBackLang").value;
   const target=bulkDestination();
   if(mode==="replace"){
@@ -1134,18 +1128,20 @@ async function bulkImport(mode){
     const additions=[];
     const chunkSize=200;
     for(let start=0;start<rows.length;start+=chunkSize){
+      if(bulkStopRequested){failBulkProgress(0,rows.length,"Import stopped. No local words were added.");return;}
       const chunk=rows.slice(start,start+chunkSize).map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}));
       additions.push(...chunk);
       updateBulkProgress(additions.length,rows.length,`Preparing batch ${Math.floor(start/chunkSize)+1}`);
       await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
     }
+    if(bulkStopRequested){failBulkProgress(0,rows.length,"Import stopped. No local words were added.");return;}
     db.words=[...db.words,...additions];
     lastLocalBulkUndo={type:"ids",ids:additions.map(word=>word.id),count:additions.length};
     $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:additions.length,playlistName:target.listName});finishBulkProgress(additions.length);toast(`${additions.length} added`);
   }catch(error){
     failBulkProgress(0,rows.length,"Import could not be completed");
     toast("Couldn't add these words. Please try again.");
-  }finally{localBulkImportInFlight=false}
+  }finally{localBulkImportInFlight=false;updateBulkActionDock()}
 }
 try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;window.requestBulkDestinationConfirmation=requestBulkDestinationConfirmation;window.showBulkUndo=showBulkUndo;window.clearBulkUndo=clearBulkUndo;window.undoLastBulkImport=undoLastBulkImport;window.updateBulkDestinationSummary=updateBulkDestinationSummary;}catch(e){}
 function posBadge(pos){return pos?`<span class="badge ${["noun","verb","adjective","adverb","phrase"].includes(pos)?pos:""}">${esc(pos)}</span>`:""}
@@ -1775,6 +1771,7 @@ function applyLastSessionToControls(){
   if(s.audioPattern&&$("audioPattern"))$("audioPattern").value=s.audioPattern;
   if(s.audioOrder&&$("audioOrder"))$("audioOrder").value=s.audioOrder;
   if(s.studyMode&&$("studyMode"))$("studyMode").value=s.studyMode;
+  updateStudyProgress();
 }
 function rememberCurrentSession(mode){
   const listId=selectedValue(mode==="cards"?"studyList":mode==="audio"?"audioList":mode==="quiz"?"quizList":"addList")||activeListId?.();
@@ -1864,6 +1861,13 @@ window.tnResetAccountUiState=resetAccountUiState;
 function setupCoreInteractions(){
   if(window.__tnCoreInteractions)return;
   window.__tnCoreInteractions=true;
+  $("bulkCancelButton")?.addEventListener("click",()=>{bulkStopRequested=true;$("bulkCancelButton").disabled=true;$("bulkCancelButton").textContent="Stopping after this batch"});
+  window.addEventListener("beforeunload",event=>{if(bulkProgressBusy()){event.preventDefault();event.returnValue="";}});
+  updateBulkAssistant();
+  $("bulkCopyPrompt")?.addEventListener("click",()=>copyBulkAssistant("prompt"));
+  $("bulkCopyFormat")?.addEventListener("click",()=>copyBulkAssistant("format"));
+  $("bulkInsertSample")?.addEventListener("click",insertBulkSample);
+  $("bulkFormat")?.addEventListener("change",()=>{clearBulkPreview();updateBulkAssistant()});
   ["addList","bulkList"].forEach(id=>{
     const el=$(id);
     if(el&&!el.dataset.recentPlaylist){
@@ -1872,9 +1876,20 @@ function setupCoreInteractions(){
     }
   });
   const bulkText=$("bulkText");
-  if(bulkText&&!bulkText.dataset.bulkDock){bulkText.dataset.bulkDock="1";bulkText.addEventListener("input",queueBulkActionDock)}
+  if(bulkText&&!bulkText.dataset.bulkDock){bulkText.dataset.bulkDock="1";bulkText.addEventListener("input",()=>{hideBulkDestinationConfirmation();$("bulkDuplicatePanel")?.classList.remove("show");if($("bulkPreview"))$("bulkPreview").style.display="none";queueBulkActionDock()})}
   document.addEventListener("keydown",event=>{
     if(event.isComposing)return;
+    const bulkModal=!$("bulkTargetConfirm")?.hidden?$("bulkTargetConfirm"):$("bulkDuplicatePanel")?.classList.contains("show")?$("bulkDuplicatePanel"):null;
+    if(bulkModal){
+      if(event.key==="Escape"){
+        event.preventDefault();hideBulkDestinationConfirmation();$("bulkDuplicatePanel")?.classList.remove("show");$("bulkRegisterBtn")?.focus();return;
+      }
+      if(event.key==="Tab"){
+        const buttons=[...bulkModal.querySelectorAll("button:not(:disabled)")];
+        const at=buttons.indexOf(document.activeElement);
+        event.preventDefault();buttons[(at+(event.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();return;
+      }
+    }
     const target=event.target;
     const tag=String(target?.tagName||"").toLowerCase();
     const inField=["input","textarea","select"].includes(tag);
@@ -1894,7 +1909,8 @@ function setupCoreInteractions(){
     }
     if(createActive&&(event.metaKey||event.ctrlKey)&&event.key==="Enter"){
       event.preventDefault();
-      $("addWordBtn")?.click();
+      if(target?.closest?.("#bulkCard"))$("bulkRegisterBtn")?.click();
+      else $("addWordBtn")?.click();
       return;
     }
     if(createActive&&event.key==="Enter"&&inField&&tag!=="textarea"){
@@ -1923,7 +1939,7 @@ function enhanceTangoNestApp(){
   restoreRecentPlaylist();
   updateBulkDestinationSummary();
   updateBulkActionDock();
-  ["bulkFrontLang","bulkBackLang"].forEach(id=>$(id)?.addEventListener("change",()=>{hideBulkDestinationConfirmation();updateBulkDestinationSummary()}));
+  ["bulkFrontLang","bulkBackLang"].forEach(id=>$(id)?.addEventListener("change",()=>{clearBulkPreview();updateBulkDestinationSummary();updateBulkAssistant()}));
   updateHeroPreview();
   if(typeof updateBrandContext==="function")updateBrandContext();
 }

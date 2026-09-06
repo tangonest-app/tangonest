@@ -52,14 +52,14 @@
 }
 
 html{
-  min-width:320px;
+  min-width:0;
   background:var(--fdg-forest-950);
   color-scheme:light;
   overflow-x:clip;
 }
 
 body{
-  min-width:320px;
+  min-width:0;
   min-height:100vh;
   margin:0;
   overflow-x:clip;
@@ -70,6 +70,9 @@ body{
   line-height:1.55;
   letter-spacing:0;
 }
+.tn-build-version{display:none;margin:0;padding:0 24px 22px;color:var(--fdg-copy);font-size:12px}
+body:has(#pageManage.active) .tn-build-version{display:block}
+@media(max-width:860px){body:has(#pageManage.active) .tn-build-version{padding-bottom:96px}}
 
 button,
 input,
@@ -1323,11 +1326,38 @@ input:focus,select:focus,textarea:focus,
 .tn-memory-stages strong{overflow:hidden;color:var(--fdg-ink);font-size:12px;text-overflow:ellipsis;white-space:nowrap}
 .tn-memory-stages small{grid-column:3;color:#526257;font-size:10px}
 .tn-memory-empty{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border:1px solid var(--fdg-line);border-radius:var(--fdg-radius-sm);background:#f6eddc}
+.tn-mistakes-empty-copy{display:grid;gap:6px}
 
 .tn-bulk-action-dock{position:sticky;z-index:45;bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0 0;padding:12px 14px;border:1px solid #a98b53;border-radius:8px;background:rgba(248,241,223,.96);box-shadow:0 10px 28px rgba(40,31,21,.16),inset 0 0 0 3px rgba(255,250,240,.72);backdrop-filter:blur(12px)}
 .tn-bulk-action-dock[hidden]{display:none}
 .tn-bulk-dock-copy{display:grid;min-width:0;gap:2px}.tn-bulk-dock-copy strong{color:var(--fdg-forest-900);font-family:var(--fdg-serif);font-size:18px;font-weight:600}.tn-bulk-dock-copy small{overflow:hidden;color:var(--fdg-copy);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
 .tn-bulk-action-dock .actions{flex:0 0 auto;margin:0}
+.tn-bulk-assistant{margin:18px 0;padding-block:16px;border-block:1px solid var(--fdg-line)}
+.tn-bulk-format-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;max-width:720px}
+.tn-bulk-format-guide{margin:14px 0 8px;padding:12px;border-left:2px solid var(--fdg-forest-700);background:#f0eadc;color:var(--fdg-forest-950);font-family:monospace;font-size:13px;overflow-wrap:anywhere}
+.tn-bulk-format-note,.tn-bulk-validation-note{max-width:780px;color:var(--fdg-copy);font-size:13px;line-height:1.65}
+#bulkAssistantStatus{margin:8px 0 0;color:var(--fdg-forest-800);font-size:13px}
+#bulkCopyFallback[hidden],#bulkRecovery[hidden]{display:none}
+#bulkCopyText{min-height:160px}
+#bulkPreview{padding:14px 0 0;border:0;border-radius:0;background:transparent}
+#bulkPreview .tablewrap{border:1px solid var(--fdg-line);border-radius:5px;background:var(--fdg-paper-strong)}
+#bulkPreview th{background:var(--fdg-sage-100);color:var(--fdg-ink)}
+#bulkPreview td{min-width:90px;max-width:320px;background:var(--fdg-paper-strong);white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+#bulkPreview td:last-child{min-width:190px}
+.tn-bulk-row-issues{display:block;margin-top:4px;color:var(--fdg-copy);font-size:12px;line-height:1.6}
+.tn-bulk-errors{margin-top:12px;padding:12px;border:1px solid #be9280;background:#fff5eb;color:#773c2a}
+.tn-bulk-errors p{margin:4px 0}
+#bulkCancelButton{grid-column:2 / -1;justify-self:end;min-height:40px}
+#bulkRecovery{flex-wrap:wrap}
+.tn-bulk-progress-copy strong{white-space:normal}
+@media(max-width:520px){
+  .tn-bulk-format-row{grid-template-columns:minmax(0,1fr)}
+  .tn-bulk-assistant .actions{display:flex;flex-wrap:wrap}
+  .tn-bulk-assistant .actions button{flex:1 1 140px;min-height:44px}
+  .tn-bulk-action-dock{flex-wrap:wrap}
+  .tn-bulk-action-dock .actions{flex:1 1 100%;display:flex;flex-wrap:wrap}
+  .tn-bulk-action-dock .actions button{flex:1 1 100px}
+}
 #bulkPreview .tablewrap{max-height:410px;overflow:auto}
 .tn-bulk-preview-limit,.dup-more{margin:8px 0;padding:8px 10px;border-radius:5px;background:#efe6d4;color:var(--fdg-copy);font-size:11px}
 
@@ -1369,7 +1399,7 @@ input:focus,select:focus,textarea:focus,
 
 @media(max-width:430px){
   .tn-memory-path-card{padding:16px}.tn-memory-path-heading h2{font-size:21px}.tn-memory-stages > div{padding:8px 6px}.tn-memory-stages b{font-size:18px}
-  .tn-bulk-action-dock .actions{grid-template-columns:1fr 1fr}.tn-bulk-action-dock .actions .btn:last-child{grid-column:1/-1}
+  .tn-bulk-action-dock .actions{grid-template-columns:1fr 1fr}.tn-bulk-action-dock .actions .btn:nth-child(2){grid-column:1/-1;grid-row:1}
   .tn-bulk-progress{grid-template-columns:36px minmax(0,1fr)}.tn-bulk-progress > b{grid-column:2}.tn-bulk-progress-mark{width:34px;height:34px}.tn-bulk-progress-mark::before{left:16px}.tn-bulk-progress-mark::after{left:16px}.tn-bulk-progress-mark span::before{right:16px}
 }
 
