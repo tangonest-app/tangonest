@@ -28,9 +28,11 @@
     const labels=pageLabels[current]||pageLabels.home;
     const eyebrow=$("appPageEyebrow");
     const title=$("appPageTitle");
-    if(eyebrow)eyebrow.textContent=labels[0];
-    if(title)title.textContent=labels[1];
-    document.title=`${labels[1]} · TangoNest`;
+    if(eyebrow)eyebrow.textContent=labels[0]==="Practice"?window.TNI18n.t("ui.practice"):labels[0]==="Collection"?window.TNI18n.t("ui.collections"):labels[0];
+    const titleKeys={home:"navigation.home",create:"navigation.addWords",library:"navigation.library",cards:"navigation.cards",quiz:"navigation.quiz",listen:"navigation.listen",settings:"navigation.settings"};
+    const translated=window.TNI18n.t(titleKeys[current]||titleKeys.home);
+    if(title)title.textContent=translated;
+    document.title=`${translated} · TangoNest`;
     if(writeHistory&&current!==currentHistoryPage&&pageLabels[current]){
       const url=new URL(location.href);
       url.searchParams.set("page",current);
@@ -41,6 +43,7 @@
   }
 
   window.tnUpdateShellContext=updateShellContext;
+  window.addEventListener("tn:locale",()=>updateShellContext(currentHistoryPage||"home",false));
   window.addEventListener("popstate",()=>{
     const page=new URLSearchParams(location.search).get("page")||"home";
     followingHistory=true;
@@ -62,9 +65,9 @@
     const offline=!navigator.onLine;
     banner.hidden=!offline&&!waitingWorker;
     button.hidden=!waitingWorker;
-    text.textContent=waitingWorker
-      ? "A TangoNest update is ready."
-      : "You are offline. Changes will sync when the connection returns.";
+    window.TNI18n.bindText(text,()=>(waitingWorker
+      ? window.TNI18n.t("ui.a_tangonest_update_is_ready",{})
+      : window.TNI18n.t("ui.you_are_offline_changes_will_sync_when_the_connection_returns",{})));
   }
 
   function watchRegistration(registration){

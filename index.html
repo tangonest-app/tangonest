@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg10">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg10">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg11">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg11">
+<link rel="stylesheet" href="./ui/living-library.css?v=1.0.0-rc.19-fdg11">
+<link rel="preload" as="image" href="./assets/living-library-desk.jpg">
 
 <script>
 (function(){
@@ -18,7 +20,7 @@
 <link rel="icon" href="./assets/icons/fdg10/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/fdg10/icon-180.png">
 <link rel="apple-touch-icon" sizes="152x152" href="./assets/icons/fdg10/icon-152.png">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg10">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg11">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -46,56 +48,57 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 </style>
 
 </head>
-<body>
+<body class="tn-living">
+<div class="tn-atmosphere-scene" aria-hidden="true"></div>
 
 <section id="authScreen" class="auth-screen" aria-labelledby="authTitle">
   <div class="auth-card">
     <div id="authInteractive" class="auth-interactive">
-    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle">Find rhythm. Build meaning.</div></div></div>
-    <div id="authModeLabel" class="auth-mode-label">Local</div>
-    <div class="auth-kicker">WELCOME TO YOUR STUDY</div>
-    <h1 id="authTitle">Return to your words.</h1>
-    <p>Sign in to keep your vocabulary, playlists, and progress together across PC and phone.</p>
+    <div class="auth-brand"><div class="auth-logo" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></div><div><div class="auth-title">TangoNest</div><div class="auth-subtitle"><span data-i18n="ui.find_rhythm_build_meaning">Find rhythm. Build meaning.</span></div></div></div>
+    <div id="authModeLabel" class="auth-mode-label"><span data-i18n="ui.local">Local</span></div>
+    <div class="auth-kicker"><span data-i18n="ui.welcome_to_your_study">WELCOME TO YOUR STUDY</span></div>
+    <h1 id="authTitle"><span data-i18n="ui.return_to_your_words">Return to your words.</span></h1>
+    <p><span data-i18n="ui.sign_in_to_keep_your_vocabulary_playlists_and_progress_together_across_pc_and_phone">Sign in to keep your vocabulary, playlists, and progress together across PC and phone.</span></p>
     <form id="authForm" novalidate>
-      <label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
-      <label for="authPassword">Password</label><div class="auth-password-field"><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters"><button id="togglePasswordButton" type="button" aria-pressed="false" aria-label="Show password">Show</button></div>
-      <div class="auth-help-row"><button id="forgotPasswordButton" type="button">Forgot password?</button></div>
-      <div id="authMessage" class="auth-message" role="status" aria-live="polite">Enter your existing account details, or create a new account.</div>
-      <div class="auth-actions"><button id="loginButton" type="submit">Login</button><button id="signupButton" type="button">Create account</button><button id="updatePasswordButton" type="button" hidden>Update password</button></div>
+      <label for="authEmail"><span data-i18n="ui.email">Email</span></label><input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" data-i18n-placeholder="ui.you_example_com">
+      <label for="authPassword"><span data-i18n="ui.password">Password</span></label><div class="auth-password-field"><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters" data-i18n-placeholder="ui.at_least_6_characters"><button id="togglePasswordButton" type="button" aria-pressed="false" aria-label="Show password" data-i18n-aria-label="ui.show_password"><span data-i18n="ui.show">Show</span></button></div>
+      <div class="auth-help-row"><button id="forgotPasswordButton" type="button"><span data-i18n="ui.forgot_password">Forgot password?</span></button></div>
+      <div id="authMessage" class="auth-message" role="status" aria-live="polite"><span data-i18n="ui.enter_your_existing_account_details_or_create_a_new_account">Enter your existing account details, or create a new account.</span></div>
+      <div class="auth-actions"><button id="loginButton" type="submit"><span data-i18n="auth.login">Login</span></button><button id="signupButton" type="button"><span data-i18n="auth.signup">Create account</span></button><button id="updatePasswordButton" type="button" hidden><span data-i18n="ui.update_password">Update password</span></button></div>
     </form>
-    <button id="guestButton" type="button" class="guest-button">Continue as guest</button>
+    <button id="guestButton" type="button" class="guest-button"><span data-i18n="ui.continue_as_guest">Continue as guest</span></button>
     </div>
     <div id="authSessionLoading" class="auth-session-loading" role="status" aria-live="polite">
       <span class="auth-session-spinner" aria-hidden="true"></span>
-      <strong>Opening your library...</strong>
-      <small>Restoring your secure session.</small>
+      <strong><span data-i18n="ui.opening_your_library">Opening your library...</span></strong>
+      <small><span data-i18n="ui.restoring_your_secure_session">Restoring your secure session.</span></small>
     </div>
   </div>
 </section>
 
 <div class="app" inert aria-hidden="true">
   <aside class="app-sidebar">
-    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></div><div><h1>TangoNest</h1><p>Learn · Grow · Remember</p></div></div>
-    <nav class="nav" aria-label="Primary navigation">
-      <span class="nav-section-label">Workspace</span>
-      <button id="navHome" class="active" type="button" onclick="go('home')">Home</button>
-      <button id="navWords" type="button" onclick="go('words')">Library</button>
-      <button id="navAdd" class="sidebar-add" type="button" onclick="appShow('add')"><span aria-hidden="true">+</span> Add Words</button>
-      <span class="nav-section-label">Practice</span>
-      <button id="navStudy" onclick="go('study')">Cards</button>
-      <button id="navQuiz" onclick="appShow('quiz')">Quiz</button>
-      <button id="navAudio" onclick="appShow('audio')">Listen</button>
-      <button id="navManage" class="nav-settings" onclick="go('manage')">Settings</button>
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></div><div><h1>TangoNest</h1><p><span data-i18n="ui.learn_grow_remember">Learn · Grow · Remember</span></p></div></div>
+    <nav class="nav" aria-label="Primary navigation" data-i18n-aria-label="ui.primary_navigation">
+      <span class="nav-section-label"><span data-i18n="ui.workspace">Workspace</span></span>
+      <button id="navHome" class="active" type="button" onclick="go('home')"><img class="tn-nav-icon" src="./assets/ui/house.svg" alt=""><span data-i18n="navigation.home">Home</span></button>
+      <button id="navWords" type="button" onclick="go('words')"><img class="tn-nav-icon" src="./assets/ui/book-open.svg" alt=""><span data-i18n="navigation.library">Library</span></button>
+      <button id="navAdd" class="sidebar-add" type="button" onclick="appShow('add')"><img class="tn-nav-icon" src="./assets/ui/plus.svg" alt=""><span data-i18n="navigation.addWords">Add Words</span></button>
+      <span class="nav-section-label"><span data-i18n="ui.practice">Practice</span></span>
+      <button id="navStudy" onclick="go('study')"><img class="tn-nav-icon" src="./assets/ui/layers.svg" alt=""><span data-i18n="navigation.cards">Cards</span></button>
+      <button id="navQuiz" onclick="appShow('quiz')"><img class="tn-nav-icon" src="./assets/ui/circle-help.svg" alt=""><span data-i18n="navigation.quiz">Quiz</span></button>
+      <button id="navAudio" onclick="appShow('audio')"><img class="tn-nav-icon" src="./assets/ui/headphones.svg" alt=""><span data-i18n="navigation.listen">Listen</span></button>
+      <button id="navManage" class="nav-settings" onclick="go('manage')"><img class="tn-nav-icon" src="./assets/ui/settings.svg" alt=""><span data-i18n="navigation.settings">Settings</span></button>
     </nav>
-    <div class="sidebar-note"><span>Words stay yours.</span><small>Synced securely across devices.</small></div>
+    <div class="sidebar-note"><span><span data-i18n="ui.words_stay_yours">Words stay yours.</span></span><small><span data-i18n="ui.synced_securely_across_devices">Synced securely across devices.</span></small></div>
   </aside>
   <div class="app-workspace">
     <header class="header">
       <div class="mobile-brand" role="img" aria-label="TangoNest"><span class="brand-mark" aria-hidden="true"><img src="./assets/icons/fdg10/icon-192.png" alt=""></span></div>
-      <div class="page-heading"><span id="appPageEyebrow">Forest Desk</span><strong id="appPageTitle">Home</strong></div>
-      <div class="stats" aria-label="Library summary">
-        <div class="stat"><b id="wc">0</b><span>Words</span></div><div class="stat"><b id="listCount">0</b><span>Lists</span></div><div class="stat"><b id="lc">0</b><span>Learned</span></div><div class="stat"><b id="hc">0</b><span>Hard</span></div>
-        <button id="tn80HeaderCloud" class="tn80-header-cloud" type="button" onclick="go('manage')" aria-label="Open account and sync settings">Cloud</button>
+      <div class="page-heading"><span id="appPageEyebrow"><span data-i18n="ui.forest_desk">Forest Desk</span></span><strong id="appPageTitle"><span data-i18n="navigation.home">Home</span></strong></div>
+      <div class="stats" aria-label="Library summary" data-i18n-aria-label="ui.library_summary">
+        <div class="stat"><b id="wc">0</b><span><span data-i18n="ui.words">Words</span></span></div><div class="stat"><b id="listCount">0</b><span><span data-i18n="ui.lists">Lists</span></span></div><div class="stat"><b id="lc">0</b><span><span data-i18n="ui.learned">Learned</span></span></div><div class="stat"><b id="hc">0</b><span><span data-i18n="ui.hard">Hard</span></span></div>
+        <button id="tn80HeaderCloud" class="tn80-header-cloud" type="button" onclick="go('manage')" aria-label="Open account and sync settings" data-i18n-aria-label="ui.open_account_and_sync_settings"><span data-i18n="ui.cloud">Cloud</span></button>
       </div>
     </header>
     <main class="app-main">
@@ -103,199 +106,212 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <section id="pageHome" class="page active" aria-labelledby="homeTitle">
     <section class="home-focus">
       <div class="home-focus-copy">
-        <span class="section-eyebrow">TODAY'S FOCUS</span>
-        <h2 id="homeTitle">Welcome back.</h2>
-        <p>Return to the words that need you today, then keep growing your collection at your own pace.</p>
+        <span class="section-eyebrow"><span data-i18n="ui.your_living_library">YOUR LIVING LIBRARY</span></span>
+        <h2 id="homeTitle">TangoNest</h2>
+        <p><span data-i18n="ui.your_own_language_space">Your own language space.</span></p>
+        <p class="tn-desk-note"><span data-i18n="ui.collect_words_find_meaning_make_them_yours">Collect words. Find meaning. Make them yours.</span></p>
         <div class="home-focus-actions">
-          <button class="btn primary" onclick="appShow('add')">+ Add Words</button>
-          <button class="btn" onclick="appShow('quiz')">Start Quiz</button>
+          <button class="btn" onclick="appShow('add')"><span data-i18n="navigation.addWords">Add Words</span></button>
+          <button class="btn" onclick="startSmartSession('today')"><span data-i18n="ui.continue_learning">Continue learning</span></button>
         </div>
       </div>
-      <div class="home-summary" aria-label="Learning overview">
-        <div><b id="totalWords">0</b><span>Words</span></div>
-        <div><b id="totalLists">0</b><span>Lists</span></div>
-        <div><b id="totalLearned">0</b><span>Learned</span></div>
-        <div><b id="totalHard">0</b><span>Hard</span></div>
+      <div class="home-summary" aria-label="Learning overview" data-i18n-aria-label="ui.learning_overview">
+        <div><b id="totalWords">0</b><span><span data-i18n="ui.words">Words</span></span></div>
+        <div><b id="totalLists">0</b><span><span data-i18n="ui.lists">Lists</span></span></div>
+        <div><b id="totalLearned">0</b><span><span data-i18n="ui.learned">Learned</span></span></div>
+        <div><b id="totalHard">0</b><span><span data-i18n="ui.hard">Hard</span></span></div>
       </div>
     </section>
+    <nav class="tn-desk-destinations" aria-label="Start learning" data-i18n-aria-label="ui.start_learning">
+      <button type="button" onclick="go('words')"><img src="./assets/ui/book-open.svg" alt=""><strong><span data-i18n="navigation.library">Library</span></strong><span><span data-i18n="ui.your_words_your_world">Your words, your world</span></span></button>
+      <button type="button" onclick="go('study')"><img src="./assets/ui/layers.svg" alt=""><strong><span data-i18n="navigation.cards">Cards</span></strong><span><span data-i18n="ui.turn_a_page_remember">Turn a page. Remember.</span></span></button>
+      <button type="button" onclick="appShow('quiz')"><img src="./assets/ui/circle-help.svg" alt=""><strong><span data-i18n="navigation.quiz">Quiz</span></strong><span><span data-i18n="ui.put_your_recall_into_practice">Put your recall into practice</span></span></button>
+      <button type="button" onclick="appShow('audio')"><img src="./assets/ui/headphones.svg" alt=""><strong><span data-i18n="navigation.listen">Listen</span></strong><span><span data-i18n="ui.hear_and_learn">Hear and learn</span></span></button>
+    </nav>
     <section class="card tn-memory-path-card" aria-labelledby="memoryPathTitle">
       <div class="tn-memory-path-heading">
-        <div><span class="section-eyebrow">MEMORY PATH</span><h2 id="memoryPathTitle">How your words are taking root</h2></div>
-        <button class="text-action" type="button" onclick="startSmartSession('today')">Review what is due</button>
+        <div><span class="section-eyebrow"><span data-i18n="ui.memory_path">MEMORY PATH</span></span><h2 id="memoryPathTitle"><span data-i18n="ui.how_your_words_are_taking_root">How your words are taking root</span></h2></div>
+        <button class="text-action" type="button" onclick="startSmartSession('today')"><span data-i18n="ui.review_what_is_due">Review what is due</span></button>
       </div>
-      <p class="desc">A quiet overview of the journey from first encounter to lasting recall.</p>
+      <p class="desc"><span data-i18n="ui.a_quiet_overview_of_the_journey_from_first_encounter_to_lasting_recall">A quiet overview of the journey from first encounter to lasting recall.</span></p>
       <div id="homeMemoryPath" class="tn-memory-path" aria-live="polite"></div>
     </section>
     <div class="home-dashboard-grid">
-      <section class="card tn-today-card"><div class="section-heading"><div><span class="section-eyebrow">DAILY REVIEW</span><h2>Today’s Session</h2></div></div><p class="desc">A focused mix of due, weak, and new words.</p><div id="todayPlan" class="tn-today-plan"></div></section>
-      <section class="card quick-start"><div class="section-heading"><div><span class="section-eyebrow">QUICK START</span><h2>Continue learning</h2></div></div><p class="desc">Choose the mode that fits the moment.</p>
-        <div class="progress-grid"><div class="progress-card"><b id="dashTotal">0</b><span>Total</span></div><div class="progress-card"><b id="dashLearned">0%</b><span>Learned</span></div><div class="progress-card"><b id="dashDue">0</b><span>Due</span></div><div class="progress-card"><b id="dashHard">0</b><span>Hard</span></div></div>
-        <div class="quick-actions"><button class="btn" onclick="go('study')">Cards</button><button class="btn" onclick="appShow('quiz')">Quiz</button><button class="btn" onclick="appShow('audio')">Listen</button></div>
+      <section class="card tn-today-card"><div class="section-heading"><div><span class="section-eyebrow"><span data-i18n="ui.daily_review">DAILY REVIEW</span></span><h2><span data-i18n="ui.today_s_session">Today’s Session</span></h2></div></div><p class="desc"><span data-i18n="ui.a_focused_mix_of_due_weak_and_new_words">A focused mix of due, weak, and new words.</span></p><div id="todayPlan" class="tn-today-plan"></div></section>
+      <section class="card quick-start"><div class="section-heading"><div><span class="section-eyebrow"><span data-i18n="ui.quick_start">QUICK START</span></span><h2><span data-i18n="ui.continue_learning">Continue learning</span></h2></div></div><p class="desc"><span data-i18n="ui.choose_the_mode_that_fits_the_moment">Choose the mode that fits the moment.</span></p>
+        <div class="progress-grid"><div class="progress-card"><b id="dashTotal">0</b><span><span data-i18n="ui.total">Total</span></span></div><div class="progress-card"><b id="dashLearned">0%</b><span><span data-i18n="ui.learned">Learned</span></span></div><div class="progress-card"><b id="dashDue">0</b><span><span data-i18n="ui.due">Due</span></span></div><div class="progress-card"><b id="dashHard">0</b><span><span data-i18n="ui.hard">Hard</span></span></div></div>
+        <div class="quick-actions"><button class="btn" onclick="go('study')"><span data-i18n="navigation.cards">Cards</span></button><button class="btn" onclick="appShow('quiz')"><span data-i18n="navigation.quiz">Quiz</span></button><button class="btn" onclick="appShow('audio')"><span data-i18n="navigation.listen">Listen</span></button></div>
       </section>
     </div>
     <div class="home-lower-grid">
-      <section class="card tn-mistake-card"><div class="section-heading"><div><span class="section-eyebrow">REVIEW</span><h2>Mistake Review</h2></div></div><p class="desc">Words you missed stay here until your answers become stable.</p><div id="mistakeNotebookHome"></div></section>
-      <section class="card"><div class="section-heading"><div><span class="section-eyebrow">COLLECTIONS</span><h2>My Lists</h2></div><button class="text-action" type="button" onclick="appShow('add')">New list</button></div><div id="homeLists" class="quick-list"></div></section>
+      <section class="card tn-mistake-card"><div class="section-heading"><div><span class="section-eyebrow"><span data-i18n="ui.review">REVIEW</span></span><h2><span data-i18n="ui.mistake_review">Mistake Review</span></h2></div></div><p class="desc"><span data-i18n="ui.words_you_missed_stay_here_until_your_answers_become_stable">Words you missed stay here until your answers become stable.</span></p><div id="mistakeNotebookHome"></div></section>
+      <section class="card"><div class="section-heading"><div><span class="section-eyebrow"><span data-i18n="ui.collections">COLLECTIONS</span></span><h2><span data-i18n="ui.my_lists">My Lists</span></h2></div><button class="text-action" type="button" onclick="appShow('add')"><span data-i18n="ui.new_list">New list</span></button></div><div id="homeLists" class="quick-list"></div></section>
     </div>
   </section>
 
   <section id="pageAdd" class="page">
     <div class="grid2">
-      <div class="card"><h2>Add Word</h2><p class="desc">Add words quickly. Enter moves forward, Cmd/Ctrl + Enter saves, then Front is focused again.</p>
-        <div class="row"><div><label for="front">Front</label><input id="front" placeholder="word" oninput="autoDetectFront()"></div><div><label for="back">Back</label><input id="back" placeholder="meaning" oninput="autoDetectBack()"></div></div>
-        <div class="row3"><div><label for="frontLang">Front language</label><select id="frontLang"></select></div><div><label for="backLang">Back language</label><select id="backLang"></select></div><div><label for="addList">Save to list</label><select id="addList"></select></div></div>
-        <div class="row3"><div><label for="pos">POS <span class="optional">optional</span></label><select id="pos"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label for="gender">Gender <span class="optional">optional</span></label><select id="gender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label for="tags">Tags</label><input id="tags" placeholder="A1, food"></div></div>
-        <label for="memo">Memo / Example</label><textarea id="memo" placeholder="Example sentence or memo"></textarea>
-        <div class="actions tn-create-actions"><button id="addWordBtn" class="btn primary" type="button" onclick="tnRegisterWordCritical(event)">Save Word</button><button class="btn blue" type="button" onclick="speak($('front').value,$('frontLang').value)">Play Front</button><button class="btn" type="button" onclick="clearForm()">Clear</button><span class="tn-key-hint">⌘ / Ctrl + Enter</span></div>
+      <div class="card"><h2><span data-i18n="ui.add_word">Add Word</span></h2><p class="desc"><span data-i18n="ui.add_words_quickly_enter_moves_forward_cmd_ctrl_enter_saves_then_front_is_focused_again">Add words quickly. Enter moves forward, Cmd/Ctrl + Enter saves, then Front is focused again.</span></p>
+        <div class="row"><div><label for="front"><span data-i18n="ui.front">Front</span></label><input id="front" placeholder="word" oninput="autoDetectFront()" data-i18n-placeholder="ui.word"></div><div><label for="back"><span data-i18n="ui.back">Back</span></label><input id="back" placeholder="meaning" oninput="autoDetectBack()" data-i18n-placeholder="ui.meaning"></div></div>
+        <div class="row3"><div><label for="frontLang"><span data-i18n="ui.front_language">Front language</span></label><select id="frontLang"></select></div><div><label for="backLang"><span data-i18n="ui.back_language">Back language</span></label><select id="backLang"></select></div><div><label for="addList"><span data-i18n="ui.save_to_list">Save to list</span></label><select id="addList"></select></div></div>
+        <div class="row3"><div><label for="pos"><span data-i18n="ui.pos">POS</span> <span class="optional"><span data-i18n="ui.optional">optional</span></span></label><select id="pos"><option value="">—</option><option data-i18n="ui.noun" value="noun">noun</option><option data-i18n="ui.verb" value="verb">verb</option><option data-i18n="ui.adjective" value="adjective">adjective</option><option data-i18n="ui.adverb" value="adverb">adverb</option><option data-i18n="ui.phrase" value="phrase">phrase</option><option data-i18n="ui.preposition" value="preposition">preposition</option><option data-i18n="ui.conjunction" value="conjunction">conjunction</option></select></div><div><label for="gender"><span data-i18n="ui.gender">Gender</span> <span class="optional"><span data-i18n="ui.optional">optional</span></span></label><select id="gender"><option value="">—</option><option value="masculine" data-i18n="ui.masculine">masculine</option><option value="feminine" data-i18n="ui.feminine">feminine</option><option value="neutral" data-i18n="ui.neutral">neutral</option><option value="plural" data-i18n="ui.plural">plural</option></select></div><div><label for="tags"><span data-i18n="ui.tags">Tags</span></label><input id="tags" placeholder="A1, food" data-i18n-placeholder="ui.a1_food"></div></div>
+        <label for="memo"><span data-i18n="ui.memo_example">Memo / Example</span></label><textarea id="memo" placeholder="Example sentence or memo"></textarea>
+        <div class="actions tn-create-actions"><button id="addWordBtn" class="btn primary" type="button" onclick="tnRegisterWordCritical(event)"><span data-i18n="ui.save_word">Save Word</span></button><button class="btn blue" type="button" onclick="speak($('front').value,$('frontLang').value)"><span data-i18n="ui.play_front">Play Front</span></button><button class="btn" type="button" onclick="clearForm()"><span data-i18n="ui.clear">Clear</span></button><span class="tn-key-hint">⌘ / Ctrl + Enter</span></div>
       </div>
-      <div class="card"><h2>Playlist</h2><label for="newList">New list name</label><input id="newList" placeholder="English A1"><div class="actions"><button class="btn primary full" onclick="createList()">Create</button></div><label for="renameListSelect">Rename list</label><select id="renameListSelect"></select><label class="sr-only" for="renameListInput">New playlist name</label><input id="renameListInput" placeholder="New name"><div class="actions"><button id="renameListButton" class="btn blue full" onclick="tnRenamePlaylist(document.getElementById('renameListSelect').value,document.getElementById('renameListInput').value)">Rename</button></div></div>
+      <div class="card"><h2><span data-i18n="ui.playlist">Playlist</span></h2><label for="newList"><span data-i18n="ui.new_list_name">New list name</span></label><input id="newList" placeholder="English A1" data-i18n-placeholder="ui.english_a1"><div class="actions"><button class="btn primary full" onclick="createList()"><span data-i18n="ui.create">Create</span></button></div><label for="renameListSelect"><span data-i18n="ui.rename_list">Rename list</span></label><select id="renameListSelect"></select><label class="sr-only" for="renameListInput"><span data-i18n="ui.new_playlist_name">New playlist name</span></label><input id="renameListInput" placeholder="New name" data-i18n-placeholder="ui.new_name"><div class="actions"><button id="renameListButton" class="btn blue full" onclick="tnRenamePlaylist(document.getElementById('renameListSelect').value,document.getElementById('renameListInput').value)"><span data-i18n="ui.rename">Rename</span></button></div></div>
     </div>
-    <div class="card" id="bulkCard"><h2>Bulk Add</h2><p class="desc">Prepare your words, check the preview, and add them to your collection.</p>
-      <div class="tn-bulk-flow"><span>1 Format</span><span>2 Paste</span><span>3 Review</span><span>4 Import</span></div>
-      <div class="row3"><div><label for="bulkFrontLang">Front language</label><select id="bulkFrontLang"></select></div><div><label for="bulkBackLang">Back language</label><select id="bulkBackLang"></select></div><div><label for="bulkList">Save to list</label><select id="bulkList"></select></div></div>
+    <div class="card" id="bulkCard"><h2><span data-i18n="ui.bulk_add">Bulk Add</span></h2><p class="desc"><span data-i18n="ui.prepare_your_words_check_the_preview_and_add_them_to_your_collection">Prepare your words, check the preview, and add them to your collection.</span></p>
+      <div class="tn-bulk-flow"><span><span data-i18n="ui.1_format">1 Format</span></span><span><span data-i18n="ui.2_paste">2 Paste</span></span><span><span data-i18n="ui.3_review">3 Review</span></span><span><span data-i18n="ui.4_import">4 Import</span></span></div>
+      <div class="row3"><div><label for="bulkFrontLang"><span data-i18n="ui.front_language">Front language</span></label><select id="bulkFrontLang"></select></div><div><label for="bulkBackLang"><span data-i18n="ui.back_language">Back language</span></label><select id="bulkBackLang"></select></div><div><label for="bulkList"><span data-i18n="ui.save_to_list">Save to list</span></label><select id="bulkList"></select></div></div>
       <div class="tn-bulk-assistant">
-        <div class="tn-bulk-format-row"><div><label for="bulkFormat">Choose format</label><select id="bulkFormat"></select></div><div><label for="bulkPromptCount">Prompt word count</label><input id="bulkPromptCount" type="number" min="1" max="1000" step="1" value="50"></div></div>
+        <div class="tn-bulk-format-row"><div><label for="bulkFormat"><span data-i18n="ui.choose_format">Choose format</span></label><select id="bulkFormat"></select></div><div><label for="bulkPromptCount"><span data-i18n="ui.prompt_word_count">Prompt word count</span></label><input id="bulkPromptCount" type="number" min="1" max="1000" step="1" value="50"></div></div>
         <p id="bulkFormatGuide" class="tn-bulk-format-guide"></p>
-        <p class="tn-bulk-format-note">TAB-separated, one word per line. Front and Back are required; keep empty optional columns. Existing comma, multi-space, and pronunciation | example rows also work in Legacy format.</p>
-        <div class="actions"><button class="btn" id="bulkCopyPrompt" type="button">Copy prompt for ChatGPT</button><button class="btn" id="bulkCopyFormat" type="button">Copy format</button><button class="btn" id="bulkInsertSample" type="button">Insert sample</button></div>
+        <p class="tn-bulk-format-note"><span data-i18n="ui.tab_separated_one_word_per_line_front_and_back_are_required_keep_empty_optional_columns_existing_com">TAB-separated, one word per line. Front and Back are required; keep empty optional columns. Existing comma, multi-space, and pronunciation | example rows also work in Legacy format.</span></p>
+        <div class="actions"><button class="btn" id="bulkCopyPrompt" type="button"><span data-i18n="bulkAdd.copyPrompt">Copy prompt for ChatGPT</span></button><button class="btn" id="bulkCopyFormat" type="button"><span data-i18n="ui.copy_format">Copy format</span></button><button class="btn" id="bulkInsertSample" type="button"><span data-i18n="ui.insert_sample">Insert sample</span></button></div>
         <p id="bulkAssistantStatus" role="status" aria-live="polite"></p>
-        <div id="bulkCopyFallback" hidden><label for="bulkCopyText">Select and copy this text</label><textarea id="bulkCopyText" readonly></textarea></div>
+        <div id="bulkCopyFallback" hidden><label for="bulkCopyText"><span data-i18n="ui.select_and_copy_this_text">Select and copy this text</span></label><textarea id="bulkCopyText" readonly></textarea></div>
       </div>
       <div id="bulkTargetSummary" class="tn-bulk-target-summary" aria-live="polite"></div>
       <div id="bulkRecovery" class="tn-bulk-undo" role="status" hidden></div>
-      <label for="bulkText">Words to import</label><textarea id="bulkText" aria-describedby="bulkFormatGuide" spellcheck="false"></textarea>
+      <label for="bulkText"><span data-i18n="ui.words_to_import">Words to import</span></label><textarea id="bulkText" aria-describedby="bulkFormatGuide" spellcheck="false"></textarea>
       <div id="bulkTargetConfirm" class="tn-bulk-confirm" role="dialog" aria-modal="true" aria-labelledby="bulkConfirmTitle" hidden></div><div id="bulkUndoPanel" class="tn-bulk-undo" aria-live="polite" hidden></div><div id="bulkPreview" class="sync-box" style="display:none"></div><div id="bulkDuplicatePanel" class="dup-panel" role="dialog" aria-modal="true" aria-labelledby="bulkDuplicateTitle"></div>
       <div id="bulkActionDock" class="tn-bulk-action-dock" hidden>
-        <div class="tn-bulk-dock-copy"><strong id="bulkDockCount">Paste words to begin</strong><small id="bulkDockMeta">Preview checks every row before saving.</small></div>
-        <div class="actions"><button class="btn blue" type="button" onclick="previewBulk()">Preview</button><button id="bulkRegisterBtn" class="btn primary" type="button" onclick="window.bulkImport()">Review &amp; Import</button><button class="btn" type="button" onclick="clearBulkInput()">Clear</button></div>
+        <div class="tn-bulk-dock-copy"><strong id="bulkDockCount"><span data-i18n="ui.paste_words_to_begin">Paste words to begin</span></strong><small id="bulkDockMeta"><span data-i18n="ui.preview_checks_every_row_before_saving">Preview checks every row before saving.</span></small></div>
+        <div class="actions"><button class="btn blue" type="button" onclick="previewBulk()"><span data-i18n="ui.preview">Preview</span></button><button id="bulkRegisterBtn" class="btn primary" type="button" onclick="window.bulkImport()"><span data-i18n="ui.review_import">Review &amp; Import</span></button><button class="btn" type="button" onclick="clearBulkInput()"><span data-i18n="ui.clear">Clear</span></button></div>
       </div>
     </div>
     <div id="bulkProgressPanel" class="tn-bulk-progress" role="status" aria-live="polite" hidden>
       <div class="tn-bulk-progress-mark" aria-hidden="true"><span></span></div>
-      <div class="tn-bulk-progress-copy"><strong id="bulkProgressLabel">Preparing your collection</strong><small id="bulkProgressDetail">Keep this tab open while TangoNest saves every word.</small><div class="tn-bulk-progress-track"><i id="bulkProgressFill"></i></div></div>
+      <div class="tn-bulk-progress-copy"><strong id="bulkProgressLabel"><span data-i18n="ui.preparing_your_collection">Preparing your collection</span></strong><small id="bulkProgressDetail"><span data-i18n="ui.keep_this_tab_open_while_tangonest_saves_every_word">Keep this tab open while TangoNest saves every word.</span></small><div class="tn-bulk-progress-track"><i id="bulkProgressFill"></i></div></div>
       <b id="bulkProgressPercent">0%</b>
-      <button id="bulkCancelButton" type="button" class="btn" hidden>Stop after this batch</button>
+      <button id="bulkCancelButton" type="button" class="btn" hidden><span data-i18n="ui.stop_after_this_batch">Stop after this batch</span></button>
     </div>
   </section>
 
   <section id="pageWords" class="page">
-    <div class="card"><h2>Word List</h2>
+    <div class="card"><h2><span data-i18n="ui.word_list">Word List</span></h2>
 <div id="tn82LibraryMount" class="tn82-library-mount"></div>
-      <div class="mobile-list-actions"><button onclick="appShow('quiz')">Quiz</button><button onclick="go('study')">Cards</button><button onclick="appShow('audio')">Listen</button></div>
+      <div class="mobile-list-actions"><button onclick="appShow('quiz')"><span data-i18n="navigation.quiz">Quiz</span></button><button onclick="go('study')"><span data-i18n="navigation.cards">Cards</span></button><button onclick="appShow('audio')"><span data-i18n="navigation.listen">Listen</span></button></div>
       <div id="mistakeNotebookLibrary" class="tn-mistake-card"></div>
     </div>
   </section>
 
   <section id="pageStudy" class="page">
-    <div class="card"><h2>Flashcards</h2><p class="desc">Tap card to flip. Auto mode plays Front → flips → Back → next.</p>
-      <div class="row"><div><label for="studyList">Library</label><select id="studyList" onchange="resetCard()"></select></div><div><label for="studyMode">Mode</label><select id="studyMode" onchange="resetCard()"><option value="front">Front → Back</option><option value="back">Back → Front</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option></select></div></div>
-      <details class="study-options"><summary>Session options</summary><div class="row3"><div><label for="flashAutoMode">Flash Auto</label><select id="flashAutoMode"><option value="off">Off</option><option value="on">On</option></select></div><div><label for="flashFlipDelay">Flip after</label><select id="flashFlipDelay"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="3500">3.5s</option><option value="5000">5s</option></select></div><div><label for="flashNextDelay">Next after</label><select id="flashNextDelay"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="3500">3.5s</option><option value="5000">5s</option></select></div></div></details>
-      <div id="studyProgress" class="tn-study-progress">Choose a library and press Next.</div>
-      <div class="flip-scene"><div id="flash" class="flash" onclick="flipCard()"><div class="face front"><div><div class="flabel">Front</div><div id="frontWord" class="fword">---</div><div id="frontMemo" class="fmemo"></div></div></div><div class="face back"><div><div class="flabel">Back</div><div id="backWord" class="fword">---</div><div id="backMemo" class="fmemo"></div></div></div></div></div>
+    <div class="card"><h2><span data-i18n="ui.flashcards">Flashcards</span></h2><p class="desc"><span data-i18n="ui.tap_card_to_flip_auto_mode_plays_front_flips_back_next">Tap card to flip. Auto mode plays Front → flips → Back → next.</span></p>
+      <div class="row"><div><label for="studyList"><span data-i18n="navigation.library">Library</span></label><select id="studyList" onchange="resetCard()"></select></div><div><label for="studyMode"><span data-i18n="ui.mode">Mode</span></label><select id="studyMode" onchange="resetCard()"><option value="front" data-i18n="ui.front_back">Front → Back</option><option value="back" data-i18n="ui.back_front">Back → Front</option><option value="hard" data-i18n="ui.hard_only">Hard only</option><option value="due" data-i18n="ui.due_only">Due only</option><option value="star" data-i18n="ui.saved_only">★ Saved only</option></select></div></div>
+      <details class="study-options"><summary><span data-i18n="ui.session_options">Session options</span></summary><div class="row3"><div><label for="flashAutoMode"><span data-i18n="ui.flash_auto">Flash Auto</span></label><select id="flashAutoMode"><option value="off" data-i18n="ui.off">Off</option><option value="on" data-i18n="ui.on">On</option></select></div><div><label for="flashFlipDelay"><span data-i18n="ui.flip_after">Flip after</span></label><select id="flashFlipDelay"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="3500">3.5s</option><option value="5000">5s</option></select></div><div><label for="flashNextDelay"><span data-i18n="ui.next_after">Next after</span></label><select id="flashNextDelay"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="3500">3.5s</option><option value="5000">5s</option></select></div></div></details>
+      <div id="studyProgress" class="tn-study-progress"><span data-i18n="ui.choose_a_library_and_press_next">Choose a library and press Next.</span></div>
+      <div class="flip-scene"><div id="flash" class="flash" onclick="flipCard()"><div class="face front"><div><div class="flabel"><span data-i18n="ui.front">Front</span></div><div id="frontWord" class="fword">---</div><div id="frontMemo" class="fmemo"></div></div></div><div class="face back"><div><div class="flabel"><span data-i18n="ui.back">Back</span></div><div id="backWord" class="fword">---</div><div id="backMemo" class="fmemo"></div></div></div></div></div>
       <div class="tn-card-controls">
-        <div class="actions tn-card-main-actions"><button class="btn primary" onclick="nextCard()">Next Card</button><button class="btn" onclick="flipCard()">Reveal <span class="tn-key-hint">Space</span></button><button class="btn blue" onclick="speakCard()">Play Audio</button><button id="studyStar" class="btn" onclick="toggleCardStar()">☆ Save</button></div>
-        <div class="tn-card-rating" aria-label="Rate this card"><button class="btn red" onclick="markCard('again',true)"><b>Again</b><span>1</span></button><button class="btn" onclick="markCard('hard',true)"><b>Hard</b><span>2</span></button><button class="btn green" onclick="markCard('good',true)"><b>Good</b><span>3</span></button><button class="btn" onclick="markCard('easy',true)"><b>Easy</b><span>4</span></button></div>
-        <details class="tn-card-auto"><summary>Auto play</summary><div class="actions"><button class="btn" onclick="startFlashAuto()">Start Auto</button><button class="btn" onclick="stopFlashAuto()">Stop</button></div></details>
+        <div class="actions tn-card-main-actions"><button class="btn primary" onclick="nextCard()"><span data-i18n="ui.next_card">Next Card</span></button><button class="btn" onclick="flipCard()"><span data-i18n="ui.reveal">Reveal</span> <span class="tn-key-hint"><span data-i18n="ui.space">Space</span></span></button><button class="btn blue" onclick="speakCard()"><span data-i18n="ui.play_audio">Play Audio</span></button><button id="studyStar" class="btn" onclick="toggleCardStar()"><span data-i18n="ui.save">☆ Save</span></button></div>
+        <div class="tn-card-rating" aria-label="Rate this card" data-i18n-aria-label="ui.rate_this_card"><button class="btn red" onclick="markCard('again',true)"><b><span data-i18n="ui.again">Again</span></b><span>1</span></button><button class="btn" onclick="markCard('hard',true)"><b><span data-i18n="ui.hard">Hard</span></b><span>2</span></button><button class="btn green" onclick="markCard('good',true)"><b><span data-i18n="ui.good">Good</span></b><span>3</span></button><button class="btn" onclick="markCard('easy',true)"><b><span data-i18n="ui.easy">Easy</span></b><span>4</span></button></div>
+        <details class="tn-card-auto"><summary><span data-i18n="ui.auto_play">Auto play</span></summary><div class="actions"><button class="btn" onclick="startFlashAuto()"><span data-i18n="ui.start_auto">Start Auto</span></button><button class="btn" onclick="stopFlashAuto()"><span data-i18n="listen.stop">Stop</span></button></div></details>
       </div>
     </div>
   </section>
 
   <section id="pageQuiz" class="page">
-    <div class="quiz-card"><div class="card"><h2>Quiz Mode</h2><p class="desc">Practice your vocabulary with clear answer feedback before moving on.</p>
+    <div class="quiz-card"><div class="card"><h2><span data-i18n="ui.quiz_mode">Quiz Mode</span></h2><p class="desc"><span data-i18n="ui.practice_your_vocabulary_with_clear_answer_feedback_before_moving_on">Practice your vocabulary with clear answer feedback before moving on.</span></p>
       <div id="quizSetup">
-        <div class="row3"><div data-quiz-setting="all"><label for="quizList">Library</label><select id="quizList"></select></div><div data-quiz-setting="all"><label for="quizType">Quiz Type</label><select id="quizType" onchange="updateQuizModeSettings()"><option value="choice" selected>4 Choices</option><option value="typing">Typing</option><option value="listening">Listening Quiz</option></select></div><div data-quiz-setting="choice typing"><label for="quizDirection">Direction</label><select id="quizDirection"><option value="front">Front → Back</option><option value="back">Back → Front</option></select></div></div>
-        <div class="row3"><div data-quiz-setting="all"><label for="quizCount">Question count</label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode">Question order</label><select id="quizOrderMode"><option value="random" selected>Random mix</option><option value="playlist">Playlist order</option><option value="weak">Needs practice first</option><option value="due">Due reviews first</option><option value="newest">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance">After answering</label><select id="quizAutoAdvance"><option value="auto" selected>Auto · smart (2.2–3.2s)</option><option value="1.5">Quick · 1.5s</option><option value="2.5">Calm · 2.5s</option><option value="4">Review · 4.0s</option><option value="manual">Wait for Next</option></select></div></div>
-        <div class="row3"><div data-quiz-setting="choice typing"><label for="quizAudioAfter">After-answer audio</label><select id="quizAudioAfter"><option value="on">On</option><option value="off">Off</option></select></div><div data-quiz-setting="choice typing"><label for="quizHardMode">Hard Mode</label><select id="quizHardMode"><option value="off">Off</option><option value="on">On: time limit</option></select></div><div data-quiz-setting="choice typing"><label for="quizTimeLimit">Time limit</label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
-        <div class="row4"><div data-quiz-setting="listening"><label for="listeningDifficulty">Listening mode</label><select id="listeningDifficulty" onchange="updateQuizModeSettings(true)"><option value="normal" selected>Normal · unlimited</option><option value="hard">Hard · timed</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningReplayLimit">Replay limit</label><select id="listeningReplayLimit"><option value="unlimited" selected>Unlimited</option><option value="1">Hard · 1 replay</option><option value="2">2 replays</option><option value="3">3 replays</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningTimerMode">Listening timer</label><select id="listeningTimerMode"><option value="off" selected>Off</option><option value="10">Hard · 10s</option><option value="15">Normal · 15s</option><option value="20">Easy · 20s</option></select></div><div data-quiz-setting="listening"><label for="listeningHintMode">Pronunciation hint</label><select id="listeningHintMode"><option value="off" selected>Off</option><option value="on">On</option></select></div></div>
-        <div class="row"><div data-quiz-setting="all"><label for="quizScope">Scope</label><select id="quizScope"><option value="all">All</option><option value="hard">Hard only</option><option value="due">Due only</option><option value="star">★ Saved only</option><option value="mistakes">Mistake Notebook</option></select></div></div>
-        <div class="actions"><button class="btn primary" onclick="startQuiz()">Start Quiz</button></div>
+        <div class="row3"><div data-quiz-setting="all"><label for="quizList"><span data-i18n="navigation.library">Library</span></label><select id="quizList"></select></div><div data-quiz-setting="all"><label for="quizType"><span data-i18n="ui.quiz_type">Quiz Type</span></label><select id="quizType" onchange="updateQuizModeSettings()"><option value="choice" selected data-i18n="ui.4_choices">4 Choices</option><option value="typing" data-i18n="ui.typing">Typing</option><option value="listening" data-i18n="ui.listening_quiz">Listening Quiz</option></select></div><div data-quiz-setting="choice typing"><label for="quizDirection"><span data-i18n="ui.direction">Direction</span></label><select id="quizDirection"><option value="front" data-i18n="ui.front_back">Front → Back</option><option value="back" data-i18n="ui.back_front">Back → Front</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="all"><label for="quizCount"><span data-i18n="ui.question_count">Question count</span></label><input id="quizCount" type="number" min="1" max="300" step="1" value="10"></div><div data-quiz-setting="all"><label for="quizOrderMode"><span data-i18n="ui.question_order">Question order</span></label><select id="quizOrderMode"><option value="random" selected data-i18n="ui.random_mix">Random mix</option><option value="playlist" data-i18n="ui.playlist_order">Playlist order</option><option value="weak" data-i18n="ui.needs_practice_first">Needs practice first</option><option value="due" data-i18n="ui.due_reviews_first">Due reviews first</option><option value="newest" data-i18n="ui.newest_words_first">Newest words first</option></select></div><div data-quiz-setting="all"><label for="quizAutoAdvance"><span data-i18n="ui.after_answering">After answering</span></label><select id="quizAutoAdvance"><option value="auto" selected data-i18n="ui.auto_smart_2_2_3_2s">Auto · smart (2.2–3.2s)</option><option value="1.5" data-i18n="ui.quick_1_5s">Quick · 1.5s</option><option value="2.5" data-i18n="ui.calm_2_5s">Calm · 2.5s</option><option value="4" data-i18n="ui.review_4_0s">Review · 4.0s</option><option value="manual" data-i18n="ui.wait_for_next">Wait for Next</option></select></div></div>
+        <div class="row3"><div data-quiz-setting="choice typing"><label for="quizAudioAfter"><span data-i18n="ui.after_answer_audio">After-answer audio</span></label><select id="quizAudioAfter"><option value="on" data-i18n="ui.on">On</option><option value="off" data-i18n="ui.off">Off</option></select></div><div data-quiz-setting="choice typing"><label for="quizHardMode"><span data-i18n="ui.hard_mode">Hard Mode</span></label><select id="quizHardMode"><option value="off" data-i18n="ui.off">Off</option><option value="on" data-i18n="ui.on_time_limit">On: time limit</option></select></div><div data-quiz-setting="choice typing"><label for="quizTimeLimit"><span data-i18n="ui.time_limit">Time limit</span></label><input id="quizTimeLimit" type="number" min="2" max="60" step="1" value="8"></div></div>
+        <div class="row4"><div data-quiz-setting="listening"><label for="listeningDifficulty"><span data-i18n="ui.listening_mode">Listening mode</span></label><select id="listeningDifficulty" onchange="updateQuizModeSettings(true)"><option value="normal" selected data-i18n="ui.normal_unlimited">Normal · unlimited</option><option value="hard" data-i18n="ui.hard_timed">Hard · timed</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningReplayLimit"><span data-i18n="ui.replay_limit">Replay limit</span></label><select id="listeningReplayLimit"><option value="unlimited" selected data-i18n="ui.unlimited">Unlimited</option><option value="1" data-i18n="ui.hard_1_replay">Hard · 1 replay</option><option value="2" data-i18n="ui.2_replays">2 replays</option><option value="3" data-i18n="ui.3_replays">3 replays</option></select></div><div data-quiz-setting="listening-hard"><label for="listeningTimerMode"><span data-i18n="ui.listening_timer">Listening timer</span></label><select id="listeningTimerMode"><option value="off" selected data-i18n="ui.off">Off</option><option value="10" data-i18n="ui.hard_10s">Hard · 10s</option><option value="15" data-i18n="ui.normal_15s">Normal · 15s</option><option value="20" data-i18n="ui.easy_20s">Easy · 20s</option></select></div><div data-quiz-setting="listening"><label for="listeningHintMode"><span data-i18n="ui.pronunciation_hint">Pronunciation hint</span></label><select id="listeningHintMode"><option value="off" selected data-i18n="ui.off">Off</option><option value="on" data-i18n="ui.on">On</option></select></div></div>
+        <div class="row"><div data-quiz-setting="all"><label for="quizScope"><span data-i18n="ui.scope">Scope</span></label><select id="quizScope"><option value="all" data-i18n="ui.all">All</option><option value="hard" data-i18n="ui.hard_only">Hard only</option><option value="due" data-i18n="ui.due_only">Due only</option><option value="star" data-i18n="ui.saved_only">★ Saved only</option><option value="mistakes" data-i18n="ui.mistake_notebook">Mistake Notebook</option></select></div></div>
+        <div class="actions"><button class="btn primary" onclick="startQuiz()"><span data-i18n="ui.start_quiz">Start Quiz</span></button></div>
       </div>
       <div id="quizRun" style="display:none">
         <div class="quiz-top"><div class="quiz-count" id="quizProgress">1 / 10</div><div class="quiz-count" id="quizScore">0 / 10</div></div>
-        <div class="quiz-question" id="quizQuestionCard"><div class="quiz-flip-inner"><div id="quizQuestionFront" class="quiz-face quiz-face-front"><div class="flabel" id="quizLabel">Question</div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div></div><div id="quizQuestionBack" class="quiz-face quiz-face-back" aria-hidden="true"><span class="quiz-reveal-kicker">ANSWER</span><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div><span class="quiz-reveal-note">Review the answer, then continue when you are ready.</span></div></div></div>
-        <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel">Time limit: Off</span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
-        <div id="typingAreaHome"><div id="typingArea"><label class="sr-only" for="quizAnswer">Your answer</label><input id="quizAnswer" placeholder="Type answer" onkeydown="handleQuizAnswerKey(event)"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()">Check</button><button class="btn blue" onclick="speakQuizQuestion()">▶ Question</button></div></div></div>
+        <div class="quiz-question" id="quizQuestionCard"><div class="quiz-flip-inner"><div id="quizQuestionFront" class="quiz-face quiz-face-front"><div class="flabel" id="quizLabel"><span data-i18n="ui.question">Question</span></div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div></div><div id="quizQuestionBack" class="quiz-face quiz-face-back" aria-hidden="true"><span class="quiz-reveal-kicker"><span data-i18n="ui.answer">ANSWER</span></span><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div><span class="quiz-reveal-note"><span data-i18n="ui.review_the_answer_then_continue_when_you_are_ready">Review the answer, then continue when you are ready.</span></span></div></div></div>
+        <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel"><span data-i18n="ui.time_limit_off">Time limit: Off</span></span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
+        <div id="typingAreaHome"><div id="typingArea"><label class="sr-only" for="quizAnswer"><span data-i18n="ui.your_answer">Your answer</span></label><input id="quizAnswer" placeholder="Type answer" onkeydown="handleQuizAnswerKey(event)" data-i18n-placeholder="ui.type_answer"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()"><span data-i18n="ui.check">Check</span></button><button class="btn blue" onclick="speakQuizQuestion()"><span data-i18n="ui.question_2">▶ Question</span></button></div></div></div>
         <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box" role="status" aria-live="polite"></div>
-        <div class="actions quiz-run-actions"><button id="quizSkipButton" class="btn" onclick="nextQuizQuestion()">Skip question</button><button class="btn red" onclick="endQuiz()">End</button></div>
+        <div class="actions quiz-run-actions"><button id="quizSkipButton" class="btn" onclick="nextQuizQuestion()"><span data-i18n="ui.skip_question">Skip question</span></button><button class="btn red" onclick="endQuiz()"><span data-i18n="ui.end">End</span></button></div>
       </div>
-      <div id="quizEnd" style="display:none"><h2>Result</h2><p class="desc" id="quizEndText"></p><div id="quizResultSummary" class="tn-quiz-summary"></div><div id="quizWrongList" class="quiz-wrong-list"></div><div class="actions"><button class="btn primary" onclick="restartWrongQuiz()">Retry wrong</button><button class="btn blue" onclick="startMistakeReview()">Review weak words</button><button class="btn" onclick="go('home')">Home</button><button class="btn" onclick="resetQuiz()">Back to setup</button></div></div>
+      <div id="quizEnd" style="display:none"><h2><span data-i18n="ui.result">Result</span></h2><p class="desc" id="quizEndText"></p><div id="quizResultSummary" class="tn-quiz-summary"></div><div id="quizWrongList" class="quiz-wrong-list"></div><div class="actions"><button class="btn primary" onclick="restartWrongQuiz()"><span data-i18n="ui.retry_wrong">Retry wrong</span></button><button class="btn blue" onclick="startMistakeReview()"><span data-i18n="ui.review_weak_words">Review weak words</span></button><button class="btn" onclick="go('home')"><span data-i18n="navigation.home">Home</span></button><button class="btn" onclick="resetQuiz()"><span data-i18n="ui.back_to_setup">Back to setup</span></button></div></div>
     </div></div>
   </section>
 
-  <section id="pageAudio" class="page"><div class="audio-player"><h2>Audio Mode</h2><p class="desc">Listening practice mode.</p>
-    <div class="row3"><div><label for="audioList">Library</label><select id="audioList"></select></div><div><label for="audioPattern">Pattern</label><select id="audioPattern"><option value="frontBack">Front → Back</option><option value="backFront">Back → Front</option><option value="front">Front only</option><option value="back">Back only</option></select></div><div><label for="audioOrder">Order</label><select id="audioOrder"><option value="random">Random</option><option value="normal">Normal</option><option value="hard">Hard first</option><option value="due">Due first</option><option value="star">★ Saved only</option></select></div></div>
-    <div class="row3"><div><label for="audioIntervalCustom">Word interval</label><input id="audioIntervalCustom" type="number" min="0.5" max="30" step="0.1" value="5"></div><div><label for="pairGapCustom">Pair gap</label><input id="pairGapCustom" type="number" min="0.1" max="10" step="0.1" value="1.8"></div><div><label for="audioRate">Voice speed</label><select id="audioRate"><option value="0.82">Slow</option><option value="0.92" selected>Normal</option><option value="1.05">Fast</option></select></div></div>
-    <div class="now-playing" data-state="idle"><div class="tn-listen-art" aria-hidden="true"><span class="tn-listen-crest">TN</span><span class="tn-listen-needle"></span></div><div class="tn-listen-copy"><div class="flabel">Now Playing</div><div id="audioNow" class="now-title">---</div><div id="audioSub" class="now-sub">Choose a playlist and press Play</div><div class="tn-listen-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
-    <div class="actions tn-player-controls"><button class="btn" onclick="previousAudio()">Previous</button><button class="btn primary" onclick="startAudio()">Play</button><button class="btn" onclick="pauseAudio()">Pause</button><button class="btn blue" onclick="nextAudio()">Next</button><button class="btn" onclick="stopAudio()">Stop</button><button class="btn" onclick="playAudioOnce()">Play One</button></div>
+  <section id="pageAudio" class="page"><div class="audio-player"><h2><span data-i18n="ui.audio_mode">Audio Mode</span></h2><p class="desc"><span data-i18n="ui.listening_practice_mode">Listening practice mode.</span></p>
+    <div class="row3"><div><label for="audioList"><span data-i18n="navigation.library">Library</span></label><select id="audioList"></select></div><div><label for="audioPattern"><span data-i18n="ui.pattern">Pattern</span></label><select id="audioPattern"><option value="frontBack" data-i18n="ui.front_back">Front → Back</option><option value="backFront" data-i18n="ui.back_front">Back → Front</option><option value="front" data-i18n="ui.front_only">Front only</option><option value="back" data-i18n="ui.back_only">Back only</option></select></div><div><label for="audioOrder"><span data-i18n="ui.order">Order</span></label><select id="audioOrder"><option value="random" data-i18n="ui.random">Random</option><option value="normal" data-i18n="ui.normal">Normal</option><option value="hard" data-i18n="ui.hard_first">Hard first</option><option value="due" data-i18n="ui.due_first">Due first</option><option value="star" data-i18n="ui.saved_only">★ Saved only</option></select></div></div>
+    <div class="row3"><div><label for="audioIntervalCustom"><span data-i18n="ui.word_interval">Word interval</span></label><input id="audioIntervalCustom" type="number" min="0.5" max="30" step="0.1" value="5"></div><div><label for="pairGapCustom"><span data-i18n="ui.pair_gap">Pair gap</span></label><input id="pairGapCustom" type="number" min="0.1" max="10" step="0.1" value="1.8"></div><div><label for="audioRate"><span data-i18n="ui.voice_speed">Voice speed</span></label><select id="audioRate"><option value="0.82" data-i18n="ui.slow">Slow</option><option value="0.92" selected data-i18n="ui.normal">Normal</option><option value="1.05" data-i18n="ui.fast">Fast</option></select></div></div>
+    <div class="now-playing" data-state="idle"><div class="tn-listen-copy"><div class="tn-listen-context"><span class="flabel"><span data-i18n="ui.now_playing">Now Playing</span></span><span id="audioPosition">0 / 0</span></div><div id="audioNow" class="now-title" dir="auto">---</div><div id="audioPronunciation" class="tn-listen-pronunciation" dir="auto"></div><div id="audioSub" class="now-sub" dir="auto"><span data-i18n="ui.choose_a_playlist_and_press_play">Choose a playlist and press Play</span></div><p id="audioExample" class="tn-listen-example" dir="auto"></p><div class="tn-listen-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    <div class="tn-listen-timeline"><label class="sr-only" for="audioSeek"><span data-i18n="ui.word_position">Word position</span></label><input id="audioSeek" type="range" min="1" max="1" value="1" disabled><label class="tn-toggle" for="audioAutoPlay"><input id="audioAutoPlay" type="checkbox" checked><span data-i18n="ui.auto_play">Auto play</span></label></div>
+    <div class="actions tn-player-controls"><button class="btn" onclick="previousAudio()"><span data-i18n="common.previous">Previous</span></button><button class="btn primary" onclick="startAudio()"><span data-i18n="listen.play">Play</span></button><button class="btn" onclick="pauseAudio()"><span data-i18n="listen.pause">Pause</span></button><button class="btn blue" onclick="nextAudio()"><span data-i18n="common.next">Next</span></button><button class="btn" onclick="stopAudio()"><span data-i18n="listen.stop">Stop</span></button><button class="btn" onclick="playAudioOnce()"><span data-i18n="ui.play_one">Play One</span></button></div>
   </div></section>
 
   <section id="pageManage" class="page">
     <div class="card">
-      <h2>Settings</h2>
-      <p class="desc">Account, learning, audio, sync, backup, and data safety.</p>
+      <h2><span data-i18n="navigation.settings">Settings</span></h2>
+      <p class="desc"><span data-i18n="ui.account_learning_audio_sync_backup_and_data_safety">Account, learning, audio, sync, backup, and data safety.</span></p>
+      <section class="tn-global-preferences" aria-labelledby="globalPreferencesTitle">
+        <h3 id="globalPreferencesTitle"><span data-i18n="ui.language_atmosphere">Language & Atmosphere</span></h3>
+        <div class="row"><div><label for="appLanguage"><span data-i18n="ui.app_language">App Language</span></label><select id="appLanguage"></select></div><div><label for="atmosphereMode"><span data-i18n="ui.atmosphere">Atmosphere</span></label><select id="atmosphereMode"><option value="auto" data-i18n="ui.follow_time_automatically">Follow time automatically</option><option value="morning" data-i18n="ui.morning">Morning</option><option value="day" data-i18n="ui.day">Day</option><option value="evening" data-i18n="ui.evening">Evening</option><option value="night" data-i18n="ui.night">Night</option></select></div></div>
+        <p class="desc"><span data-i18n="ui.app_language_changes_the_interface_not_your_vocabulary">App language changes the interface, not your vocabulary.</span></p>
+      </section>
       <details class="tn-settings-fold tn-settings-health">
-        <summary><span><strong>Collection health</strong><small>New, due, saved, and missing POS totals.</small></span><span class="tn-settings-manage">View</span></summary>
+        <summary><span><strong><span data-i18n="ui.collection_health">Collection health</span></strong><small><span data-i18n="ui.new_due_saved_and_missing_pos_totals">New, due, saved, and missing POS totals.</span></small></span><span class="tn-settings-manage"><span data-i18n="ui.view">View</span></span></summary>
         <div class="progress-grid">
-          <div class="progress-card"><b id="mgNew">0</b><span>New</span></div>
-          <div class="progress-card"><b id="mgDue">0</b><span>Due</span></div>
-          <div class="progress-card"><b id="mgNoPOS">0</b><span>No POS</span></div>
-          <div class="progress-card"><b id="mgSaved">0</b><span>Saved</span></div>
+          <div class="progress-card"><b id="mgNew">0</b><span><span data-i18n="ui.new">New</span></span></div>
+          <div class="progress-card"><b id="mgDue">0</b><span><span data-i18n="ui.due">Due</span></span></div>
+          <div class="progress-card"><b id="mgNoPOS">0</b><span><span data-i18n="ui.no_pos">No POS</span></span></div>
+          <div class="progress-card"><b id="mgSaved">0</b><span><span data-i18n="ui.saved">Saved</span></span></div>
         </div>
       </details>
 
-      <div class="tn-settings-section-title"><span>Account & Sync</span><em>Keep PC and phone aligned automatically.</em></div>
+      <div class="tn-settings-section-title"><span><span data-i18n="ui.account_sync">Account & Sync</span></span><em><span data-i18n="ui.keep_pc_and_phone_aligned_automatically">Keep PC and phone aligned automatically.</span></em></div>
       <div class="tn-settings-pair">
       <div class="tn-account-summary">
-        <div><span>Account</span><strong id="tn80Account">Not logged in</strong></div>
-        <div><span>Status</span><strong id="tn80StatusPill" class="tn80-status-pill local">Offline</strong></div>
-        <div><span>Last sync</span><strong id="tn80CloudUpdated">-</strong></div>
-        <div class="tn80-cloud-actions"><button type="button" id="tn80CheckCloudBtn" onclick="tnSyncNow()">Sync now</button><button type="button" id="tn80LogoutBtn" onclick="tnLogout()">Log out</button></div>
+        <div><span><span data-i18n="ui.account">Account</span></span><strong id="tn80Account"><span data-i18n="ui.not_logged_in">Not logged in</span></strong></div>
+        <div><span><span data-i18n="ui.status">Status</span></span><strong id="tn80StatusPill" class="tn80-status-pill local"><span data-i18n="ui.offline">Offline</span></strong></div>
+        <div><span><span data-i18n="ui.last_sync">Last sync</span></span><strong id="tn80CloudUpdated">-</strong></div>
+        <div class="tn80-cloud-actions"><button type="button" id="tn80CheckCloudBtn" onclick="tnSyncNow()"><span data-i18n="ui.sync_now">Sync now</span></button><button type="button" id="tn80LogoutBtn" onclick="tnLogout()"><span data-i18n="ui.log_out">Log out</span></button></div>
       </div>
       <details id="tn80CloudPanel" class="tn80-cloud-panel tn81-compact-cloud tn-advanced-panel">
-        <summary class="tn81-cloud-summary">Advanced sync details</summary>
+        <summary class="tn81-cloud-summary"><span data-i18n="ui.advanced_sync_details">Advanced sync details</span></summary>
         <div class="tn80-panel-head">
           <div>
-            <div class="tn80-kicker">ACCOUNT / CLOUD SYNC</div>
-            <h2>Cloud Status</h2>
-            <p>PCとスマホが同じクラウドにいるか、ここで確認できます。</p>
+            <div class="tn80-kicker"><span data-i18n="ui.account_cloud_sync">ACCOUNT / CLOUD SYNC</span></div>
+            <h2><span data-i18n="ui.cloud_status">Cloud Status</span></h2>
+            <p><span data-i18n="ui.check_that_your_devices_are_connected_to_the_same_account">Check that your devices are connected to the same account.</span></p>
           </div>
         </div>
 
         <div class="tn80-cloud-grid">
-          <div class="tn80-cloud-item"><span>This device</span><strong id="tn80Device">-</strong></div>
-          <div class="tn80-cloud-item"><span>Local words</span><strong id="tn80LocalWords">0</strong></div>
-          <div class="tn80-cloud-item"><span>Actual cloud words</span><strong id="tn80CloudWords">-</strong></div>
-          <div class="tn80-cloud-item"><span>Local lists</span><strong id="tn80LocalLists">0</strong></div>
-          <div class="tn80-cloud-item"><span>Actual cloud lists</span><strong id="tn80CloudLists">-</strong></div>
-          <div class="tn80-cloud-item"><span>Pending sync</span><strong id="tn80PendingMutations">0</strong></div>
-          <div class="tn80-cloud-item"><span>Realtime</span><strong id="tn80RealtimeStatus">-</strong></div>
-          <div class="tn80-cloud-item wide"><span>Connection</span><strong id="tn80Connection">Not checked</strong></div>
-          <div class="tn80-cloud-item wide"><span>User ID</span><strong id="tn80UserId">-</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.this_device">This device</span></span><strong id="tn80Device">-</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.local_words">Local words</span></span><strong id="tn80LocalWords">0</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.actual_cloud_words">Actual cloud words</span></span><strong id="tn80CloudWords">-</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.local_lists">Local lists</span></span><strong id="tn80LocalLists">0</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.actual_cloud_lists">Actual cloud lists</span></span><strong id="tn80CloudLists">-</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.pending_sync">Pending sync</span></span><strong id="tn80PendingMutations">0</strong></div>
+          <div class="tn80-cloud-item"><span><span data-i18n="ui.realtime">Realtime</span></span><strong id="tn80RealtimeStatus">-</strong></div>
+          <div class="tn80-cloud-item wide"><span><span data-i18n="ui.connection">Connection</span></span><strong id="tn80Connection"><span data-i18n="ui.not_checked">Not checked</span></strong></div>
+          <div class="tn80-cloud-item wide"><span><span data-i18n="ui.user_id">User ID</span></span><strong id="tn80UserId">-</strong></div>
         </div>
 
         <div class="tn80-cloud-actions">
-          <button type="button" id="tn80LoadCloudBtn" onclick="tnSyncNow()">Load latest</button>
+          <button type="button" id="tn80LoadCloudBtn" onclick="tnSyncNow()"><span data-i18n="ui.load_latest">Load latest</span></button>
         </div>
 
         <div class="tn80-note">
-          Cloud totals update after a successful sync. Device totals are this browser's offline copy.
+          <span data-i18n="ui.cloud_totals_update_after_a_successful_sync_device_totals_are_this_browser_s_offline_copy">Cloud totals update after a successful sync. Device totals are this browser's offline copy.</span>
         </div>
       </details>
       </div>
 
-      <div class="tn-settings-section-title"><span>Preferences & Data</span><em>Audio, backup, and portable vocabulary data.</em></div>
+      <div class="tn-settings-section-title"><span><span data-i18n="ui.preferences_data">Preferences & Data</span></span><em><span data-i18n="ui.audio_backup_and_portable_vocabulary_data">Audio, backup, and portable vocabulary data.</span></em></div>
       <div class="tn-settings-pair">
       <details class="tn-settings-panel tn-settings-fold" id="tnDataTransferDetails">
-        <summary><span><strong>Data Transfer</strong><small>Backup, export, or restore your vocabulary.</small></span><span class="tn-settings-manage">Manage</span></summary>
+        <summary><span><strong><span data-i18n="ui.data_transfer">Data Transfer</span></strong><small><span data-i18n="ui.backup_export_or_restore_your_vocabulary">Backup, export, or restore your vocabulary.</span></small></span><span class="tn-settings-manage"><span data-i18n="ui.manage">Manage</span></span></summary>
         <div class="tn-settings-fold-body">
-          <p class="desc">Export is a safe backup. Import replaces the signed-in account's cloud vocabulary, then refreshes this device.</p>
+          <p class="desc"><span data-i18n="ui.export_is_a_safe_backup_import_replaces_the_signed_in_account_s_cloud_vocabulary_then_refreshes_this">Export is a safe backup. Import replaces the signed-in account's cloud vocabulary, then refreshes this device.</span></p>
           <div class="actions">
-            <button class="btn blue" onclick="exportDataText()">Export / Copy Data</button>
-            <button class="btn yellow" onclick="downloadBackupFile()">Download Backup</button>
-            <button class="btn green" onclick="importDataText()">Import to Cloud</button>
+            <button class="btn blue" onclick="exportDataText()"><span data-i18n="ui.export_copy_data">Export / Copy Data</span></button>
+            <button class="btn yellow" onclick="downloadBackupFile()"><span data-i18n="ui.download_backup">Download Backup</span></button>
+            <button class="btn green" onclick="importDataText()"><span data-i18n="ui.import_to_cloud">Import to Cloud</span></button>
           </div>
           <div class="sync-box">
-            <label for="syncDataBox">Export / Import Text</label>
+            <label for="syncDataBox"><span data-i18n="ui.export_import_text">Export / Import Text</span></label>
             <textarea id="syncDataBox" placeholder="Exported data will appear here. Paste TangoNest backup JSON here to import."></textarea>
           </div>
         </div>
@@ -303,15 +319,15 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
 
       <details class="tn-settings-panel tn-voice-panel">
         <summary>
-          <span><strong>Audio / Voice</strong><small>Voice preferences by language.</small></span>
-          <span class="tn-settings-manage">Manage</span>
+          <span><strong><span data-i18n="ui.audio_voice">Audio / Voice</span></strong><small><span data-i18n="ui.voice_preferences_by_language">Voice preferences by language.</span></small></span>
+          <span class="tn-settings-manage"><span data-i18n="ui.manage">Manage</span></span>
         </summary>
         <div class="tn-voice-panel-body">
-          <p class="desc">TangoNest automatically uses the registered word language. Change a voice only when the browser default does not sound right.</p>
+          <p class="desc"><span data-i18n="ui.tangonest_automatically_uses_the_registered_word_language_change_a_voice_only_when_the_browser_defau">TangoNest automatically uses the registered word language. Change a voice only when the browser default does not sound right.</span></p>
           <div id="voiceSettingsBox" class="tn-voice-settings"></div>
           <div class="actions">
-            <button class="btn blue" onclick="showVoiceStatus()">Refresh Voices</button>
-            <button class="btn green" onclick="testAllMainVoices()">Test Main Voices</button>
+            <button class="btn blue" onclick="showVoiceStatus()"><span data-i18n="ui.refresh_voices">Refresh Voices</span></button>
+            <button class="btn green" onclick="testAllMainVoices()"><span data-i18n="ui.test_main_voices">Test Main Voices</span></button>
           </div>
           <div id="voiceStatusBox" class="sync-box" style="display:none"></div>
         </div>
@@ -319,41 +335,45 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </div>
 
       <details class="danger-zone tn-settings-fold">
-        <summary><span><strong>Danger Zone</strong><small>Cache and permanent account data controls.</small></span><span class="tn-settings-manage">Open carefully</span></summary>
+        <summary><span><strong><span data-i18n="ui.danger_zone">Danger Zone</span></strong><small><span data-i18n="ui.cache_and_permanent_account_data_controls">Cache and permanent account data controls.</span></small></span><span class="tn-settings-manage"><span data-i18n="ui.open_carefully">Open carefully</span></span></summary>
         <div class="tn-settings-fold-body">
-          <p class="desc">Clear this browser's cache or permanently delete the logged-in account's TangoNest cloud data.</p>
+          <p class="desc"><span data-i18n="ui.clear_this_browser_s_cache_or_permanently_delete_the_logged_in_account_s_tangonest_cloud_data">Clear this browser's cache or permanently delete the logged-in account's TangoNest cloud data.</span></p>
           <div class="actions">
-            <button class="btn blue" onclick="go('words')">Edit Words</button>
-            <button class="btn yellow" onclick="clearLocalCache()">Clear Local Cache</button>
-            <button class="btn red" onclick="deleteAllAccountData()">Delete All Account Data</button>
+            <button class="btn blue" onclick="go('words')"><span data-i18n="ui.edit_words">Edit Words</span></button>
+            <button class="btn yellow" onclick="clearLocalCache()"><span data-i18n="ui.clear_local_cache">Clear Local Cache</span></button>
+            <button class="btn red" onclick="deleteAllAccountData()"><span data-i18n="ui.delete_all_account_data">Delete All Account Data</span></button>
           </div>
         </div>
       </details>
     </div>
   </section>
-    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg10</p>
+    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg11</p>
     </main>
   </div>
 </div>
-<button id="mnavAdd" class="mobile-add-button" type="button" onclick="appShow('add')" aria-label="Add words" hidden><span aria-hidden="true">+</span></button>
-<nav class="mobile-tabbar" aria-label="Mobile navigation"><button id="mnavHome" class="active" onclick="go('home')">Home</button><button id="mnavWords" onclick="go('words')">Library</button><button id="mnavStudy" onclick="go('study')">Cards</button><button id="mnavQuiz" onclick="appShow('quiz')">Quiz</button><button id="mnavAudio" onclick="appShow('audio')">Listen</button><button id="mnavManage" class="mobile-settings-link" onclick="go('manage')">Settings</button></nav>
-<div id="editModal" class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="editWordTitle"><h2 id="editWordTitle">Edit Word</h2><input type="hidden" id="editId"><div class="row"><div><label for="editFront">Front</label><input id="editFront"></div><div><label for="editBack">Back</label><input id="editBack"></div></div><div class="row3"><div><label for="editFrontLang">Front language</label><select id="editFrontLang"></select></div><div><label for="editBackLang">Back language</label><select id="editBackLang"></select></div><div><label for="editList">Library</label><select id="editList"></select></div></div><div class="row3"><div><label for="editPOS">POS</label><select id="editPOS"><option value="">—</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>preposition</option><option>conjunction</option></select></div><div><label for="editGender">Gender</label><select id="editGender"><option value="">—</option><option value="masculine">masculine</option><option value="feminine">feminine</option><option value="neutral">neutral</option><option value="plural">plural</option></select></div><div><label for="editTags">Tags</label><input id="editTags"></div></div><label for="editMemo">Memo / Example</label><textarea id="editMemo"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()">Save</button><button class="btn" onclick="closeEdit()">Cancel</button></div></div></div>
-<div id="detailModal" class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-label="Word details"><div class="actions" style="justify-content:flex-end;margin-top:0"><button class="btn" onclick="closeDetail()">Close</button></div><div id="detailContent"></div></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
+<button id="mnavAdd" class="mobile-add-button" type="button" onclick="appShow('add')" aria-label="Add words" hidden data-i18n-aria-label="ui.add_words"><span aria-hidden="true">+</span></button>
+<nav class="mobile-tabbar" aria-label="Mobile navigation" data-i18n-aria-label="ui.mobile_navigation"><button id="mnavHome" class="active" onclick="go('home')"><span data-i18n="navigation.home">Home</span></button><button id="mnavWords" onclick="go('words')"><span data-i18n="navigation.library">Library</span></button><button id="mnavStudy" onclick="go('study')"><span data-i18n="navigation.cards">Cards</span></button><button id="mnavQuiz" onclick="appShow('quiz')"><span data-i18n="navigation.quiz">Quiz</span></button><button id="mnavAudio" onclick="appShow('audio')"><span data-i18n="navigation.listen">Listen</span></button><button id="mnavManage" class="mobile-settings-link" onclick="go('manage')"><span data-i18n="navigation.settings">Settings</span></button></nav>
+<div id="editModal" class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="editWordTitle"><h2 id="editWordTitle"><span data-i18n="ui.edit_word">Edit Word</span></h2><input type="hidden" id="editId"><div class="row"><div><label for="editFront"><span data-i18n="ui.front">Front</span></label><input id="editFront"></div><div><label for="editBack"><span data-i18n="ui.back">Back</span></label><input id="editBack"></div></div><div class="row3"><div><label for="editFrontLang"><span data-i18n="ui.front_language">Front language</span></label><select id="editFrontLang"></select></div><div><label for="editBackLang"><span data-i18n="ui.back_language">Back language</span></label><select id="editBackLang"></select></div><div><label for="editList"><span data-i18n="navigation.library">Library</span></label><select id="editList"></select></div></div><div class="row3"><div><label for="editPOS"><span data-i18n="ui.pos">POS</span></label><select id="editPOS"><option value="">—</option><option data-i18n="ui.noun" value="noun">noun</option><option data-i18n="ui.verb" value="verb">verb</option><option data-i18n="ui.adjective" value="adjective">adjective</option><option data-i18n="ui.adverb" value="adverb">adverb</option><option data-i18n="ui.phrase" value="phrase">phrase</option><option data-i18n="ui.preposition" value="preposition">preposition</option><option data-i18n="ui.conjunction" value="conjunction">conjunction</option></select></div><div><label for="editGender"><span data-i18n="ui.gender">Gender</span></label><select id="editGender"><option value="">—</option><option value="masculine" data-i18n="ui.masculine">masculine</option><option value="feminine" data-i18n="ui.feminine">feminine</option><option value="neutral" data-i18n="ui.neutral">neutral</option><option value="plural" data-i18n="ui.plural">plural</option></select></div><div><label for="editTags"><span data-i18n="ui.tags">Tags</span></label><input id="editTags"></div></div><label for="editMemo"><span data-i18n="ui.memo_example">Memo / Example</span></label><textarea id="editMemo"></textarea><div class="actions"><button class="btn primary" onclick="saveEdit()"><span data-i18n="common.save">Save</span></button><button class="btn" onclick="closeEdit()"><span data-i18n="common.cancel">Cancel</span></button></div></div></div>
+<div id="detailModal" class="modal-backdrop" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-label="Word details" data-i18n-aria-label="ui.word_details"><div class="actions" style="justify-content:flex-end;margin-top:0"><button class="btn" onclick="closeDetail()"><span data-i18n="common.close">Close</span></button></div><div id="detailContent"></div></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="networkStatus" class="network-status" role="status" aria-live="polite" hidden>
-  <span id="networkStatusText">You are offline. Saved data remains available on this device.</span>
-  <button id="appUpdateButton" type="button" hidden>Update</button>
+  <span id="networkStatusText"><span data-i18n="ui.you_are_offline_saved_data_remains_available_on_this_device">You are offline. Saved data remains available on this device.</span></span>
+  <button id="appUpdateButton" type="button" hidden><span data-i18n="ui.update">Update</span></button>
 </div>
 <script src="./vendor/supabase-2.115.0.js"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./bulk-format.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg10"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./languages.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./locales/base.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./ui/i18n.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./bulk-format.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./ui/living-library.js?v=1.0.0-rc.19-fdg11"></script>
 </body>
 </html>

@@ -1,11 +1,11 @@
 # TangoNest Forest Desk Glass
 
 TangoNest is a vocabulary library for collecting, organizing, reviewing,
-quizzing, and listening to words. The published `1.0.0-rc.19-fdg10` release improves the
-Forest Desk Glass interface while preserving the existing account-scoped data,
+quizzing, and listening to words. The `1.0.0-rc.19-fdg11` Living Library release adds
+Forest Desk Glass 2.0, quiet native motion, 37 study languages and 16 interface locales while preserving the existing account-scoped data,
 learning, playlist, Auth, sync, and PWA behavior.
 
-Published and verified on September 6, 2026. See [the publication record](FDG10_PUBLICATION.md) for deployment evidence and the remaining physical-device acceptance limits.
+FDG11 was verified in the development workspace on September 7, 2026. See [the audit notes](FDG11_AUDIT_NOTES.md) for scope and physical-device acceptance limits. Historical FDG10 publication evidence remains in `FDG10_PUBLICATION.md`.
 
 ## Run locally
 
@@ -19,9 +19,9 @@ Open `http://127.0.0.1:4173/`.
 
 ## Automated QA
 
-FDG10 release tests were run in the development workspace: two full E2E runs each passed 195 tests with 6 intentional skips, and the syntax, unit, and static suites passed. Public-site verification passed 40 checks. See `FDG10_PUBLICATION.md` for the scope and evidence.
+FDG11 final runs 10 and 11 each passed 228 E2E tests with 6 intentional skips, zero failures and zero flakes. Syntax, unit, static, locale, motion and performance checks passed twice. Each final responsive run covered 378 combinations (6 locales, 9 widths, 7 screens). An additional Hindi/Russian/Korean run covered 189 combinations. Catalogs have 686/686 canonical keys in all 16 published UI locales.
 
-This repository's current GitHub Pages job publishes the site; it does not run those full product tests. Older source and test files retained in this repository are not the FDG10 test evidence. Active production asset paths are listed in `index.html` and `sw.js`.
+This repository's current GitHub Pages job publishes the site; it does not run those full product tests. Older source and test files retained in this repository are not FDG11 test evidence. Active production asset paths are listed in `index.html` and `sw.js`. Final tests and canonical development sources are maintained in the TangoNest_Living_Library development workspace.
 
 ## Supabase
 
@@ -37,15 +37,11 @@ Real Auth, RLS, RPC, Realtime, and cross-device acceptance tests require a confi
 
 `manifest-rc19-fdg1.json` and `sw.js` use relative paths so the app works below a GitHub Pages project path such as `/tangonest/`. The Service Worker caches only the static app shell. Supabase, Auth, API responses, and user data are never cached by the Service Worker.
 
-The active `*-rc19-fdg1` filenames are compatibility names; their published contents are FDG10. Do not regenerate them from older unsuffixed source files retained in this repository. Future releases should be generated and tested in the current development workspace before replacing the complete runtime package.
+The active `*-rc19-fdg1` filenames are compatibility names; their contents are FDG11. Do not regenerate them from older unsuffixed source files retained in this repository. Future releases should be generated and tested in the current development workspace before replacing the complete runtime package.
 
 The Supabase browser SDK is pinned locally under `vendor/` and included in the offline shell. Auth and REST responses are never included. A waiting Service Worker is activated only after the user accepts the update banner.
 
-See `FDG10_UPDATE_GUIDE.md` for safe deployment and acceptance steps. The
-`TangoNest_FDG10_REVIEW_CANDIDATE` package is deliberately not labeled READY:
-production Auth/RLS acceptance and physical-device PWA icon checks require
-access outside the local fixture. Never deploy `qa/`, `node_modules`, or
-`test-results`. The mock fixture is test-only and is not included in that package.
+See `FDG11_UPDATE_GUIDE.md` for safe deployment and acceptance steps. The FDG11 runtime package contains 68 files and retains the existing premium icon family. No database reset or migration is required for FDG11. Physical-device speech/PWA behavior, battery use and native-language editorial review are not certified by browser fixtures. Never deploy `qa/`, `node_modules`, or `test-results`.
 
 ## Main files
 
@@ -61,6 +57,9 @@ access outside the local fixture. Never deploy `qa/`, `node_modules`, or
 - `tn-library-management-rc19-fdg1.js` - Library and playlist UI
 - `tn-learning-flow-rc19-fdg1.js` - learning workflow coordination
 - `ui/` - presentation and PWA runtime helpers
+- `ui/living-library.css` and `ui/living-library.js` - current materials, motion and atmosphere
+- `ui/i18n.js`, `locales/` and `languages.js` - interface locale and separate study-language definitions
+- `FDG11_AUDIT_NOTES.md` and `FDG11_UPDATE_GUIDE.md` - current update scope and instructions
 - `SUPABASE_FDG10_SAFETY.sql` - applied non-destructive compatibility fix
 - `FDG10_AUDIT_NOTES.md` - historical pre-publication audit and release limitations
 - `FDG10_PUBLICATION.md` - current publication evidence and acceptance limits
