@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "المراجعات المستحقة أولًا",
   "ui.newest_words_first": "الأحدث أولًا",
   "ui.after_answering": "بعد الإجابة",
-  "ui.auto_smart_2_2_3_2s": "تلقائي ذكي (2.2–3.2 ث)",
   "ui.quick_1_5s": "سريع · 1.5 ث",
   "ui.calm_2_5s": "هادئ · 2.5 ث",
   "ui.review_4_0s": "مراجعة · 4 ث",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "بلا إجابة",
   "quiz.reviewMore": "ستظهر هذه الكلمة أكثر.",
   "library.recentlyUpdated": "حُدّث مؤخرًا",
+  "ui.auto_smart_2_2_3_2s": "تلقائي (0.8–1.25 ث)",
   "ui.value_words_about_value_min": "الكلمات: {p0} · نحو {p1} دقيقة",
   "ui.value_accuracy": "الدقة: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "أُنشئ الحساب. أكّده من البريد الإلكتروني ثم سجّل الدخول.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "سجّل الدخول أو أنشئ حسابًا لمزامنة كلماتك.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "المزامنة تستغرق وقتًا أطول. راجع الاتصال وأعد التحميل.",
   "bulk.complete": "اكتمل الاستيراد",
-  "bulk.paused": "توقف الاستيراد مؤقتًا"
+  "bulk.paused": "توقف الاستيراد مؤقتًا",
+  "quiz.chooseMeaning": "اختر المعنى الصحيح.",
+  "quiz.endSession": "إنهاء الجلسة"
 }

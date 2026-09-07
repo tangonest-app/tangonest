@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg11">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg11">
-<link rel="stylesheet" href="./ui/living-library.css?v=1.0.0-rc.19-fdg11">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg12">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg12">
+<link rel="stylesheet" href="./ui/living-library.css?v=1.0.0-rc.19-fdg12">
 <link rel="preload" as="image" href="./assets/living-library-desk.jpg">
 
 <script>
@@ -20,7 +20,7 @@
 <link rel="icon" href="./assets/icons/fdg10/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/fdg10/icon-180.png">
 <link rel="apple-touch-icon" sizes="152x152" href="./assets/icons/fdg10/icon-152.png">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg11">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg12">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -111,8 +111,8 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
         <p><span data-i18n="ui.your_own_language_space">Your own language space.</span></p>
         <p class="tn-desk-note"><span data-i18n="ui.collect_words_find_meaning_make_them_yours">Collect words. Find meaning. Make them yours.</span></p>
         <div class="home-focus-actions">
+          <button class="btn home-resume" onclick="startSmartSession('today')"><span data-i18n="ui.continue_learning">Continue learning</span></button>
           <button class="btn" onclick="appShow('add')"><span data-i18n="navigation.addWords">Add Words</span></button>
-          <button class="btn" onclick="startSmartSession('today')"><span data-i18n="ui.continue_learning">Continue learning</span></button>
         </div>
       </div>
       <div class="home-summary" aria-label="Learning overview" data-i18n-aria-label="ui.learning_overview">
@@ -221,12 +221,11 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
         <div class="actions"><button class="btn primary" onclick="startQuiz()"><span data-i18n="ui.start_quiz">Start Quiz</span></button></div>
       </div>
       <div id="quizRun" style="display:none">
-        <div class="quiz-top"><div class="quiz-count" id="quizProgress">1 / 10</div><div class="quiz-count" id="quizScore">0 / 10</div></div>
-        <div class="quiz-question" id="quizQuestionCard"><div class="quiz-flip-inner"><div id="quizQuestionFront" class="quiz-face quiz-face-front"><div class="flabel" id="quizLabel"><span data-i18n="ui.question">Question</span></div><div class="quiz-word" id="quizWord">---</div><div id="listeningPanel" class="listening-panel" style="display:none"></div></div><div id="quizQuestionBack" class="quiz-face quiz-face-back" aria-hidden="true"><span class="quiz-reveal-kicker"><span data-i18n="ui.answer">ANSWER</span></span><div id="quizQuestionAnswer" class="quiz-question-answer" aria-live="polite"></div><span class="quiz-reveal-note"><span data-i18n="ui.review_the_answer_then_continue_when_you_are_ready">Review the answer, then continue when you are ready.</span></span></div></div></div>
+        <div class="quiz-top"><div class="quiz-progress-group"><div class="quiz-count" id="quizProgress">1 / 10</div><progress id="quizSessionProgress" max="10" value="1" aria-labelledby="quizProgress"></progress></div><button id="quizSkipButton" type="button" class="btn" onclick="nextQuizQuestion()" data-i18n-title="ui.skip_question" data-i18n-aria-label="ui.skip_question" title="Skip question" aria-label="Skip question"><img src="./assets/ui/skip-forward.svg" width="18" height="18" alt=""></button><button id="quizEndSession" type="button" class="btn" onclick="endQuiz()"><span data-i18n="quiz.endSession">End session</span></button><span id="quizScore" hidden></span></div>
+        <div class="quiz-question" id="quizQuestionCard"><div id="quizQuestionFront"><div class="flabel" id="quizLabel"><span data-i18n="ui.question">Question</span></div><div class="quiz-word" id="quizWord" tabindex="-1">---</div><div id="quizPronunciation" dir="auto"></div><div id="listeningPanel" class="listening-panel" style="display:none"></div></div></div>
         <div id="quizTimerWrap" class="quiz-timer-wrap"><div class="quiz-timer-top"><span id="quizTimerLabel"><span data-i18n="ui.time_limit_off">Time limit: Off</span></span><span id="quizTimerText"></span></div><div class="quiz-timer-bar"><div id="quizTimerFill" class="quiz-timer-fill"></div></div></div>
         <div id="typingAreaHome"><div id="typingArea"><label class="sr-only" for="quizAnswer"><span data-i18n="ui.your_answer">Your answer</span></label><input id="quizAnswer" placeholder="Type answer" onkeydown="handleQuizAnswerKey(event)" data-i18n-placeholder="ui.type_answer"><div class="actions"><button class="btn primary" onclick="checkTypingAnswer()"><span data-i18n="ui.check">Check</span></button><button class="btn blue" onclick="speakQuizQuestion()"><span data-i18n="ui.question_2">▶ Question</span></button></div></div></div>
-        <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box" role="status" aria-live="polite"></div>
-        <div class="actions quiz-run-actions"><button id="quizSkipButton" class="btn" onclick="nextQuizQuestion()"><span data-i18n="ui.skip_question">Skip question</span></button><button class="btn red" onclick="endQuiz()"><span data-i18n="ui.end">End</span></button></div>
+        <div id="choiceArea" class="choice-grid"></div><div id="quizResult" class="result-box" role="status" aria-live="polite" onfocusin="pauseQuizAdvance()"></div>
       </div>
       <div id="quizEnd" style="display:none"><h2><span data-i18n="ui.result">Result</span></h2><p class="desc" id="quizEndText"></p><div id="quizResultSummary" class="tn-quiz-summary"></div><div id="quizWrongList" class="quiz-wrong-list"></div><div class="actions"><button class="btn primary" onclick="restartWrongQuiz()"><span data-i18n="ui.retry_wrong">Retry wrong</span></button><button class="btn blue" onclick="startMistakeReview()"><span data-i18n="ui.review_weak_words">Review weak words</span></button><button class="btn" onclick="go('home')"><span data-i18n="navigation.home">Home</span></button><button class="btn" onclick="resetQuiz()"><span data-i18n="ui.back_to_setup">Back to setup</span></button></div></div>
     </div></div>
@@ -347,7 +346,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </details>
     </div>
   </section>
-    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg11</p>
+    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg12</p>
     </main>
   </div>
 </div>
@@ -360,20 +359,20 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <button id="appUpdateButton" type="button" hidden><span data-i18n="ui.update">Update</span></button>
 </div>
 <script src="./vendor/supabase-2.115.0.js"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./languages.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./locales/base.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./ui/i18n.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./bulk-format.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg11"></script>
-<script src="./ui/living-library.js?v=1.0.0-rc.19-fdg11"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./languages.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./locales/base.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./ui/i18n.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./bulk-format.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg12"></script>
+<script src="./ui/living-library.js?v=1.0.0-rc.19-fdg12"></script>
 </body>
 </html>

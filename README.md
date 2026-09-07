@@ -1,11 +1,11 @@
 # TangoNest Forest Desk Glass
 
 TangoNest is a vocabulary library for collecting, organizing, reviewing,
-quizzing, and listening to words. The `1.0.0-rc.19-fdg11` Living Library release adds
-Forest Desk Glass 2.0, quiet native motion, 37 study languages and 16 interface locales while preserving the existing account-scoped data,
+quizzing, and listening to words. The `1.0.0-rc.19-fdg12` release refines Quiz focus, timing, keyboard input and brand language while retaining
+Forest Desk Glass 2.0, quiet native motion, 37 study languages and 16 interface locales and preserving the existing account-scoped data,
 learning, playlist, Auth, sync, and PWA behavior.
 
-FDG11 was verified in the development workspace on September 7, 2026. See [the audit notes](FDG11_AUDIT_NOTES.md) for scope and physical-device acceptance limits. Historical FDG10 publication evidence remains in `FDG10_PUBLICATION.md`.
+FDG12 was verified in the development workspace on September 7, 2026. See [the refinement report](FDG12_REPORT.md) for changes, evidence scope and physical-device acceptance limits. Historical publication records are retained as history, not current instructions.
 
 ## Run locally
 
@@ -19,9 +19,9 @@ Open `http://127.0.0.1:4173/`.
 
 ## Automated QA
 
-FDG11 final runs 10 and 11 each passed 228 E2E tests with 6 intentional skips, zero failures and zero flakes. Syntax, unit, static, locale, motion and performance checks passed twice. Each final responsive run covered 378 combinations (6 locales, 9 widths, 7 screens). An additional Hindi/Russian/Korean run covered 189 combinations. Catalogs have 686/686 canonical keys in all 16 published UI locales.
+FDG12 passed two consecutive full verification rounds on unchanged runtime. Each passed 243 E2E tests with 6 intentional project-specific skips and zero failures. Syntax, unit, static, locale, motion, performance and old-shell upgrade checks passed twice. Each round covered 378 full-screen combinations and 162 active-Quiz combinations. Catalogs have 688/688 canonical keys in all 16 published UI locales. Brand names remain English; functional copy follows the interface language.
 
-This repository's current GitHub Pages job publishes the site; it does not run those full product tests. Older source and test files retained in this repository are not FDG11 test evidence. Active production asset paths are listed in `index.html` and `sw.js`. Final tests and canonical development sources are maintained in the TangoNest_Living_Library development workspace.
+This repository's current GitHub Pages job publishes the site; it does not run those full product tests. Older source and test files retained in this repository are not FDG12 test evidence. Active production asset paths are listed in `index.html` and `sw.js`. Final tests and canonical development sources are maintained in the TangoNest_Living_Library development workspace.
 
 ## Supabase
 
@@ -37,11 +37,11 @@ Real Auth, RLS, RPC, Realtime, and cross-device acceptance tests require a confi
 
 `manifest-rc19-fdg1.json` and `sw.js` use relative paths so the app works below a GitHub Pages project path such as `/tangonest/`. The Service Worker caches only the static app shell. Supabase, Auth, API responses, and user data are never cached by the Service Worker.
 
-The active `*-rc19-fdg1` filenames are compatibility names; their contents are FDG11. Do not regenerate them from older unsuffixed source files retained in this repository. Future releases should be generated and tested in the current development workspace before replacing the complete runtime package.
+The active `*-rc19-fdg1` filenames are compatibility names; their contents are FDG12. Do not regenerate them from older unsuffixed source files retained in this repository. Future releases should be generated and tested in the current development workspace before replacing the complete runtime package.
 
 The Supabase browser SDK is pinned locally under `vendor/` and included in the offline shell. Auth and REST responses are never included. A waiting Service Worker is activated only after the user accepts the update banner.
 
-See `FDG11_UPDATE_GUIDE.md` for safe deployment and acceptance steps. The FDG11 runtime package contains 68 files and retains the existing premium icon family. No database reset or migration is required for FDG11. Physical-device speech/PWA behavior, battery use and native-language editorial review are not certified by browser fixtures. Never deploy `qa/`, `node_modules`, or `test-results`.
+See `FDG12_REPORT.md` for update and acceptance scope. The FDG12 runtime package contains 67 files and retains the existing premium icon family. No database reset or migration is required. Physical-device speech/PWA behavior, battery use and native-language editorial review are not certified by browser fixtures. Never deploy `qa/`, `node_modules`, or `test-results`.
 
 ## Main files
 

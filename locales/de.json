@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "Fällige Wörter zuerst",
   "ui.newest_words_first": "Neueste Wörter zuerst",
   "ui.after_answering": "Nach der Antwort",
-  "ui.auto_smart_2_2_3_2s": "Automatisch (2,2–3,2 s)",
   "ui.quick_1_5s": "Schnell (1,5 s)",
   "ui.calm_2_5s": "Ruhig (2,5 s)",
   "ui.review_4_0s": "Gründlich (4 s)",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "Keine Antwort",
   "quiz.reviewMore": "Dieses Wort wird häufiger wiederholt.",
   "library.recentlyUpdated": "Kürzlich aktualisiert",
+  "ui.auto_smart_2_2_3_2s": "Automatisch (0,8–1,25 s)",
   "ui.value_words_about_value_min": "{p0} Wörter · etwa {p1} Min.",
   "ui.value_accuracy": "Trefferquote: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Konto erstellt. Bestätige es per E-Mail und melde dich an.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "Melde dich an oder erstelle ein Konto, um deine Wörter zu synchronisieren.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "Die Synchronisierung dauert länger. Prüfe die Verbindung und lade neu.",
   "bulk.complete": "Import abgeschlossen",
-  "bulk.paused": "Import pausiert"
+  "bulk.paused": "Import pausiert",
+  "quiz.chooseMeaning": "Wähle die richtige Bedeutung.",
+  "quiz.endSession": "Sitzung beenden"
 }

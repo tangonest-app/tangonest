@@ -2227,7 +2227,10 @@
       password.type=visible ? "password" : "text";
       window.TNI18n.bindText(toggleBtn,()=>(visible ? window.TNI18n.t("ui.show",{}) : window.TNI18n.t("ui.hide",{})));
       toggleBtn.setAttribute("aria-pressed",visible ? "false" : "true");
-      toggleBtn.setAttribute("aria-label",visible ? "Show password" : "Hide password");
+      const labelKey=visible?"ui.show_password":"ui.hide";
+      toggleBtn.setAttribute("data-i18n-aria-label",labelKey);
+      toggleBtn.setAttribute("aria-label",window.TNI18n.t(labelKey));
+      toggleBtn.setAttribute("aria-controls","authPassword");
       password.focus({preventScroll:true});
     };
     ["authEmail","authPassword"].forEach(id => {

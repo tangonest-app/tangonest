@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "優先到期複習",
   "ui.newest_words_first": "優先最新單字",
   "ui.after_answering": "答題後",
-  "ui.auto_smart_2_2_3_2s": "智慧自動（2.2–3.2秒）",
   "ui.quick_1_5s": "快速 · 1.5秒",
   "ui.calm_2_5s": "從容 · 2.5秒",
   "ui.review_4_0s": "複習 · 4.0秒",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "未作答",
   "quiz.reviewMore": "這個單字會更頻繁出現。",
   "library.recentlyUpdated": "最近更新",
+  "ui.auto_smart_2_2_3_2s": "自動（0.8–1.25秒）",
   "ui.value_words_about_value_min": "{p0}個單字 · 約{p1}分鐘",
   "ui.value_accuracy": "正確率{p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "帳號已建立。請透過電子郵件確認帳號後登入。",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "登入或建立帳號以同步單字。",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "同步耗時較長，請檢查連線並重新載入。",
   "bulk.complete": "匯入完成",
-  "bulk.paused": "匯入已暫停"
+  "bulk.paused": "匯入已暫停",
+  "quiz.chooseMeaning": "請選擇正確的意思。",
+  "quiz.endSession": "結束學習"
 }

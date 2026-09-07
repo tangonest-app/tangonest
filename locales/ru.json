@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "Сначала запланированные",
   "ui.newest_words_first": "Сначала новые",
   "ui.after_answering": "После ответа",
-  "ui.auto_smart_2_2_3_2s": "Авто (2,2–3,2 с)",
   "ui.quick_1_5s": "Быстро · 1,5 с",
   "ui.calm_2_5s": "Спокойно · 2,5 с",
   "ui.review_4_0s": "Повторение · 4 с",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "Нет ответа",
   "quiz.reviewMore": "Это слово будет появляться чаще.",
   "library.recentlyUpdated": "Недавно обновлено",
+  "ui.auto_smart_2_2_3_2s": "Авто (0,8–1,25 с)",
   "ui.value_words_about_value_min": "Слов: {p0} · около {p1} мин",
   "ui.value_accuracy": "Точность: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Аккаунт создан. Подтверди его по почте, затем войди.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "Войди или создай аккаунт для синхронизации слов.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "Синхронизация затянулась. Проверь соединение и обнови страницу.",
   "bulk.complete": "Импорт завершён",
-  "bulk.paused": "Импорт приостановлен"
+  "bulk.paused": "Импорт приостановлен",
+  "quiz.chooseMeaning": "Выбери правильное значение.",
+  "quiz.endSession": "Завершить занятие"
 }

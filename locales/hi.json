@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "पहले तय दोहराव",
   "ui.newest_words_first": "पहले नए शब्द",
   "ui.after_answering": "उत्तर के बाद",
-  "ui.auto_smart_2_2_3_2s": "स्मार्ट ऑटो (2.2–3.2 सेकंड)",
   "ui.quick_1_5s": "तेज़ · 1.5 सेकंड",
   "ui.calm_2_5s": "आराम से · 2.5 सेकंड",
   "ui.review_4_0s": "दोहराव · 4 सेकंड",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "उत्तर नहीं",
   "quiz.reviewMore": "यह शब्द अधिक बार आएगा।",
   "library.recentlyUpdated": "हाल में अपडेट हुआ",
+  "ui.auto_smart_2_2_3_2s": "स्वचालित (0.8–1.25 सेकंड)",
   "ui.value_words_about_value_min": "{p0} शब्द · लगभग {p1} मिनट",
   "ui.value_accuracy": "सटीकता: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "खाता बना। ईमेल से पुष्टि करके लॉग इन करें।",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "शब्द सिंक करने के लिए लॉग इन करें या खाता बनाएँ।",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "सिंक में अधिक समय लग रहा है। कनेक्शन जाँचकर फिर लोड करें।",
   "bulk.complete": "आयात पूरा",
-  "bulk.paused": "आयात रुका"
+  "bulk.paused": "आयात रुका",
+  "quiz.chooseMeaning": "सही अर्थ चुनें।",
+  "quiz.endSession": "सत्र समाप्त करें"
 }

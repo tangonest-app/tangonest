@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "Từ đến hạn trước",
   "ui.newest_words_first": "Từ mới nhất trước",
   "ui.after_answering": "Sau khi trả lời",
-  "ui.auto_smart_2_2_3_2s": "Tự động thông minh (2,2–3,2 giây)",
   "ui.quick_1_5s": "Nhanh · 1,5 giây",
   "ui.calm_2_5s": "Chậm rãi · 2,5 giây",
   "ui.review_4_0s": "Ôn tập · 4 giây",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "Chưa trả lời",
   "quiz.reviewMore": "Từ này sẽ xuất hiện thường xuyên hơn.",
   "library.recentlyUpdated": "Vừa cập nhật",
+  "ui.auto_smart_2_2_3_2s": "Tự động (0,8–1,25 giây)",
   "ui.value_words_about_value_min": "{p0} từ · khoảng {p1} phút",
   "ui.value_accuracy": "Độ chính xác: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Đã tạo tài khoản. Xác nhận qua email rồi đăng nhập.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "Đăng nhập hoặc tạo tài khoản để đồng bộ từ vựng.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "Đồng bộ lâu hơn dự kiến. Kiểm tra kết nối rồi tải lại.",
   "bulk.complete": "Nhập hoàn tất",
-  "bulk.paused": "Đã tạm dừng nhập"
+  "bulk.paused": "Đã tạm dừng nhập",
+  "quiz.chooseMeaning": "Chọn nghĩa đúng.",
+  "quiz.endSession": "Kết thúc buổi học"
 }

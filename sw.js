@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg11";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg12";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
@@ -22,6 +22,7 @@ const SHELL=[
   "./assets/ui/circle-help.svg",
   "./assets/ui/headphones.svg",
   "./assets/ui/settings.svg",
+  "./assets/ui/skip-forward.svg",
   "./vendor/supabase-2.115.0.js",
   "./config-rc19-fdg1.js",
   "./languages.js",

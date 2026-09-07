@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "Mots dus d’abord",
   "ui.newest_words_first": "Plus récents d’abord",
   "ui.after_answering": "Après la réponse",
-  "ui.auto_smart_2_2_3_2s": "Automatique (2,2–3,2 s)",
   "ui.quick_1_5s": "Rapide (1,5 s)",
   "ui.calm_2_5s": "Calme (2,5 s)",
   "ui.review_4_0s": "Approfondi (4 s)",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "Sans réponse",
   "quiz.reviewMore": "Ce mot apparaîtra plus souvent.",
   "library.recentlyUpdated": "Mis à jour récemment",
+  "ui.auto_smart_2_2_3_2s": "Auto (0,8–1,25 s)",
   "ui.value_words_about_value_min": "{p0} mots · environ {p1} min",
   "ui.value_accuracy": "Précision : {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Compte créé. Confirmez-le par e-mail, puis connectez-vous.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "Connectez-vous ou créez un compte pour synchroniser vos mots.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "La synchronisation prend du temps. Vérifiez la connexion et rechargez.",
   "bulk.complete": "Import terminé",
-  "bulk.paused": "Import en pause"
+  "bulk.paused": "Import en pause",
+  "quiz.chooseMeaning": "Choisissez le sens correct.",
+  "quiz.endSession": "Terminer la session"
 }

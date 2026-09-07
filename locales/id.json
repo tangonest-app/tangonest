@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "Yang perlu diulang dahulu",
   "ui.newest_words_first": "Kata terbaru dahulu",
   "ui.after_answering": "Setelah menjawab",
-  "ui.auto_smart_2_2_3_2s": "Otomatis cerdas (2,2–3,2 dtk)",
   "ui.quick_1_5s": "Cepat · 1,5 dtk",
   "ui.calm_2_5s": "Tenang · 2,5 dtk",
   "ui.review_4_0s": "Ulangi · 4 dtk",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "Tanpa jawaban",
   "quiz.reviewMore": "Kata ini akan muncul lebih sering.",
   "library.recentlyUpdated": "Baru diperbarui",
+  "ui.auto_smart_2_2_3_2s": "Otomatis (0,8–1,25 dtk)",
   "ui.value_words_about_value_min": "{p0} kata · sekitar {p1} menit",
   "ui.value_accuracy": "Akurasi: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Akun dibuat. Konfirmasi melalui email, lalu masuk.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "Masuk atau buat akun untuk menyinkronkan kosakata.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "Sinkronisasi lebih lama dari biasanya. Periksa koneksi dan muat ulang.",
   "bulk.complete": "Impor selesai",
-  "bulk.paused": "Impor dijeda"
+  "bulk.paused": "Impor dijeda",
+  "quiz.chooseMeaning": "Pilih arti yang benar.",
+  "quiz.endSession": "Akhiri sesi"
 }

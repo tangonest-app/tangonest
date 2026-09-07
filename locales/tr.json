@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "Zamanı gelenler önce",
   "ui.newest_words_first": "En yeni kelimeler önce",
   "ui.after_answering": "Cevaptan sonra",
-  "ui.auto_smart_2_2_3_2s": "Akıllı otomatik (2,2–3,2 sn)",
   "ui.quick_1_5s": "Hızlı · 1,5 sn",
   "ui.calm_2_5s": "Sakin · 2,5 sn",
   "ui.review_4_0s": "Tekrar · 4 sn",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "Cevap yok",
   "quiz.reviewMore": "Bu kelime daha sık görünecek.",
   "library.recentlyUpdated": "Yakın zamanda güncellendi",
+  "ui.auto_smart_2_2_3_2s": "Otomatik (0,8–1,25 sn)",
   "ui.value_words_about_value_min": "{p0} kelime · yaklaşık {p1} dk",
   "ui.value_accuracy": "Doğruluk: %{p0}",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Hesap oluşturuldu. E-postayla doğrula, sonra giriş yap.",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "Kelimelerini eşitlemek için giriş yap veya hesap oluştur.",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "Eşitleme uzun sürüyor. Bağlantını kontrol edip yeniden yükle.",
   "bulk.complete": "Aktarım tamamlandı",
-  "bulk.paused": "Aktarım duraklatıldı"
+  "bulk.paused": "Aktarım duraklatıldı",
+  "quiz.chooseMeaning": "Doğru anlamı seç.",
+  "quiz.endSession": "Oturumu bitir"
 }

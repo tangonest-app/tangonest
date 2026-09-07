@@ -291,7 +291,6 @@
   "ui.due_reviews_first": "復習対象から",
   "ui.newest_words_first": "新しい単語から",
   "ui.after_answering": "回答後の移動",
-  "ui.auto_smart_2_2_3_2s": "自動（2.2〜3.2秒）",
   "ui.quick_1_5s": "速め（1.5秒）",
   "ui.calm_2_5s": "標準（2.5秒）",
   "ui.review_4_0s": "じっくり（4秒）",
@@ -677,6 +676,7 @@
   "quiz.noAnswer": "未回答",
   "quiz.reviewMore": "この単語は今後の復習に多めに出題されます。",
   "library.recentlyUpdated": "最近更新",
+  "ui.auto_smart_2_2_3_2s": "自動（0.8〜1.25秒）",
   "ui.value_words_about_value_min": "{p0}語・約{p1}分",
   "ui.value_accuracy": "正答率 {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "アカウントを作成しました。確認メールから認証してログインしてください。",
@@ -684,5 +684,7 @@
   "ui.login_or_create_an_account_to_sync_your_vocabulary": "単語を同期するには、ログインまたはアカウントを作成してください。",
   "ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload": "同期に時間がかかっています。接続を確認して再読み込みしてください。",
   "bulk.complete": "読み込み完了",
-  "bulk.paused": "読み込みを一時停止しました"
+  "bulk.paused": "読み込みを一時停止しました",
+  "quiz.chooseMeaning": "正しい意味を選んでください。",
+  "quiz.endSession": "学習を終了"
 }

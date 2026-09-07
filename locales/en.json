@@ -201,7 +201,7 @@
   "ui.due_reviews_first": "Due reviews first",
   "ui.newest_words_first": "Newest words first",
   "ui.after_answering": "After answering",
-  "ui.auto_smart_2_2_3_2s": "Auto · smart (2.2–3.2s)",
+  "ui.auto_smart_2_2_3_2s": "Auto (0.8–1.25s)",
   "ui.quick_1_5s": "Quick · 1.5s",
   "ui.calm_2_5s": "Calm · 2.5s",
   "ui.review_4_0s": "Review · 4.0s",
@@ -684,5 +684,7 @@
   "bulk.complete": "Import complete",
   "bulk.paused": "Import paused",
   "bulk.error": "Error",
-  "bulk.warning": "Warning"
+  "bulk.warning": "Warning",
+  "quiz.chooseMeaning": "Choose the correct meaning.",
+  "quiz.endSession": "End session"
 }

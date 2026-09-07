@@ -5,6 +5,8 @@
   let locale="en",request=0;
   const bindings=new Map(),missing=new Set();
   const sourceKeys=new Map(Object.entries(en).map(([id,text])=>[text,id]));
+  // Product identity is shared worldwide; instructions and accessible labels remain localized.
+  const brandKeys=new Set(["navigation.home","navigation.library","navigation.addWords","navigation.cards","navigation.quiz","navigation.listen","navigation.settings","ui.bulk_add","ui.language","ui.your_living_library","ui.your_own_language_space","ui.find_rhythm_build_meaning","ui.learn_grow_remember","ui.forest_desk"]);
   const escape=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   function supported(code){
     const value=String(code||"").replace(/_/g,"-");
@@ -15,7 +17,7 @@
   function t(id,params={}){
     if(!Object.hasOwn(en,id))return id;
     if(locale!=="en"&&!Object.hasOwn(dicts[locale]||{},id))missing.add(`${locale}:${id}`);
-    const text=dicts[locale]?.[id]??en[id];
+    const text=brandKeys.has(id)?en[id]:(dicts[locale]?.[id]??en[id]);
     return text.replace(/\{(\w+)\}/g,(match,name)=>Object.hasOwn(params,name)?String(params[name]):match);
   }
   function mark(id,params={}){
@@ -37,6 +39,7 @@
   function applyElement(element){
     if(element.hasAttribute("data-user-content"))return;
     const id=element.getAttribute("data-i18n");
+    if(brandKeys.has(id)){element.lang="en";element.dir="ltr";}
     if(id&&element.getAttribute("data-i18n-resolved")!==locale){
       let params={};try{params=JSON.parse(element.getAttribute("data-i18n-params")||"{}")}catch(error){}
       if(element.tagName==="OPTION")element.textContent=t(id,params);
