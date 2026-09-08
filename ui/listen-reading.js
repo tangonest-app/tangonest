@@ -11,8 +11,11 @@
   let following=true,queueSignature="",currentState="idle";
   function state(value){
     currentState=value;
-    const keys={idle:"ui.choose_a_playlist_and_press_play",preparing:"listen.preparing",playing:"ui.now_playing",paused:"ui.paused",unavailable:"ui.voice_playback_failed_try_another_voice_in_settings"};
-    status.textContent=t(keys[value]||keys.idle);
+    const keys={idle:"ui.choose_a_playlist_and_press_play",preparing:"listen.preparing",playing:"ui.now_playing",waiting:"listen.waiting",completed:"listen.completed",paused:"listen.resumeHint",error:"ui.voice_playback_failed_try_another_voice_in_settings",unavailable:"ui.voice_playback_failed_try_another_voice_in_settings"};
+    const errors=typeof listenRun!=="undefined"?listenRun.errors:[];
+    status.textContent=t(keys[value]||keys.idle)+(errors.length?" · "+t("listen.failedParts")+": "+errors.length+" ("+errors.at(-1).reason+")":"");
+    const play=document.querySelector('[onclick="startAudio()"]');
+    if(play)window.TNI18n.bindText(play,()=>t(["paused","error","unavailable"].includes(currentState)?"quiz.resumeAdvance":"listen.play"));
     if(value==="idle"){list.replaceChildren();queueSignature="";follow.hidden=true;following=true}
   }
   function track(){
@@ -26,7 +29,7 @@
       for(const [index,word]of audioQueue.entries()){
         const row=document.createElement("li"),button=document.createElement("button");button.type="button";
         const front=document.createElement("bdi"),back=document.createElement("bdi");front.textContent=word.front;back.textContent=word.back;
-        button.append(front,back);button.onclick=()=>{audioRunToken++;clearTimeout(audioTimer);cancelSpeech();audioIndex=index;audioPaused=false;playAudioCurrent()};
+        button.append(front,back);button.onclick=()=>selectAudioItem(index);
         row.appendChild(button);list.appendChild(row);
       }
     }

@@ -96,8 +96,10 @@ html[data-atmosphere="night"]{--scene-brightness:.56;--scene-tint:rgba(5,21,15,.
 .tn-listen-example{min-height:28px;margin:20px 0 0;color:var(--desk-muted);font-size:15px;line-height:1.8}
 .tn-living .tn-listen-wave{justify-content:center;height:16px;margin:22px 0 0}
 .tn-living .tn-listen-wave i{width:2px;height:12px;background:#ddc997;transform:scaleY(.2);transition:transform var(--motion-normal) var(--ease-standard),opacity var(--motion-normal) linear}
-.tn-listen-timeline{display:flex;align-items:center;gap:22px;margin:18px 0 10px}
-.tn-listen-timeline input[type="range"]{flex:1;min-width:0;height:32px;padding:0;accent-color:#426543;background:transparent;border:0}
+.tn-listen-timeline{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin:18px 0 10px}
+.tn-listen-timeline>label[for="audioRepeat"]{display:flex;align-items:center;gap:8px;margin:0;min-width:0;flex-wrap:wrap}
+.tn-listen-timeline select{width:auto;max-width:100%;min-height:44px}
+.tn-listen-timeline input[type="range"]{flex:1 1 120px;min-width:80px;height:32px;padding:0;accent-color:#426543;background:transparent;border:0}
 .tn-toggle{display:flex;align-items:center;gap:8px;margin:0;white-space:normal}
 .tn-toggle input[type="checkbox"]{width:18px;height:18px;accent-color:var(--fdg-forest-700)}
 .tn-living .tn-player-controls{justify-content:center;gap:8px;flex-wrap:wrap}
@@ -176,7 +178,8 @@ html[data-atmosphere="night"]{--scene-brightness:.56;--scene-tint:rgba(5,21,15,.
 .tn-living .home-focus-copy .home-resume-context{font-family:var(--font-ui,system-ui);font-size:14px;line-height:1.7;color:var(--desk-text);margin:14px 0}
 .tn-living .home-resume[hidden],.tn-living .home-resume-context[hidden]{display:none}
 .tn-living .quiz-explanation{font-size:14px;margin-top:6px}
-.tn-living .quiz-explanation summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.tn-living .quiz-explanation summary{cursor:pointer;min-height:44px;display:list-item;list-style:disclosure-closed inside;padding:10px 0;text-decoration:underline;text-underline-offset:3px}
+.tn-living .quiz-explanation[open] summary{list-style-type:disclosure-open}
 .tn-living .page button{white-space:normal;overflow-wrap:anywhere;min-width:0;max-width:100%}
 .tn-living .tn-desk-destinations button>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
 .tn-living .tn-library-tabs{flex-wrap:wrap}

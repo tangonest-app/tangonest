@@ -17,7 +17,7 @@
       state={mode:"quiz",listId:$("quizList").value,index,total:quiz.total,queue:quiz.queue.map(fingerprint),records:quiz.records||[],type:quiz.type,direction:quiz.direction,options:{quizAutoAdvance:$("quizAutoAdvance").value,quizAudioAfter:$("quizAudioAfter").value}};
     }else if(page==="pageStudy"&&current){
       state={mode:"cards",listId:$("studyList").value,word:fingerprint(current),flipped,rated:cardRated,studyMode:$("studyMode").value};
-    }else if(page==="pageAudio"&&audioQueue.length){
+    }else if(page==="pageAudio"&&audioQueue.length&&listenRun.phase!=="completed"){
       state={mode:"listen",listId:$("audioList").value,queue:audioQueue.map(fingerprint),index:Math.max(0,audioIndex-1),pattern:$("audioPattern").value};
     }
     if(state)write({...state,owner:owner(),at:new Date().toISOString()});
@@ -51,7 +51,7 @@
       const words=new Map(db.words.map(word=>[fingerprint(word),word]));
       if(state.mode==="quiz"){
         $("quizList").value=state.listId;
-        for(const [id,value]of Object.entries(state.options))$(id).value=value;
+        for(const [id,value]of Object.entries(state.options))if(id!=="quizAutoAdvance")$(id).value=value;
         // Resuming never restarts a deadline or plays audio without a fresh user action.
         $("quizHardMode").value="off";$("listeningTimerMode").value="off";
         quiz={queue:state.queue.map(value=>words.get(value)),wrong:[],allWrong:[],records:state.records,index:state.index,total:state.total,score:state.records.filter(record=>record.ok).length,type:state.type,direction:state.direction,current:null,answered:false,ended:false,listeningReplayUsed:0};
@@ -60,7 +60,7 @@
       }else if(state.mode==="cards"){
         $("studyList").value=state.listId;$("studyMode").value=state.studyMode;current=words.get(state.word);flipped=state.flipped;cardRated=state.rated;$("flash").classList.toggle("is-flipped",flipped);drawCard();updateCardRating();updateStudyProgress();
       }else{
-        $("audioList").value=state.listId;$("audioPattern").value=state.pattern;audioQueue=state.queue.map(value=>words.get(value));audioIndex=state.index+1;audioPaused=true;updateNow(audioQueue[state.index]);setAudioPlayerState("paused");
+        $("audioList").value=state.listId;$("audioPattern").value=state.pattern;audioQueue=state.queue.map(value=>words.get(value));audioIndex=state.index+1;audioPaused=true;updateNow(audioQueue[state.index]);listenState("paused");
       }
     }finally{restoring=false;activeOwner=owner()}
   }

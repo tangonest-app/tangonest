@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>TangoNest</title>
-<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg13">
-<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg13">
-<link rel="stylesheet" href="./ui/living-library.css?v=1.0.0-rc.19-fdg13">
+<link rel="stylesheet" href="./style-rc19-fdg1.css?v=1.0.0-rc.19-fdg14">
+<link rel="stylesheet" href="./ui/forest-desk-glass-rc19-fdg1.css?v=1.0.0-rc.19-fdg14">
+<link rel="stylesheet" href="./ui/living-library.css?v=1.0.0-rc.19-fdg14">
 <link rel="preload" as="image" href="./assets/living-library-desk.jpg">
 
 <script>
@@ -20,7 +20,7 @@
 <link rel="icon" href="./assets/icons/fdg10/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/fdg10/icon-180.png">
 <link rel="apple-touch-icon" sizes="152x152" href="./assets/icons/fdg10/icon-152.png">
-<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg13">
+<link rel="manifest" href="./manifest-rc19-fdg1.json?v=1.0.0-rc.19-fdg14">
 <meta name="description" content="TangoNest is your personal vocabulary collection and daily review space.">
 <meta name="theme-color" content="#103a2c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -232,10 +232,10 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   </section>
 
   <section id="pageAudio" class="page"><div class="audio-player"><h2><span data-i18n="ui.audio_mode">Audio Mode</span></h2><p class="desc"><span data-i18n="ui.listening_practice_mode">Listening practice mode.</span></p>
-    <div class="row3"><div><label for="audioList"><span data-i18n="navigation.library">Library</span></label><select id="audioList"></select></div><div><label for="audioPattern"><span data-i18n="ui.pattern">Pattern</span></label><select id="audioPattern"><option value="frontBack" data-i18n="ui.front_back">Front → Back</option><option value="backFront" data-i18n="ui.back_front">Back → Front</option><option value="front" data-i18n="ui.front_only">Front only</option><option value="back" data-i18n="ui.back_only">Back only</option></select></div><div><label for="audioOrder"><span data-i18n="ui.order">Order</span></label><select id="audioOrder"><option value="random" data-i18n="ui.random">Random</option><option value="normal" data-i18n="ui.normal">Normal</option><option value="hard" data-i18n="ui.hard_first">Hard first</option><option value="due" data-i18n="ui.due_first">Due first</option><option value="star" data-i18n="ui.saved_only">★ Saved only</option></select></div></div>
-    <div class="row3"><div><label for="audioIntervalCustom"><span data-i18n="ui.word_interval">Word interval</span></label><input id="audioIntervalCustom" type="number" min="0.5" max="30" step="0.1" value="5"></div><div><label for="pairGapCustom"><span data-i18n="ui.pair_gap">Pair gap</span></label><input id="pairGapCustom" type="number" min="0.1" max="10" step="0.1" value="1.8"></div><div><label for="audioRate"><span data-i18n="ui.voice_speed">Voice speed</span></label><select id="audioRate"><option value="0.82" data-i18n="ui.slow">Slow</option><option value="0.92" selected data-i18n="ui.normal">Normal</option><option value="1.05" data-i18n="ui.fast">Fast</option></select></div></div>
+    <div class="row3"><div><label for="audioList"><span data-i18n="navigation.library">Library</span></label><select id="audioList"></select></div><div><label for="audioPattern"><span data-i18n="ui.pattern">Pattern</span></label><select id="audioPattern"><option value="frontBack" data-i18n="ui.front_back">Front → Back</option><option value="backFront" data-i18n="ui.back_front">Back → Front</option><option value="front" data-i18n="ui.front_only">Front only</option><option value="back" data-i18n="ui.back_only">Back only</option><option value="frontBackExample" data-i18n="listen.frontBackExample">Front → Back → Example</option></select></div><div><label for="audioOrder"><span data-i18n="ui.order">Order</span></label><select id="audioOrder"><option value="random" data-i18n="ui.random">Random</option><option value="normal" data-i18n="ui.normal">Normal</option><option value="hard" data-i18n="ui.hard_first">Hard first</option><option value="due" data-i18n="ui.due_first">Due first</option><option value="star" data-i18n="ui.saved_only">★ Saved only</option></select></div></div>
+    <div class="row3"><div><label for="audioIntervalCustom"><span data-i18n="ui.word_interval">Word interval</span></label><input id="audioIntervalCustom" type="number" min="0" max="30" step="0.1" value="0.4"></div><div><label for="pairGapCustom"><span data-i18n="ui.pair_gap">Pair gap</span></label><input id="pairGapCustom" type="number" min="0.1" max="10" step="0.1" value="1.8"></div><div><label for="audioRate"><span data-i18n="ui.voice_speed">Voice speed</span></label><select id="audioRate"><option value="0.82" data-i18n="ui.slow">Slow</option><option value="0.92" selected data-i18n="ui.normal">Normal</option><option value="1.05" data-i18n="ui.fast">Fast</option></select></div></div>
     <div class="now-playing" data-state="idle"><div class="tn-listen-copy"><div class="tn-listen-context"><span class="flabel"><span data-i18n="ui.now_playing">Now Playing</span></span><span id="audioPosition">0 / 0</span></div><div id="audioNow" class="now-title" dir="auto">---</div><div id="audioPronunciation" class="tn-listen-pronunciation" dir="auto"></div><div id="audioSub" class="now-sub" dir="auto"><span data-i18n="ui.choose_a_playlist_and_press_play">Choose a playlist and press Play</span></div><p id="audioExample" class="tn-listen-example" dir="auto"></p><div class="tn-listen-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
-    <div class="tn-listen-timeline"><label class="sr-only" for="audioSeek"><span data-i18n="ui.word_position">Word position</span></label><input id="audioSeek" type="range" min="1" max="1" value="1" disabled><label class="tn-toggle" for="audioAutoPlay"><input id="audioAutoPlay" type="checkbox" checked><span data-i18n="ui.auto_play">Auto play</span></label></div>
+    <div class="tn-listen-timeline"><label class="sr-only" for="audioSeek"><span data-i18n="ui.word_position">Word position</span></label><input id="audioSeek" type="range" min="1" max="1" value="1" disabled><label class="tn-toggle" for="audioAutoPlay"><input id="audioAutoPlay" type="checkbox" checked><span data-i18n="ui.auto_play">Auto play</span></label><label for="audioRepeat"><span data-i18n="listen.repeat">Repeat</span><select id="audioRepeat"><option value="off" data-i18n="listen.repeatOff">Off</option><option value="all" data-i18n="listen.repeatAll">Playlist</option><option value="word" data-i18n="listen.repeatWord">Current word</option></select></label></div>
     <div class="actions tn-player-controls"><button class="btn" onclick="previousAudio()"><span data-i18n="common.previous">Previous</span></button><button class="btn primary" onclick="startAudio()"><span data-i18n="listen.play">Play</span></button><button class="btn" onclick="pauseAudio()"><span data-i18n="listen.pause">Pause</span></button><button class="btn blue" onclick="nextAudio()"><span data-i18n="common.next">Next</span></button><button class="btn" onclick="stopAudio()"><span data-i18n="listen.stop">Stop</span></button><button class="btn" onclick="playAudioOnce()"><span data-i18n="ui.play_one">Play One</span></button></div>
   </div></section>
 
@@ -346,7 +346,7 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
       </details>
     </div>
   </section>
-    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg13</p>
+    <p id="appBuildVersion" class="tn-build-version">TangoNest · 1.0.0-rc.19-fdg14</p>
     </main>
   </div>
 </div>
@@ -359,22 +359,22 @@ html:not(.auth-ready) #loginGate,html:not(.auth-ready) .login-gate{display:none;
   <button id="appUpdateButton" type="button" hidden><span data-i18n="ui.update">Update</span></button>
 </div>
 <script src="./vendor/supabase-2.115.0.js"></script>
-<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./languages.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./locales/base.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./ui/i18n.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./bulk-format.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./ui/living-library.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./ui/study-continuity.js?v=1.0.0-rc.19-fdg13"></script>
-<script src="./ui/listen-reading.js?v=1.0.0-rc.19-fdg13"></script>
+<script src="./config-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./languages.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./locales/base.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./ui/i18n.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./default-playlist-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./learning-engine-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./ui/learning-presentation-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./example-fields-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./bulk-format.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./app-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./tn-supabase-sync-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./tn-library-management-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./tn-learning-flow-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./ui/runtime-rc19-fdg1.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./ui/living-library.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./ui/study-continuity.js?v=1.0.0-rc.19-fdg14"></script>
+<script src="./ui/listen-reading.js?v=1.0.0-rc.19-fdg14"></script>
 </body>
 </html>
