@@ -26,7 +26,7 @@
       "url": "./?page=create",
       "icons": [
         {
-          "src": "assets/icons/fdg10/icon-192.png",
+          "src": "assets/icons/fdg16/icon-192.png",
           "sizes": "192x192"
         }
       ]
@@ -37,7 +37,7 @@
       "url": "./?page=library",
       "icons": [
         {
-          "src": "assets/icons/fdg10/icon-192.png",
+          "src": "assets/icons/fdg16/icon-192.png",
           "sizes": "192x192"
         }
       ]
@@ -45,19 +45,19 @@
   ],
   "icons": [
     {
-      "src": "assets/icons/fdg10/icon-192.png",
+      "src": "assets/icons/fdg16/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/fdg10/icon-512.png",
+      "src": "assets/icons/fdg16/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/fdg10/maskable-512.png",
+      "src": "assets/icons/fdg16/maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

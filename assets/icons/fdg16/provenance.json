@@ -1,0 +1,12 @@
+{
+  "master": "icon-1024.png",
+  "sha256": "cf19403f13c02d901fd5d9a0399c2d4ef1c6fcd7932d74e5e49f65a3380f30ca",
+  "resize": "Pillow LANCZOS, RGB; square outer-mat crop only; no redrawing or recoloring",
+  "crop": [
+    0,
+    24,
+    960,
+    984
+  ],
+  "maskable": "360px fitted artwork centered in 512px canvas; background sampled from master interior; decorative frame may be masked"
+}

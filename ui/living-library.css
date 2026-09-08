@@ -26,7 +26,14 @@ html[data-atmosphere="night"]{--scene-brightness:.56;--scene-tint:rgba(5,21,15,.
 .tn-living .app-sidebar::before,.tn-living .app-sidebar::after{content:none}
 .tn-living .brand{justify-content:center;min-height:50px;margin:0 0 24px}
 .tn-living .brand>div:last-child,.tn-living .sidebar-note,.tn-living .nav-section-label{display:none}
-.tn-living .brand-mark{width:42px;height:42px;min-width:42px;margin:0}
+.tn-living .brand-mark{--brand-size:44px;width:var(--brand-size);height:var(--brand-size);min-width:var(--brand-size);flex:0 0 var(--brand-size);margin:0}
+.tn-living .auth-logo{--brand-size:52px;width:var(--brand-size);height:var(--brand-size);min-width:var(--brand-size);flex:0 0 var(--brand-size)}
+.tn-living :is(.brand-mark,.auth-logo){position:relative;box-sizing:border-box;isolation:isolate;overflow:hidden;background:#14241b;border:1px solid #bfa36c;border-radius:calc(var(--brand-size)*.22);box-shadow:inset 0 0 0 1px rgba(242,220,164,.16)}
+/* Install and in-app icons share the same fitted artwork without a second crop. */
+.tn-living :is(.brand-mark,.auth-logo)>img{position:absolute;left:50%;top:50%;display:block;width:100%;height:100%;max-width:none;object-fit:contain;border-radius:0;transform:translate(-50%,-50%);pointer-events:none}
+.tn-living .mobile-brand .brand-mark{--brand-size:36px}
+.tn-living .auth-brand>div:last-child{min-width:0}
+.tn-living .auth-title{overflow-wrap:anywhere;line-height:1.15}
 .tn-living .nav{gap:7px;isolation:isolate}
 .tn-living .nav button{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;min-height:65px;padding:9px 5px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--desk-muted);font-family:inherit;font-size:12px;font-weight:500;line-height:1.35;text-align:center;white-space:normal;overflow-wrap:normal}
 .tn-living .nav button::before{content:none}
@@ -34,7 +41,7 @@ html[data-atmosphere="night"]{--scene-brightness:.56;--scene-tint:rgba(5,21,15,.
 .tn-living .nav button.active{background:rgba(216,203,148,.08);border-color:var(--desk-line);color:var(--desk-text);box-shadow:none}
 .tn-living .nav .sidebar-add{margin:0 0 13px;box-shadow:none}
 .tn-living .nav .nav-settings{margin-top:14px}
-.tn-nav-icon,.tn-desk-destinations img{width:23px;height:23px;object-fit:contain;filter:invert(91%) sepia(19%) saturate(495%) hue-rotate(349deg)}
+.tn-nav-icon,.tn-desk-destinations img{display:block;width:24px;height:24px;flex:none;object-fit:contain;pointer-events:none;filter:invert(91%) sepia(19%) saturate(495%) hue-rotate(349deg)}
 .tn-nav-indicator{position:absolute;z-index:-1;inset-inline:0;top:0;height:var(--nav-height,65px);background:rgba(195,190,138,.1);border-radius:6px;transform:translateY(var(--nav-y,0px));transition:transform var(--motion-normal) var(--ease-emphasized),height var(--motion-normal) var(--ease-standard);pointer-events:none}
 .tn-living .header{background:rgba(8,27,18,.95);border-color:var(--desk-line);color:var(--desk-text);backdrop-filter:none;padding-inline:36px}
 .tn-living .page-heading strong{color:var(--desk-text);font-weight:500;font-size:28px}
@@ -61,7 +68,7 @@ html[data-atmosphere="night"]{--scene-brightness:.56;--scene-tint:rgba(5,21,15,.
 .tn-living .home-summary span{font-size:12px;color:var(--desk-muted)}
 .tn-desk-destinations{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 32px}
 .tn-desk-destinations button{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:142px;padding:20px;border:1px solid var(--desk-line);border-top-color:rgba(244,225,168,.65);border-radius:7px;background:var(--desk-glass);color:var(--desk-text);box-shadow:0 8px 18px rgba(0,0,0,.13);text-align:start}
-.tn-desk-destinations img{width:27px;height:27px;margin-bottom:8px}
+.tn-desk-destinations img{width:28px;height:28px;margin-bottom:8px}
 .tn-desk-destinations strong{font-family:var(--fdg-serif);font-weight:500;font-size:21px}
 .tn-desk-destinations button>span{color:var(--desk-muted);font-size:12px;line-height:1.5}
 .tn-living #pageHome>.card,.tn-living .home-dashboard-grid>.card,.tn-living .home-lower-grid>.card{background:var(--paper-glass);border-radius:7px;box-shadow:none}
@@ -129,7 +136,7 @@ html[data-atmosphere="night"]{--scene-brightness:.56;--scene-tint:rgba(5,21,15,.
 .tn-living .tn-bulk-progress-track i{transition:transform var(--motion-normal) var(--ease-standard)}
 .tn-living .tn-bulk-progress[data-state="working"] .tn-bulk-progress-mark{animation:none}
 .tn-living.tn-background-paused *{animation-play-state:paused}
-.tn-living .auth-session-spinner{animation:none;border:0;background:url("../assets/icons/fdg10/icon-64.png") center/contain no-repeat;width:48px;height:48px;border-radius:10px}
+.tn-living .auth-session-spinner{animation:none;border:0;background:url("../assets/icons/fdg16/icon-64.png") center/contain no-repeat;width:48px;height:48px;border-radius:10px}
 .tn-living .auth-session-loading{animation:tn-sheet-enter var(--motion-slow) var(--ease-enter)}
 .tn-living #authScreen{background-image:url("../assets/living-library-desk.jpg")}
 .tn-living .auth-card{background:rgba(255,250,238,.95);backdrop-filter:none}

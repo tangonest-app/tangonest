@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg15";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg16";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
@@ -9,12 +9,12 @@ const SHELL=[
   "./ui/forest-desk-glass-rc19-fdg1.css",
   "./ui/living-library.css",
   "./assets/living-library-desk.jpg",
-  "./assets/icons/fdg10/icon-32.png",
-  "./assets/icons/fdg10/favicon.ico",
-  "./assets/icons/fdg10/icon-180.png",
-  "./assets/icons/fdg10/icon-152.png",
+  "./assets/icons/fdg16/icon-32.png",
+  "./assets/icons/fdg16/favicon.ico",
+  "./assets/icons/fdg16/icon-180.png",
+  "./assets/icons/fdg16/icon-152.png",
   "./manifest-rc19-fdg1.json",
-  "./assets/icons/fdg10/icon-192.png",
+  "./assets/icons/fdg16/icon-192.png",
   "./assets/ui/house.svg",
   "./assets/ui/book-open.svg",
   "./assets/ui/plus.svg",
@@ -57,13 +57,14 @@ const SHELL=[
   "./locales/vi.json",
   "./locales/zh-Hans.json",
   "./locales/zh-Hant.json",
-  "./assets/icons/fdg10/icon-512.png",
-  "./assets/icons/fdg10/maskable-512.png",
+  "./assets/icons/fdg16/icon-512.png",
+  "./assets/icons/fdg16/maskable-512.png",
   "./assets/botanical-corner.svg",
   "./assets/forest-study-login-v1.png",
   "./favicon.png",
   "./favicon.ico",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./assets/icons/fdg16/icon-64.png"
 ].map(path=>new URL(path,BASE).href);
 const SHELL_PATHS=new Set(SHELL.map(url=>new URL(url).pathname));
 
