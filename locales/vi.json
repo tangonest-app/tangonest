@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "Chậm rãi · 2,5 giây",
   "ui.review_4_0s": "Ôn tập · 4 giây",
   "ui.wait_for_next": "Chờ nhấn Tiếp theo",
-  "ui.after_answer_audio": "Âm thanh sau câu trả lời",
   "ui.hard_mode": "Chế độ giới hạn thời gian",
   "ui.on_time_limit": "Bật: giới hạn thời gian",
   "ui.time_limit": "Giới hạn thời gian",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "Từ này sẽ xuất hiện thường xuyên hơn.",
   "library.recentlyUpdated": "Vừa cập nhật",
   "ui.auto_smart_2_2_3_2s": "Tự động (đúng 1,2 giây / sai 2,5 giây)",
+  "ui.after_answer_audio": "Âm thanh mặt trước sau khi trả lời",
   "quiz.advancing": "Tự động chuyển tiếp",
   "listen.waiting": "Đang chờ mục tiếp theo",
   "listen.completed": "Đã phát xong",
@@ -703,5 +703,7 @@
   "study.cannotResume": "Buổi học đã thay đổi. Hãy bắt đầu buổi mới.",
   "listen.followCurrent": "Quay lại mục đang phát",
   "bulk.editRow": "Sửa dòng {row}",
-  "listen.preparing": "Đang chuẩn bị âm thanh"
+  "listen.preparing": "Đang chuẩn bị âm thanh",
+  "audio.frontMissing": "Thiếu văn bản hoặc ngôn ngữ mặt trước. Kiểm tra từ trong Library.",
+  "quiz.autoShort": "Tự động"
 }

@@ -60,7 +60,8 @@
       }else if(state.mode==="cards"){
         $("studyList").value=state.listId;$("studyMode").value=state.studyMode;current=words.get(state.word);flipped=state.flipped;cardRated=state.rated;$("flash").classList.toggle("is-flipped",flipped);drawCard();updateCardRating();updateStudyProgress();
       }else{
-        $("audioList").value=state.listId;$("audioPattern").value=state.pattern;audioQueue=state.queue.map(value=>words.get(value));audioIndex=state.index+1;audioPaused=true;updateNow(audioQueue[state.index]);listenState("paused");
+        // Keep the current saved audio target, including one-time defaults migrations.
+        $("audioList").value=state.listId;audioQueue=state.queue.map(value=>words.get(value));audioIndex=state.index+1;audioPaused=true;updateNow(audioQueue[state.index]);listenState("paused");
       }
     }finally{restoring=false;activeOwner=owner()}
   }

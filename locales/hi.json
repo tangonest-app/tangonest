@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "आराम से · 2.5 सेकंड",
   "ui.review_4_0s": "दोहराव · 4 सेकंड",
   "ui.wait_for_next": "अगला दबाने तक रुकें",
-  "ui.after_answer_audio": "उत्तर के बाद आवाज़",
   "ui.hard_mode": "समय-सीमा मोड",
   "ui.on_time_limit": "चालू: समय सीमा",
   "ui.time_limit": "समय सीमा",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "यह शब्द अधिक बार आएगा।",
   "library.recentlyUpdated": "हाल में अपडेट हुआ",
   "ui.auto_smart_2_2_3_2s": "स्वचालित (सही 1.2 सेकंड / गलत 2.5 सेकंड)",
+  "ui.after_answer_audio": "उत्तर के बाद सामने का ऑडियो",
   "quiz.advancing": "अपने आप आगे बढ़ रहा है",
   "listen.waiting": "अगले आइटम की प्रतीक्षा",
   "listen.completed": "प्लेबैक पूरा हुआ",
@@ -703,5 +703,7 @@
   "study.cannotResume": "यह सत्र बदल गया है। नया सत्र शुरू करें।",
   "listen.followCurrent": "चल रहे आइटम पर लौटें",
   "bulk.editRow": "पंक्ति {row} बदलें",
-  "listen.preparing": "ऑडियो तैयार हो रहा है"
+  "listen.preparing": "ऑडियो तैयार हो रहा है",
+  "audio.frontMissing": "सामने का पाठ या भाषा नहीं है। Library में शब्द जाँचें।",
+  "quiz.autoShort": "स्वतः"
 }

@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "Ruhig (2,5 s)",
   "ui.review_4_0s": "Gründlich (4 s)",
   "ui.wait_for_next": "Manuell weiter",
-  "ui.after_answer_audio": "Nach der Antwort vorlesen",
   "ui.hard_mode": "Zeitbegrenzung",
   "ui.on_time_limit": "Ein: mit Zeitbegrenzung",
   "ui.time_limit": "Zeitlimit",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "Dieses Wort wird häufiger wiederholt.",
   "library.recentlyUpdated": "Kürzlich aktualisiert",
   "ui.auto_smart_2_2_3_2s": "Auto (1,2 s richtig / 2,5 s falsch)",
+  "ui.after_answer_audio": "Vorderseiten-Audio nach der Antwort",
   "quiz.advancing": "Automatisch weiter",
   "listen.waiting": "Nächster Eintrag folgt",
   "listen.completed": "Wiedergabe abgeschlossen",
@@ -703,5 +703,7 @@
   "study.cannotResume": "Diese Sitzung hat sich geändert. Starte eine neue Sitzung.",
   "listen.followCurrent": "Zum aktuellen Eintrag",
   "bulk.editRow": "Zeile {row} bearbeiten",
-  "listen.preparing": "Audio wird vorbereitet"
+  "listen.preparing": "Audio wird vorbereitet",
+  "audio.frontMissing": "Text oder Sprache der Vorderseite fehlt. Prüfe das Wort in Library.",
+  "quiz.autoShort": "Automatisch"
 }

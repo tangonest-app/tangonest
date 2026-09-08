@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "Tenang · 2,5 dtk",
   "ui.review_4_0s": "Ulangi · 4 dtk",
   "ui.wait_for_next": "Tunggu Berikutnya",
-  "ui.after_answer_audio": "Audio setelah menjawab",
   "ui.hard_mode": "Mode berbatas waktu",
   "ui.on_time_limit": "Aktif: batas waktu",
   "ui.time_limit": "Batas waktu",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "Kata ini akan muncul lebih sering.",
   "library.recentlyUpdated": "Baru diperbarui",
   "ui.auto_smart_2_2_3_2s": "Otomatis (benar 1,2 dtk / salah 2,5 dtk)",
+  "ui.after_answer_audio": "Audio depan setelah menjawab",
   "quiz.advancing": "Melanjutkan otomatis",
   "listen.waiting": "Menunggu item berikutnya",
   "listen.completed": "Pemutaran selesai",
@@ -703,5 +703,7 @@
   "study.cannotResume": "Sesi ini telah berubah. Mulai sesi baru.",
   "listen.followCurrent": "Kembali ke item yang diputar",
   "bulk.editRow": "Edit baris {row}",
-  "listen.preparing": "Menyiapkan audio"
+  "listen.preparing": "Menyiapkan audio",
+  "audio.frontMissing": "Teks atau bahasa depan tidak ada. Periksa kata di Library.",
+  "quiz.autoShort": "Otomatis"
 }

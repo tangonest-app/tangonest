@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "標準（2.5秒）",
   "ui.review_4_0s": "じっくり（4秒）",
   "ui.wait_for_next": "手動で次へ進む",
-  "ui.after_answer_audio": "回答後の読み上げ",
   "ui.hard_mode": "時間制限",
   "ui.on_time_limit": "有効：時間制限あり",
   "ui.time_limit": "制限時間",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "この単語は今後の復習に多めに出題されます。",
   "library.recentlyUpdated": "最近更新",
   "ui.auto_smart_2_2_3_2s": "自動（正解1.2秒／不正解2.5秒）",
+  "ui.after_answer_audio": "回答後のFront音声",
   "quiz.advancing": "自動で次へ進みます",
   "listen.waiting": "次の項目を待機中",
   "listen.completed": "再生が完了しました",
@@ -703,5 +703,7 @@
   "study.cannotResume": "学習データが変更されています。新しいセッションを開始してください。",
   "listen.followCurrent": "再生中の項目へ戻る",
   "bulk.editRow": "{row}行目を修正",
-  "listen.preparing": "音声を準備中"
+  "listen.preparing": "音声を準備中",
+  "audio.frontMissing": "Frontの本文または言語がありません。Libraryで単語を確認してください。",
+  "quiz.autoShort": "自動"
 }

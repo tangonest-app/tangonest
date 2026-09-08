@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "여유롭게 · 2.5초",
   "ui.review_4_0s": "복습 · 4.0초",
   "ui.wait_for_next": "다음을 누를 때까지 대기",
-  "ui.after_answer_audio": "답변 후 음성",
   "ui.hard_mode": "시간 제한 모드",
   "ui.on_time_limit": "켜기: 시간 제한",
   "ui.time_limit": "제한 시간",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "이 단어가 더 자주 나옵니다.",
   "library.recentlyUpdated": "최근 업데이트",
   "ui.auto_smart_2_2_3_2s": "자동 (정답 1.2초 / 오답 2.5초)",
+  "ui.after_answer_audio": "응답 후 앞면 음성",
   "quiz.advancing": "자동으로 다음으로 이동합니다",
   "listen.waiting": "다음 항목 대기 중",
   "listen.completed": "재생 완료",
@@ -703,5 +703,7 @@
   "study.cannotResume": "학습 데이터가 변경되었습니다. 새 세션을 시작하세요.",
   "listen.followCurrent": "재생 중인 항목으로 돌아가기",
   "bulk.editRow": "{row}행 수정",
-  "listen.preparing": "오디오 준비 중"
+  "listen.preparing": "오디오 준비 중",
+  "audio.frontMissing": "앞면 텍스트나 언어가 없습니다. Library에서 단어를 확인하세요.",
+  "quiz.autoShort": "자동"
 }

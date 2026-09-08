@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "Calmo (2,5 s)",
   "ui.review_4_0s": "Revisão (4 s)",
   "ui.wait_for_next": "Avançar manualmente",
-  "ui.after_answer_audio": "Áudio após responder",
   "ui.hard_mode": "Limite de tempo",
   "ui.on_time_limit": "Ativo: tempo limitado",
   "ui.time_limit": "Tempo limite",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "Esta palavra aparecerá com mais frequência.",
   "library.recentlyUpdated": "Atualizado recentemente",
   "ui.auto_smart_2_2_3_2s": "Auto (1,2 s certo / 2,5 s errado)",
+  "ui.after_answer_audio": "Áudio da frente após responder",
   "quiz.advancing": "A continuar automaticamente",
   "listen.waiting": "Próximo item em breve",
   "listen.completed": "Reprodução concluída",
@@ -703,5 +703,7 @@
   "study.cannotResume": "Esta sessão mudou. Inicia uma nova.",
   "listen.followCurrent": "Voltar ao item em reprodução",
   "bulk.editRow": "Editar linha {row}",
-  "listen.preparing": "A preparar áudio"
+  "listen.preparing": "A preparar áudio",
+  "audio.frontMissing": "Falta o texto ou idioma da frente. Verifique a palavra em Library.",
+  "quiz.autoShort": "Automático"
 }

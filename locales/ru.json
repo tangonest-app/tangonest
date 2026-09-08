@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "Спокойно · 2,5 с",
   "ui.review_4_0s": "Повторение · 4 с",
   "ui.wait_for_next": "Переходить вручную",
-  "ui.after_answer_audio": "Озвучка после ответа",
   "ui.hard_mode": "Режим с таймером",
   "ui.on_time_limit": "Вкл.: с таймером",
   "ui.time_limit": "Лимит времени",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "Это слово будет появляться чаще.",
   "library.recentlyUpdated": "Недавно обновлено",
   "ui.auto_smart_2_2_3_2s": "Авто (1,2 с верно / 2,5 с неверно)",
+  "ui.after_answer_audio": "Озвучивание лицевой стороны после ответа",
   "quiz.advancing": "Автоматический переход",
   "listen.waiting": "Ожидание следующего слова",
   "listen.completed": "Воспроизведение завершено",
@@ -703,5 +703,7 @@
   "study.cannotResume": "Данные занятия изменились. Начни новое занятие.",
   "listen.followCurrent": "К текущему слову",
   "bulk.editRow": "Изменить строку {row}",
-  "listen.preparing": "Подготовка аудио"
+  "listen.preparing": "Подготовка аудио",
+  "audio.frontMissing": "Отсутствует текст или язык лицевой стороны. Проверьте слово в Library.",
+  "quiz.autoShort": "Авто"
 }

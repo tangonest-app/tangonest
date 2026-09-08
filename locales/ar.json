@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "هادئ · 2.5 ث",
   "ui.review_4_0s": "مراجعة · 4 ث",
   "ui.wait_for_next": "انتظار الضغط على التالي",
-  "ui.after_answer_audio": "الصوت بعد الإجابة",
   "ui.hard_mode": "نمط محدد بالوقت",
   "ui.on_time_limit": "تشغيل: وقت محدود",
   "ui.time_limit": "الوقت المحدد",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "ستظهر هذه الكلمة أكثر.",
   "library.recentlyUpdated": "حُدّث مؤخرًا",
   "ui.auto_smart_2_2_3_2s": "تلقائي (1.2 ث للصحيح / 2.5 ث للخطأ)",
+  "ui.after_answer_audio": "صوت الوجه الأمامي بعد الإجابة",
   "quiz.advancing": "الانتقال تلقائيًا",
   "listen.waiting": "انتظار العنصر التالي",
   "listen.completed": "اكتمل التشغيل",
@@ -703,5 +703,7 @@
   "study.cannotResume": "تغيّرت هذه الجلسة. ابدأ جلسة جديدة.",
   "listen.followCurrent": "العودة إلى العنصر الجاري تشغيله",
   "bulk.editRow": "تعديل الصف {row}",
-  "listen.preparing": "جارٍ تحضير الصوت"
+  "listen.preparing": "جارٍ تحضير الصوت",
+  "audio.frontMissing": "نص الوجه الأمامي أو لغته مفقود. تحقق من الكلمة في Library.",
+  "quiz.autoShort": "تلقائي"
 }

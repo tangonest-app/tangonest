@@ -206,7 +206,7 @@
   "ui.calm_2_5s": "Calm · 2.5s",
   "ui.review_4_0s": "Review · 4.0s",
   "ui.wait_for_next": "Wait for Next",
-  "ui.after_answer_audio": "After-answer audio",
+  "ui.after_answer_audio": "Front audio after answering",
   "ui.hard_mode": "Hard Mode",
   "ui.on_time_limit": "On: time limit",
   "ui.time_limit": "Time limit",
@@ -703,5 +703,7 @@
   "study.cannotResume": "This session has changed. Start a new session.",
   "listen.followCurrent": "Return to playing item",
   "bulk.editRow": "Edit row {row}",
-  "listen.preparing": "Preparing audio"
+  "listen.preparing": "Preparing audio",
+  "audio.frontMissing": "Front text or language is missing. Check the word in Library.",
+  "quiz.autoShort": "Auto"
 }

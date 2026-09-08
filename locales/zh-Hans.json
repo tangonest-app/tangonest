@@ -297,7 +297,6 @@
   "ui.calm_2_5s": "从容 · 2.5秒",
   "ui.review_4_0s": "复习 · 4.0秒",
   "ui.wait_for_next": "手动进入下一题",
-  "ui.after_answer_audio": "答题后朗读",
   "ui.hard_mode": "限时模式",
   "ui.on_time_limit": "开启：限时",
   "ui.time_limit": "时间限制",
@@ -679,6 +678,7 @@
   "quiz.reviewMore": "这个单词会更频繁出现。",
   "library.recentlyUpdated": "最近更新",
   "ui.auto_smart_2_2_3_2s": "自动（正确1.2秒／错误2.5秒）",
+  "ui.after_answer_audio": "回答后播放正面音频",
   "quiz.advancing": "将自动继续",
   "listen.waiting": "等待下一项",
   "listen.completed": "播放完成",
@@ -703,5 +703,7 @@
   "study.cannotResume": "学习数据已更改。请开始新的学习。",
   "listen.followCurrent": "返回正在播放的项目",
   "bulk.editRow": "修改第{row}行",
-  "listen.preparing": "正在准备音频"
+  "listen.preparing": "正在准备音频",
+  "audio.frontMissing": "缺少正面文本或语言。请在Library中检查单词。",
+  "quiz.autoShort": "自动"
 }
