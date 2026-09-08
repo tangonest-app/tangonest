@@ -676,7 +676,7 @@
   "quiz.noAnswer": "Sin respuesta",
   "quiz.reviewMore": "Esta palabra aparecerá con más frecuencia.",
   "library.recentlyUpdated": "Actualizado recientemente",
-  "ui.auto_smart_2_2_3_2s": "Automático (0,8–1,25 s)",
+  "ui.auto_smart_2_2_3_2s": "Auto (1,2 s acierto / 2,5 s error)",
   "ui.value_words_about_value_min": "{p0} palabras · unos {p1} min",
   "ui.value_accuracy": "Precisión: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Cuenta creada. Confírmala desde el correo y luego inicia sesión.",
@@ -686,5 +686,12 @@
   "bulk.complete": "Importación completada",
   "bulk.paused": "Importación en pausa",
   "quiz.chooseMeaning": "Elige el significado correcto.",
-  "quiz.endSession": "Finalizar sesión"
+  "quiz.endSession": "Finalizar sesión",
+  "quiz.pauseAdvance": "Pausar avance automático",
+  "quiz.resumeAdvance": "Reanudar",
+  "quiz.answeredCount": "{count} respondidas de {total} previstas. La precisión usa las respondidas.",
+  "study.cannotResume": "Esta sesión ha cambiado. Inicia una nueva.",
+  "listen.followCurrent": "Volver al elemento en reproducción",
+  "bulk.editRow": "Editar fila {row}",
+  "listen.preparing": "Preparando audio"
 }

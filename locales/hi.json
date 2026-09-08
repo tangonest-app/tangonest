@@ -676,7 +676,7 @@
   "quiz.noAnswer": "उत्तर नहीं",
   "quiz.reviewMore": "यह शब्द अधिक बार आएगा।",
   "library.recentlyUpdated": "हाल में अपडेट हुआ",
-  "ui.auto_smart_2_2_3_2s": "स्वचालित (0.8–1.25 सेकंड)",
+  "ui.auto_smart_2_2_3_2s": "स्वचालित (सही 1.2 सेकंड / गलत 2.5 सेकंड)",
   "ui.value_words_about_value_min": "{p0} शब्द · लगभग {p1} मिनट",
   "ui.value_accuracy": "सटीकता: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "खाता बना। ईमेल से पुष्टि करके लॉग इन करें।",
@@ -686,5 +686,12 @@
   "bulk.complete": "आयात पूरा",
   "bulk.paused": "आयात रुका",
   "quiz.chooseMeaning": "सही अर्थ चुनें।",
-  "quiz.endSession": "सत्र समाप्त करें"
+  "quiz.endSession": "सत्र समाप्त करें",
+  "quiz.pauseAdvance": "स्वचालित प्रगति रोकें",
+  "quiz.resumeAdvance": "फिर शुरू करें",
+  "quiz.answeredCount": "नियोजित {total} में से {count} उत्तर दिए। सटीकता दिए गए उत्तरों पर आधारित है।",
+  "study.cannotResume": "यह सत्र बदल गया है। नया सत्र शुरू करें।",
+  "listen.followCurrent": "चल रहे आइटम पर लौटें",
+  "bulk.editRow": "पंक्ति {row} बदलें",
+  "listen.preparing": "ऑडियो तैयार हो रहा है"
 }

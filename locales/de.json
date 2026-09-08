@@ -676,7 +676,7 @@
   "quiz.noAnswer": "Keine Antwort",
   "quiz.reviewMore": "Dieses Wort wird häufiger wiederholt.",
   "library.recentlyUpdated": "Kürzlich aktualisiert",
-  "ui.auto_smart_2_2_3_2s": "Automatisch (0,8–1,25 s)",
+  "ui.auto_smart_2_2_3_2s": "Auto (1,2 s richtig / 2,5 s falsch)",
   "ui.value_words_about_value_min": "{p0} Wörter · etwa {p1} Min.",
   "ui.value_accuracy": "Trefferquote: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Konto erstellt. Bestätige es per E-Mail und melde dich an.",
@@ -686,5 +686,12 @@
   "bulk.complete": "Import abgeschlossen",
   "bulk.paused": "Import pausiert",
   "quiz.chooseMeaning": "Wähle die richtige Bedeutung.",
-  "quiz.endSession": "Sitzung beenden"
+  "quiz.endSession": "Sitzung beenden",
+  "quiz.pauseAdvance": "Automatischen Wechsel pausieren",
+  "quiz.resumeAdvance": "Fortsetzen",
+  "quiz.answeredCount": "{count} von {total} geplanten Fragen beantwortet. Die Quote bezieht sich auf beantwortete Fragen.",
+  "study.cannotResume": "Diese Sitzung hat sich geändert. Starte eine neue Sitzung.",
+  "listen.followCurrent": "Zum aktuellen Eintrag",
+  "bulk.editRow": "Zeile {row} bearbeiten",
+  "listen.preparing": "Audio wird vorbereitet"
 }

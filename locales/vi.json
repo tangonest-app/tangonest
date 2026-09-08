@@ -676,7 +676,7 @@
   "quiz.noAnswer": "Chưa trả lời",
   "quiz.reviewMore": "Từ này sẽ xuất hiện thường xuyên hơn.",
   "library.recentlyUpdated": "Vừa cập nhật",
-  "ui.auto_smart_2_2_3_2s": "Tự động (0,8–1,25 giây)",
+  "ui.auto_smart_2_2_3_2s": "Tự động (đúng 1,2 giây / sai 2,5 giây)",
   "ui.value_words_about_value_min": "{p0} từ · khoảng {p1} phút",
   "ui.value_accuracy": "Độ chính xác: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Đã tạo tài khoản. Xác nhận qua email rồi đăng nhập.",
@@ -686,5 +686,12 @@
   "bulk.complete": "Nhập hoàn tất",
   "bulk.paused": "Đã tạm dừng nhập",
   "quiz.chooseMeaning": "Chọn nghĩa đúng.",
-  "quiz.endSession": "Kết thúc buổi học"
+  "quiz.endSession": "Kết thúc buổi học",
+  "quiz.pauseAdvance": "Tạm dừng chuyển tự động",
+  "quiz.resumeAdvance": "Tiếp tục",
+  "quiz.answeredCount": "Đã trả lời {count}/{total} câu dự kiến. Độ chính xác tính theo câu đã trả lời.",
+  "study.cannotResume": "Buổi học đã thay đổi. Hãy bắt đầu buổi mới.",
+  "listen.followCurrent": "Quay lại mục đang phát",
+  "bulk.editRow": "Sửa dòng {row}",
+  "listen.preparing": "Đang chuẩn bị âm thanh"
 }

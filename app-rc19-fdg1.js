@@ -363,6 +363,7 @@ let audioRunToken=0,speechEpoch=0;
 const pendingSpeech=new Set();
 const modalReturnFocus={edit:null,detail:null};
 let quiz={queue:[],wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:"choice",direction:"front",total:0,listeningReplayUsed:0};let quizAutoTimer=null,quizTimerInterval=null,quizListeningAudioTimer=null,quizQuestionStartedAt=0;
+let quizFeedback=null,quizEpoch=0,quizInputReadyAt=0,quizInputUnlockTimer=null,quizHiddenAt=0,cardRated=false;
 let smartSessionQueue=[];
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
@@ -1082,6 +1083,7 @@ function renderDuplicatePanel(rows){
 }
 function previewBulk(reviewDuplicates=false){
   let stats=bulkParseStats(),rows=stats.rows,box=$("bulkPreview");
+  box.dataset.inputVersion=JSON.stringify([$("bulkText").value,$("bulkFormat").value,bulkDestination()]);
   box.style.display="block";
   if(!rows.length){box.innerHTML=`<div class="empty"><h3>${window.TNI18n.mark("ui.no_readable_words",{})}</h3><p>${window.TNI18n.mark("ui.each_row_needs_at_least_front_and_back",{})}</p></div>`;return}
   if(!stats.invalid&&reviewDuplicates)renderDuplicatePanel(rows);
@@ -1092,6 +1094,23 @@ function previewBulk(reviewDuplicates=false){
   box.innerHTML=`<div class="tn-bulk-preview-target"><b>${window.TNI18n.mark("ui.import_to_value",{p0:esc(target.listName)})}</b><span>${esc(window.TNI18n.studyName(target.frontLang))} → ${esc(window.TNI18n.studyName(target.backLang))}</span></div><div class="tn-bulk-summary" role="status"><span>${window.TNI18n.mark("ui.value_ready",{p3:stats.ready})}</span><span>${window.TNI18n.mark("ui.value_warnings",{p4:stats.warnings})}</span><span>${window.TNI18n.mark("ui.value_errors",{p5:stats.invalid})}</span><span>${window.TNI18n.mark("ui.value_valid",{p6:stats.valid})}</span><span>${window.TNI18n.mark("ui.value_exact_duplicates",{p7:rows.filter(r=>r.duplicate).length})}</span></div><p class="tn-bulk-validation-note">${window.TNI18n.mark("ui.errors_must_be_corrected_before_importing_warnings_can_be_imported_after_review",{})}</p>${rows.length>visible.length?`<p class="tn-bulk-preview-limit">${window.TNI18n.mark("ui.showing_value_of_value_rows_every_row_is_validated",{p0:visible.length,p1:rows.length})}</p>`:""}<div class="tablewrap" tabindex="0" role="region" aria-label="Bulk Add preview" data-i18n-aria-label="ui.bulk_add_preview"><table><thead><tr><th>${window.TNI18n.mark("ui.row",{})}</th>${fields.map(field=>`<th>${esc(window.TNI18n.uiText(field.label))}</th>`).join("")}<th>${window.TNI18n.mark("ui.status",{})}</th></tr></thead><tbody>`+visible.map(r=>`<tr><td>${r.row}</td>${fields.map(field=>`<td dir="auto">${esc(r[field.key])}</td>`).join("")}<td><strong>${r.status==="error"?window.TNI18n.uiText("Error"):r.status==="warning"?window.TNI18n.uiText("Warning"):window.TNI18n.uiText("Ready")}</strong><span class="tn-bulk-row-issues">${esc([...r.errors,...r.warnings].join(" "))}</span></td></tr>`).join("")+"</tbody></table></div>";
   const issues=rows.filter(row=>row.errors.length);
   if(issues.length)box.innerHTML+=`<div class="tn-bulk-errors" role="alert">${issues.slice(0,30).map(row=>`<p>${window.TNI18n.mark("ui.row_value_value",{p0:row.row,p1:esc(row.errors.join(" "))})}</p>`).join("")}${issues.length>30?`<p>${window.TNI18n.mark("ui.value_additional_rows_need_correction",{p0:issues.length-30})}</p>`:""}</div>`;
+  const problems=rows.filter(row=>row.errors.length||row.warnings.length);
+  if(problems.length){
+    const list=document.createElement("div");list.className="bulk-problem-links";
+    for(const row of problems){
+      const button=document.createElement("button");button.type="button";
+      button.textContent=window.TNI18n.t("bulk.editRow",{row:row.row})+" · "+[...row.errors,...row.warnings].join(" ");
+      button.onclick=()=>focusBulkRow(row.row);list.appendChild(button);
+    }
+    box.prepend(list);
+  }
+}
+function focusBulkRow(row){
+  const input=$("bulkText"),lines=input.value.split("\n");
+  const start=lines.slice(0,row-1).reduce((length,line)=>length+line.length+1,0);
+  input.focus();input.setSelectionRange(start,start+(lines[row-1]||"").length);
+  input.scrollTop=(row-1)*(parseFloat(getComputedStyle(input).lineHeight)||22);
+  input.scrollIntoView({block:"center",behavior:"instant"});
 }
 async function bulkImport(mode){
   if(localBulkImportInFlight)return toast(window.TNI18n.t("ui.bulk_add_is_already_running",{}));
@@ -1173,13 +1192,14 @@ function updateStudyProgress(){
   const hard=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard").length;
   window.TNI18n.bindText(el,()=>(words.length?window.TNI18n.t("ui.value_cards_value_due_value_weak_space_flips_1_4_rates",{p0:words.length,p1:due,p2:hard}):window.TNI18n.t("ui.no_cards_in_this_view",{})));
 }
-function resetCard(){clearFlashTimers();current=null;flipped=false;$("flash").classList.remove("is-flipped");$("frontWord").textContent="---";$("backWord").textContent="---";$("frontMemo").textContent="";$("backMemo").textContent="";updateStudyStar();updateStudyProgress()}
+function resetCard(){clearFlashTimers();current=null;flipped=false;cardRated=false;$("flash").classList.remove("is-flipped");$("frontWord").textContent=window.TNI18n.t(studyWords().length?"ui.next_card":"ui.no_cards_in_this_view");$("backWord").textContent="";$("frontMemo").textContent="";$("backMemo").textContent="";updateCardRating();updateStudyStar();updateStudyProgress()}
 function weighted(words){if(!words.length)return null;const ordered=[...words].sort((a,b)=>(learningEngine()?.learningWeight(b)||0)-(learningEngine()?.learningWeight(a)||0));const top=ordered.slice(0,Math.max(1,Math.ceil(ordered.length/2)));return top[Math.floor(Math.random()*top.length)]}
-function nextCard(){clearFlashTimers();let words=studyWords();if(!words.length){resetCard();return toast(window.TNI18n.t("ui.no_words",{}))}const candidates=current&&words.length>1?words.filter(word=>word.id!==current.id):words;current=weighted(candidates);flipped=false;$("flash").classList.remove("is-flipped");current.seen=(current.seen||0)+1;drawCard();persist();updateStudyStar();updateStudyProgress()}
+function nextCard(){clearFlashTimers();let words=studyWords();if(!words.length){resetCard();return toast(window.TNI18n.t("ui.no_words",{}))}const candidates=current&&words.length>1?words.filter(word=>word.id!==current.id):words;current=weighted(candidates);flipped=false;cardRated=false;$("flash").classList.remove("is-flipped");current.seen=(current.seen||0)+1;drawCard();persist();updateCardRating();updateStudyStar();updateStudyProgress();window.tnStudyContinuity?.capture()}
 function drawCard(){if(!current)return;let mode=$("studyMode").value;if(mode==="back"){$("frontWord").textContent=current.back;$("backWord").textContent=current.front;$("backMemo").textContent=current.memo||""}else{$("frontWord").textContent=current.front;$("backWord").textContent=current.back;$("backMemo").textContent=current.memo||""}$("frontMemo").textContent=[current.pos,current.gender].filter(Boolean).join(" / ")}
-function flipCard(){if(!current)return;flipped=!flipped;$("flash").classList.toggle("is-flipped",flipped)}
+function updateCardRating(){document.querySelectorAll(".tn-card-rating button").forEach(button=>button.disabled=!current||!flipped||cardRated);const sides=$("flash")?.querySelectorAll(".front,.back");sides?.forEach(side=>side.setAttribute("aria-hidden",String(side.classList.contains("back")?!flipped:flipped)))}
+function flipCard(){if(!current)return;flipped=!flipped;$("flash").classList.toggle("is-flipped",flipped);updateCardRating();window.tnStudyContinuity?.capture()}
 function speakCard(){if(!current)return;let mode=$("studyMode").value,text,lang;if(mode==="back"){text=flipped?current.front:current.back;lang=flipped?current.frontLang:current.backLang}else{text=flipped?current.back:current.front;lang=flipped?current.backLang:current.frontLang}speak(text,lang)}
-function markCard(rating,autoNext=false){if(!current)return;const normalized=learningEngine()?.normalizeRating(rating)||rating;if(normalized==="again")recordMistake(current,"flashcard","Again",current.back);const updated=updateWordLearning(current.id,normalized,{mode:"cards"});current=updated||db.words.find(w=>w.id===current.id);if(normalized==="good"||normalized==="easy")markMistakeCorrect(current.id);const feedback=learningPresentation()?.rating(current,normalized);toast(feedback?`${feedback.label} · ${feedback.review}`:window.TNI18n.t("ui.value_saved",{p0:normalized[0].toUpperCase()+normalized.slice(1)}));if(autoNext)flashTimers.push(setTimeout(()=>nextCard(),700))}
+function markCard(rating,autoNext=false){if(!current||!flipped||cardRated)return;cardRated=true;updateCardRating();const normalized=learningEngine()?.normalizeRating(rating)||rating;if(normalized==="again")recordMistake(current,"flashcard","Again",current.back);const updated=updateWordLearning(current.id,normalized,{mode:"cards"});current=updated||db.words.find(w=>w.id===current.id);if(normalized==="good"||normalized==="easy")markMistakeCorrect(current.id);const feedback=learningPresentation()?.rating(current,normalized);toast(feedback?`${feedback.label} · ${feedback.review}`:window.TNI18n.t("ui.value_saved",{p0:normalized[0].toUpperCase()+normalized.slice(1)}));window.tnStudyContinuity?.capture();if(autoNext)flashTimers.push(setTimeout(()=>nextCard(),220))}
 function toggleCardStar(){if(current)toggleStar(current.id)}
 function updateStudyStar(){let b=$("studyStar");if(b)window.TNI18n.bindText(b,()=>(current&&current.saved?window.TNI18n.t("ui.saved_2",{}):window.TNI18n.t("ui.save",{})))}
 function clearFlashTimers(){flashTimers.forEach(t=>clearTimeout(t));flashTimers=[]}
@@ -1299,6 +1319,7 @@ function focusQuizInput(){
 function showQuizQuestion(){
   clearQuizTimers();resetQuizAnswerVisualState();quiz.answered=false;quiz.selectedAnswer=null;quiz.listeningReplayUsed=0;
   avoidConsecutiveDuplicateQuestion();quiz.current=quiz.queue[quiz.index];if(!quiz.current)return endQuiz();
+  quizInputReadyAt=performance.now()+(quiz.index>0?350:0);
   window.TNI18n.bindText($("quizProgress"),()=>`${window.TNI18n.t("ui.question")} ${quiz.index+1} / ${quiz.total}`);
   $("quizSessionProgress").max=quiz.total;$("quizSessionProgress").value=quiz.index+1;
   const isListening=quiz.type==="listening";
@@ -1312,6 +1333,11 @@ function showQuizQuestion(){
   $("quizAnswer").placeholder=window.TNI18n.t(isListening?"ui.type_the_front_word":"ui.type_answer");
   $("quizQuestionCard").classList.toggle("is-listening",isListening);
   renderListeningPanel();if(quiz.type==="choice")renderChoices();
+  $("quizAnswer").readOnly=quiz.index>0;
+  if(quiz.index>0){
+    document.querySelectorAll(".choice").forEach(button=>button.disabled=true);
+    quizInputUnlockTimer=setTimeout(()=>{if(quiz.answered)return;document.querySelectorAll(".choice").forEach(button=>button.disabled=false);$("quizAnswer").readOnly=false},350);
+  }
   startQuestionTimer();focusQuizInput();
   if(quiz.type==="choice")$("quizWord").focus({preventScroll:true});
   if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
@@ -1325,7 +1351,7 @@ function correctAnswerLang(){return quiz.type==="listening"?listeningPromptLang(
 function quizAnswerText(word){return quiz.direction==="front"?word.back:word.front}
 function quizAnswerLang(word){return quiz.direction==="front"?word.backLang:word.frontLang}
 function normalize(s){return String(s||"").trim().toLowerCase()}
-function checkTypingAnswer(){if(quiz.answered)return;const input=$("quizAnswer");const value=input?.value||"";if(!value.trim()){focusQuizInput();return}quiz.selectedAnswer=value;finishAnswer(normalize(value)===normalize(correctAnswer()))}
+function checkTypingAnswer(){if(quiz.answered||performance.now()<quizInputReadyAt)return;const input=$("quizAnswer");const value=input?.value||"";if(!value.trim()){focusQuizInput();return}quiz.selectedAnswer=value;finishAnswer(normalize(value)===normalize(correctAnswer()))}
 function handleQuizAnswerKey(event){
   if(event.isComposing||event.keyCode===229||event.repeat||event.key!=="Enter")return;
   event.preventDefault();
@@ -1355,58 +1381,138 @@ function renderChoices(){
   quiz.currentChoices=choices;
   $("choiceArea").innerHTML=choices.map((c,index)=>`<button type="button" class="choice" dir="auto" lang="${esc(answerLang)}" data-shortcut="${index+1}" onclick="chooseAnswer(this,quiz.currentChoices[${index}])" aria-label="${index+1}. ${esc(c)}">${esc(c)}</button>`).join("");
 }
-function chooseAnswer(btn,ans){if(quiz.answered)return;quiz.selectedAnswer=ans;let ok=normalize(ans)===normalize(correctAnswer());[...document.querySelectorAll(".choice")].forEach(b=>{b.disabled=true;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){};if(normalize(b.textContent)===normalize(correctAnswer()))b.classList.add("correct")});btn.classList.add("selected");if(!ok)btn.classList.add("wrong");finishAnswer(ok)}
+function chooseAnswer(btn,ans){if(quiz.answered||!btn?.isConnected||performance.now()<quizInputReadyAt)return;quiz.selectedAnswer=ans;let ok=normalize(ans)===normalize(correctAnswer());[...document.querySelectorAll(".choice")].forEach(b=>{b.disabled=true;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){};if(normalize(b.textContent)===normalize(correctAnswer()))b.classList.add("correct")});btn.classList.add("selected");if(!ok)btn.classList.add("wrong");finishAnswer(ok)}
 function quizLearningMessage(word,ok){if(!word)return"";const view=learningPresentation();const state=view?.state(word);const review=view?.review(word);return [state?.label,review?.label,!ok?window.TNI18n.t("quiz.reviewMore"):""].filter(Boolean).join(" · ")}
 function quizFeedbackHtml(ok){
   const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||window.TNI18n.t("quiz.noAnswer");
   const answer=`<bdi lang="${esc(correctAnswerLang())}">${esc(correctAnswer())}</bdi>`;
   const detail=ok?"":`<span>${window.TNI18n.mark("ui.your_answer_value_2",{p1:`<bdi>${esc(selected)}</bdi>`})}</span><span>${window.TNI18n.mark("ui.correct_answer_value",{p0:answer})}</span>`;
-  const timing=isAutoAdvance()?`<span class="quiz-auto-note" aria-hidden="true"><i style="--quiz-auto-delay:${nextDelay(ok)}ms"></i></span>`:"";
-  return `<div class="quiz-feedback-copy"><strong>${window.TNI18n.t(ok?"quiz.correctFeedback":"quiz.incorrectFeedback")}</strong>${detail}${timing}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">${window.TNI18n.mark("ui.play_answer",{})}</button><button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">${window.TNI18n.mark("ui.next_now",{})}</button></div>`;
+  const extra=quiz.current.memo?`<details class="quiz-explanation" ontoggle="if(this.open)pauseQuizAdvance()"><summary onclick="if(!this.parentElement.open)pauseQuizAdvance()">${window.TNI18n.mark("ui.example")}</summary><p dir="auto">${esc(quiz.current.memo)}</p></details>`:"";
+  return `<div class="quiz-feedback-copy"><strong>${window.TNI18n.t(ok?"quiz.correctFeedback":"quiz.incorrectFeedback")}</strong>${detail}<span id="quizAdvanceStatus"></span>${extra}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">${window.TNI18n.mark("ui.play_answer")}</button>${isAutoAdvance()?`<button type="button" id="quizPauseAdvance" onclick="toggleQuizAdvance()">${window.TNI18n.mark("quiz.pauseAdvance")}</button>`:`<button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">${window.TNI18n.mark("common.next")}</button>`}</div>`;
 }
 function renderQuizQuestionAnswer(){
   // Keep the prompt in place; feedback belongs to the single status region below the choices.
   $("quizQuestionCard")?.classList.add("is-answered");
 }
-function finishAnswer(ok){if(quiz.answered)return;quiz.answered=true;quiz.previousQuestionId=quiz.current?.id||quiz.previousQuestionId;quiz.previousQuestionKey=quizQuestionKey(quiz.current)||quiz.previousQuestionKey;clearInterval(quizTimerInterval);const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";let fresh=null;if(ok){quiz.score++;fresh=updateWordLearning(quiz.current.id,"good",{mode:quiz.type||"quiz"});markMistakeCorrect(quiz.current.id);$("quizResult").className="result-box show ok";$("quizResult").innerHTML=quizFeedbackHtml(true,fresh)}else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());fresh=updateWordLearning(quiz.current.id,"again",{mode:quiz.type||"quiz"});$("quizResult").className="result-box show no";$("quizResult").innerHTML=quizFeedbackHtml(false,fresh);quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}$("choiceArea")?.classList.add("is-answered");renderQuizQuestionAnswer(ok);const skip=$("quizSkipButton");if(skip)skip.hidden=true;$("quizScore").textContent=quiz.score+" / "+quiz.total;if($("quizAudioAfter").value==="on")setTimeout(()=>{try{speakQuizFront()}catch(e){}},80);if(isAutoAdvance())scheduleNext(ok)}
+function finishAnswer(ok){
+  if(quiz.answered||!quiz.current||quiz.ended)return;
+  quiz.answered=true;
+  quiz.previousQuestionId=quiz.current.id;quiz.previousQuestionKey=quizQuestionKey(quiz.current);
+  clearInterval(quizTimerInterval);clearTimeout(quizListeningAudioTimer);
+  const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";
+  quiz.records=quiz.records||[];
+  quiz.records.push({id:quiz.current.id,ok,eventId:learningEventId()});
+  if(ok){quiz.score++;markMistakeCorrect(quiz.current.id)}
+  else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}
+  updateWordLearning(quiz.current.id,ok?"good":"again",{mode:quiz.type||"quiz",eventId:quiz.records.at(-1).eventId});
+  $("quizAnswer").readOnly=true;
+  $("quizResult").className="result-box show "+(ok?"ok":"no");$("quizResult").innerHTML=quizFeedbackHtml(ok);
+  $("choiceArea")?.classList.add("is-answered");renderQuizQuestionAnswer();
+  $("quizSkipButton").hidden=true;$("quizScore").textContent=quiz.score+" / "+quiz.total;
+  scheduleNext(ok);
+}
 function isAutoAdvance(){const mode=$("quizAutoAdvance")?.value||"auto";return mode!=="manual"&&mode!=="off"}
-const QUIZ_NEXT_TIMING=Object.freeze({correct:800,incorrect:1250});
+const QUIZ_NEXT_TIMING=Object.freeze({correct:1200,incorrect:2500});
 function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"auto";if(mode==="auto")return ok?QUIZ_NEXT_TIMING.correct:QUIZ_NEXT_TIMING.incorrect;let v=mode==="manual"||mode==="off"?2.5:parseFloat(mode);if(!Number.isFinite(v))v=2.5;v=Math.max(1.2,Math.min(10,v));return Math.round(v*1000)}
-function scheduleNext(ok){clearTimeout(quizAutoTimer);quizAutoTimer=setTimeout(()=>advanceQuiz(),nextDelay(ok))}
-function advanceQuiz(){clearQuizTimers();if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}quiz.index++;if(quiz.index>=quiz.queue.length)return endQuiz();showQuizQuestion()}
-function nextQuizQuestion(){if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}advanceQuiz()}
+function scheduleNext(ok){
+  clearTimeout(quizAutoTimer);
+  const state=quizFeedback={epoch:quizEpoch,ok,paused:document.hidden,displayed:false,minDone:false,audioDone:$("quizAudioAfter").value!=="on",failed:false,advanced:false};
+  // Two frames ensure the feedback has been painted before its reading time starts.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(quizFeedback!==state)return;
+    state.displayed=true;
+    if(!state.paused)armQuizFeedback(state);
+    if(!state.audioDone&&!document.hidden)playQuizFeedbackAudio(state);
+    updateQuizAdvanceControl();
+  }));
+}
+function armQuizFeedback(state){
+  clearTimeout(quizAutoTimer);state.minDone=false;
+  if(state.paused||document.hidden||quizFeedback!==state)return;
+  quizAutoTimer=setTimeout(()=>{if(quizFeedback!==state)return;state.minDone=true;maybeAdvanceQuiz(state)},nextDelay(state.ok));
+}
+async function playQuizFeedbackAudio(state){
+  const attempt=(state.audioAttempt||0)+1;state.audioAttempt=attempt;state.audioDone=false;
+  let timeout;
+  const watchdog=new Promise(resolve=>{timeout=setTimeout(()=>{if(quizFeedback===state&&state.audioAttempt===attempt)cancelSpeech();resolve(false)},20000)});
+  let ok=false;
+  try{ok=await Promise.race([speak(correctAnswer(),correctAnswerLang()),watchdog])}catch(error){}
+  clearTimeout(timeout);
+  if(quizFeedback!==state||state.audioAttempt!==attempt)return;
+  state.audioDone=true;state.failed=!ok;
+  if(!ok){toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings"));if(!state.paused)armQuizFeedback(state)}
+  updateQuizAdvanceControl();maybeAdvanceQuiz(state);
+}
+function maybeAdvanceQuiz(state){
+  if(quizFeedback!==state||state.epoch!==quizEpoch||state.advanced||state.paused||document.hidden||!state.minDone||!state.audioDone||!isAutoAdvance())return;
+  state.advanced=true;advanceQuiz();
+}
+function updateQuizAdvanceControl(){
+  const state=quizFeedback;if(!state)return;
+  window.TNI18n.bindText($("quizPauseAdvance"),()=>window.TNI18n.t(state.paused?"quiz.resumeAdvance":"quiz.pauseAdvance"));
+  window.TNI18n.bindText($("quizAdvanceStatus"),()=>state.failed?window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings"):state.paused?window.TNI18n.t("ui.paused"):!state.audioDone?window.TNI18n.t("ui.now_playing"):"");
+}
+function toggleQuizAdvance(){
+  if(!quizFeedback)return;
+  if(!quizFeedback.paused)return pauseQuizAdvance();
+  if(document.hidden)return;
+  quizFeedback.paused=false;if(!quizFeedback.audioDone&&!quizFeedback.audioAttempt)playQuizFeedbackAudio(quizFeedback);armQuizFeedback(quizFeedback);updateQuizAdvanceControl();
+}
+function advanceQuiz(){if(!quiz.current||!quiz.answered||quiz.ended)return;clearQuizTimers();quiz.index++;if(quiz.index>=quiz.queue.length)return endQuiz();showQuizQuestion()}
+function nextQuizQuestion(allowSkip=false){if(!quiz.current||performance.now()<quizInputReadyAt)return;if(!quiz.answered){if(allowSkip)finishAnswer(false);return}advanceQuiz()}
 function speakQuizQuestion(){if(!quiz.current)return;if(quiz.type==="listening")return playListeningAudio(true);let text=quiz.direction==="front"?quiz.current.front:quiz.current.back,lang=quiz.direction==="front"?quiz.current.frontLang:quiz.current.backLang;speak(text,lang)}
-function pauseQuizAdvance(){clearTimeout(quizAutoTimer);$("quizResult")?.querySelector(".quiz-auto-note")?.remove()}
-function speakCorrectAnswer(){if(!quiz.current)return;pauseQuizAdvance();speak(correctAnswer(),correctAnswerLang())}
+function pauseQuizAdvance(){clearTimeout(quizAutoTimer);if(quizFeedback){quizFeedback.paused=true;updateQuizAdvanceControl()}}
+function speakCorrectAnswer(){if(!quiz.current)return;pauseQuizAdvance();if(quizFeedback)playQuizFeedbackAudio(quizFeedback);else speak(correctAnswer(),correctAnswerLang())}
 function speakQuizFront(){if(!quiz.current)return;speak(quiz.current.front,quiz.current.frontLang)}
 function speakQuizBack(){if(!quiz.current)return;speak(quiz.current.back,quiz.current.backLang)}
-function clearQuizTimers(){clearTimeout(quizAutoTimer);clearTimeout(quizListeningAudioTimer);clearInterval(quizTimerInterval);quizAutoTimer=null;quizListeningAudioTimer=null;quizTimerInterval=null}
-function startQuestionTimer(){let wrap=$("quizTimerWrap"),fill=$("quizTimerFill"),text=$("quizTimerText"),label=$("quizTimerLabel");if(!wrap||!fill||!text)return;let limit=0;if(quiz.type==="listening")limit=listeningTimerLimit();else if($("quizHardMode").value==="on")limit=Math.max(2,parseInt($("quizTimeLimit").value||"8",10));if(!limit){wrap.classList.remove("show");if(label)window.TNI18n.bindText(label,()=>(window.TNI18n.t("ui.time_limit_off",{})));text.textContent="";fill.style.width="0%";fill.classList.remove("danger");if(quiz.type==="listening")updateListeningTimerInline("");return}quizQuestionStartedAt=Date.now();wrap.classList.toggle("show",quiz.type!=="listening");if(label)window.TNI18n.bindText(label,()=>(quiz.type==="listening"?window.TNI18n.t("ui.listening_timer",{}):window.TNI18n.t("ui.time_limit",{})));fill.style.width="100%";fill.classList.remove("danger");text.textContent=limit+"s";if(quiz.type==="listening")updateListeningTimerInline(limit+"s");quizTimerInterval=setInterval(()=>{if(quiz.answered){clearInterval(quizTimerInterval);return}let remain=Math.max(0,limit-(Date.now()-quizQuestionStartedAt)/1000),pct=remain/limit*100;fill.style.width=pct+"%";if(pct<30)fill.classList.add("danger");const shown=Math.ceil(remain)+"s";text.textContent=shown;if(quiz.type==="listening")updateListeningTimerInline(shown);if(remain<=0){clearInterval(quizTimerInterval);finishAnswer(false)}},200)}
+function clearQuizTimers(){quizEpoch++;if(quizFeedback&&!quizFeedback.audioDone)cancelSpeech();quizFeedback=null;clearTimeout(quizInputUnlockTimer);clearTimeout(quizAutoTimer);clearTimeout(quizListeningAudioTimer);clearInterval(quizTimerInterval);quizAutoTimer=null;quizListeningAudioTimer=null;quizTimerInterval=null}
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){quizHiddenAt=Date.now();pauseQuizAdvance();if(quizFeedback&&!quizFeedback.audioDone)cancelSpeech()}
+  else if(quizHiddenAt){quizQuestionStartedAt+=Date.now()-quizHiddenAt;quizHiddenAt=0}
+});
+function startQuestionTimer(){
+  const wrap=$("quizTimerWrap"),fill=$("quizTimerFill"),text=$("quizTimerText"),label=$("quizTimerLabel");
+  if(!wrap||!fill||!text)return;
+  const limit=quiz.type==="listening"?listeningTimerLimit():$("quizHardMode").value==="on"?Math.max(2,parseInt($("quizTimeLimit").value||"8",10)):0;
+  if(!limit){wrap.classList.remove("show");window.TNI18n.bindText(label,()=>window.TNI18n.t("ui.time_limit_off"));text.textContent="";fill.style.width="0%";fill.classList.remove("danger");if(quiz.type==="listening")updateListeningTimerInline("");return}
+  quizQuestionStartedAt=Date.now();quizHiddenAt=document.hidden?Date.now():0;
+  wrap.classList.toggle("show",quiz.type!=="listening");window.TNI18n.bindText(label,()=>window.TNI18n.t(quiz.type==="listening"?"ui.listening_timer":"ui.time_limit"));
+  fill.style.width="100%";fill.classList.remove("danger");text.textContent=limit+"s";if(quiz.type==="listening")updateListeningTimerInline(limit+"s");
+  quizTimerInterval=setInterval(()=>{
+    if(quiz.answered){clearInterval(quizTimerInterval);return}
+    if(document.hidden)return;
+    const remain=Math.max(0,limit-(Date.now()-quizQuestionStartedAt)/1000),pct=remain/limit*100;
+    fill.style.width=pct+"%";fill.classList.toggle("danger",pct<30);
+    const shown=Math.ceil(remain)+"s";text.textContent=shown;if(quiz.type==="listening")updateListeningTimerInline(shown);
+    if(remain<=0){clearInterval(quizTimerInterval);finishAnswer(false)}
+  },200);
+}
 function renderQuizSummary(){
   const box=$("quizResultSummary");
   if(!box)return;
-  const wrong=(quiz.allWrong||[]).length;
-  const accuracy=quiz.total?Math.round(quiz.score/quiz.total*100):0;
-  const improved=quiz.queue.filter(word=>!learningEngine()?.isWeakWord(word)).length;
-  const stillWeak=quiz.queue.filter(word=>learningEngine()?.isWeakWord(word)).length;
-  const next=wrong?window.TNI18n.t("ui.review_weak_words"):window.TNI18n.t("ui.no_wrong_answers_great_job");
+  const records=quiz.records||[],wrong=records.filter(record=>!record.ok).length;
+  const accuracy=records.length?Math.round(quiz.score/records.length*100):null;
+  const improved=new Set(records.filter(record=>record.ok).map(record=>record.id)).size;
+  const studied=Array.from(new Set(records.map(record=>record.id))).map(id=>db.words.find(word=>word.id===id)).filter(Boolean);
+  const stillWeak=studied.filter(word=>learningEngine()?.isWeakWord(word)).length;
+  const next=!records.length?window.TNI18n.t("quiz.noAnswer"):wrong?window.TNI18n.t("ui.review_weak_words"):window.TNI18n.t("ui.no_wrong_answers_great_job");
   box.innerHTML=`
     <div><b>${quiz.score}</b><span>${window.TNI18n.mark("ui.correct",{})}</span></div>
     <div><b>${wrong}</b><span>${window.TNI18n.mark("ui.wrong",{})}</span></div>
-    <div><b>${accuracy}%</b><span>${window.TNI18n.mark("ui.accuracy",{})}</span></div>
+    <div><b>${accuracy===null?"—":accuracy+"%"}</b><span>${window.TNI18n.mark("ui.accuracy",{})}</span></div>
     <div><b>${improved}</b><span>${window.TNI18n.mark("ui.improved",{})}</span></div>
     <div><b>${stillWeak}</b><span>${window.TNI18n.mark("ui.still_weak",{})}</span></div>
-    <div class="wide"><strong>${esc(next)}</strong></div>
+    <div class="wide"><span>${window.TNI18n.mark("quiz.answeredCount",{count:records.length,total:quiz.total})}</span><strong>${esc(next)}</strong></div>
   `;
 }
-function endQuiz(){clearQuizTimers();$("quizRun").style.display="none";$("quizEnd").style.display="block";$("pageQuiz")?.classList.remove("quiz-focus-active");window.TNI18n.bindText($("quizEndText"),()=>(window.TNI18n.t("ui.score_value_value",{p0:quiz.score,p1:quiz.total})));renderQuizSummary();renderWrongList();render()}
-function renderWrongList(){let box=$("quizWrongList"),wrong=quiz.allWrong||[];if(!wrong.length){box.innerHTML=`<div class="empty">${window.TNI18n.mark("ui.no_wrong_answers_great_job",{})}</div>`;return}box.innerHTML=`<h2 style="margin-top:8px">${window.TNI18n.mark("ui.wrong_answers",{})}</h2>`+wrong.map(item=>{let w=db.words.find(x=>x.id===item.id)||item,q=quiz.direction==="front"?w.front:w.back,a=quiz.direction==="front"?w.back:w.front,lang=safeLang(quiz.direction==="front"?w.frontLang:w.backLang);let id=jsArg(w.id);return`<div class="quiz-wrong-card"><button type="button" class="quiz-wrong-copy" onclick="openDetail(${id})"><span class="quiz-wrong-front">${esc(q)}</span><span class="quiz-wrong-back">${window.TNI18n.mark("ui.answer_value",{p2:esc(a)})}</span></button><div class="quiz-wrong-actions"><button type="button" onclick="speak(${jsArg(q)},${jsArg(lang)})" aria-label="Play word audio" data-i18n-aria-label="ui.play_word_audio">${window.TNI18n.mark("listen.play",{})}</button><button type="button" class="${w.saved?'starred':''}" onclick="toggleQuizWrongStar(${id})">${w.saved?window.TNI18n.t("ui.saved"):window.TNI18n.t("ui.save")}</button><button type="button" onclick="openDetail(${id})">${window.TNI18n.mark("ui.detail",{})}</button></div></div>`}).join("")}
+function endQuiz(){quiz.ended=true;clearQuizTimers();$("quizRun").style.display="none";$("quizEnd").style.display="block";$("pageQuiz")?.classList.remove("quiz-focus-active");window.TNI18n.bindText($("quizEndText"),()=>(window.TNI18n.t("ui.score_value_value",{p0:quiz.score,p1:(quiz.records||[]).length})));renderQuizSummary();renderWrongList();render();window.tnStudyContinuity?.complete("quiz")}
+function renderWrongList(){let box=$("quizWrongList"),wrong=quiz.allWrong||[];if(!quiz.records?.length){box.innerHTML="";return}if(!wrong.length){box.innerHTML=`<div class="empty">${window.TNI18n.mark("ui.no_wrong_answers_great_job",{})}</div>`;return}box.innerHTML=`<h2 style="margin-top:8px">${window.TNI18n.mark("ui.wrong_answers",{})}</h2>`+wrong.map(item=>{let w=db.words.find(x=>x.id===item.id)||item,q=quiz.direction==="front"?w.front:w.back,a=quiz.direction==="front"?w.back:w.front,lang=safeLang(quiz.direction==="front"?w.frontLang:w.backLang);let id=jsArg(w.id);return`<div class="quiz-wrong-card"><button type="button" class="quiz-wrong-copy" onclick="openDetail(${id})"><span class="quiz-wrong-front">${esc(q)}</span><span class="quiz-wrong-back">${window.TNI18n.mark("ui.answer_value",{p2:esc(a)})}</span></button><div class="quiz-wrong-actions"><button type="button" onclick="speak(${jsArg(q)},${jsArg(lang)})" aria-label="Play word audio" data-i18n-aria-label="ui.play_word_audio">${window.TNI18n.mark("listen.play",{})}</button><button type="button" class="${w.saved?'starred':''}" onclick="toggleQuizWrongStar(${id})">${w.saved?window.TNI18n.t("ui.saved"):window.TNI18n.t("ui.save")}</button><button type="button" onclick="openDetail(${id})">${window.TNI18n.mark("ui.detail",{})}</button></div></div>`}).join("")}
 function toggleQuizWrongStar(id){toggleStar(id);renderWrongList()}
-function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion()}
+function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],allWrong:[],records:[],ended:false,index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion()}
 function audioWords(){let list=$("audioList").value,order=$("audioOrder").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(order==="star")words=words.filter(w=>w.saved);if(order==="due")words=words.filter(isDue);if(order==="hard")words=[...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));if(order==="random")words=shuffle(words);return words}
-function setAudioPlayerState(state){const player=$("audioNow")?.closest(".now-playing");if(player)player.dataset.state=state}
+function setAudioPlayerState(state){const player=$("audioNow")?.closest(".now-playing");if(player)player.dataset.state=state;window.tnListenReading?.state(state)}
 function startAudio(){
-  if(audioPaused&&audioQueue.length){audioRunToken++;cancelSpeech();audioIndex=Math.max(0,audioIndex-1);audioPaused=false;playAudioCurrent();return;}
+  if((audioPaused||$("audioNow")?.closest(".now-playing")?.dataset.state==="unavailable")&&audioQueue.length){audioRunToken++;cancelSpeech();audioIndex=Math.max(0,audioIndex-1);audioPaused=false;playAudioCurrent();return;}
   stopAudio();audioQueue=audioWords();if(!audioQueue.length)return toast(window.TNI18n.t("ui.no_words",{}));playAudioCurrent();
 }
 function pauseAudio(){audioRunToken++;audioPaused=true;clearTimeout(audioTimer);cancelSpeech();setAudioPlayerState("paused");toast(window.TNI18n.t("ui.paused",{}))}
@@ -1422,6 +1528,7 @@ async function playAudioCurrent(){
   const token=audioRunToken;
   if(audioIndex>=audioQueue.length){audioIndex=0;if($("audioOrder").value==="random")audioQueue=shuffle(audioQueue)}
   const w=audioQueue[audioIndex++];updateNow(w);
+  setAudioPlayerState("preparing");
   const ok=await speakByPattern(w);
   if(token!==audioRunToken||audioPaused)return;
   if(!ok){setAudioPlayerState("unavailable");return;}
@@ -1436,16 +1543,17 @@ function updateNow(w){
   $("audioPosition").textContent=`${audioIndex} / ${audioQueue.length}`;
   const seek=$("audioSeek");seek.max=String(Math.max(1,audioQueue.length));seek.value=String(Math.max(1,audioIndex));seek.disabled=!audioQueue.length;
   setAudioPlayerState("playing");window.TangoNestMotion?.enter($("audioNow"),true);
+  window.tnListenReading?.update();
 }
 $("audioSeek")?.addEventListener("change",event=>{audioRunToken++;clearTimeout(audioTimer);cancelSpeech();audioIndex=Math.max(0,Number(event.target.value)-1);audioPaused=false;playAudioCurrent();});
 $("audioList")?.addEventListener("change",stopAudio);
-function speakByPattern(w){return speakPair(w,$("audioPattern").value)}
-function speakPair(w,p){
+function speakByPattern(w){const token=audioRunToken;return speakPair(w,$("audioPattern").value,{onstart:()=>{if(token===audioRunToken&&!audioPaused)setAudioPlayerState("playing")}})}
+function speakPair(w,p,opts={}){
   let gap=Math.max(.1,parseFloat($("pairGapCustom")?.value||"1.8"))*1000;
-  if(p==="front")return speak(w.front,w.frontLang);
-  if(p==="back")return speak(w.back,w.backLang);
-  if(p==="frontBack")return speakQueued([{text:w.front,lang:w.frontLang},{text:w.back,lang:w.backLang}],gap);
-  if(p==="backFront")return speakQueued([{text:w.back,lang:w.backLang},{text:w.front,lang:w.frontLang}],gap);
+  if(p==="front")return speak(w.front,w.frontLang,opts);
+  if(p==="back")return speak(w.back,w.backLang,opts);
+  if(p==="frontBack")return speakQueued([{text:w.front,lang:w.frontLang},{text:w.back,lang:w.backLang}],gap,opts);
+  if(p==="backFront")return speakQueued([{text:w.back,lang:w.backLang},{text:w.front,lang:w.frontLang}],gap,opts);
 }
 
 function downloadBackupFile(){
@@ -1656,6 +1764,7 @@ async function speak(text,lang,opts={}){
     const timeout=setTimeout(()=>{finish(false);if(epoch===speechEpoch)cancelSpeech();},Math.max(20000,Math.min(180000,text.length*200)));
     pendingSpeech.add(cancel);
     u.onend=()=>finish(epoch===speechEpoch);
+    u.onstart=()=>{if(epoch===speechEpoch)opts.onstart?.()};
     u.onerror=event=>{if(!["canceled","interrupted"].includes(event.error))toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings",{}));finish(false);};
     try{window.speechSynthesis.speak(u);}catch(error){finish(false);toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings",{}));}
   });
@@ -1664,12 +1773,12 @@ async function speakText(text,language,opts={}){return speak(text,language,opts)
 window.speakText = speakText;
 
 function cancelSpeech(){speechEpoch++;for(const cancel of pendingSpeech)cancel();pendingSpeech.clear();try{window.speechSynthesis?.cancel()}catch(error){}}
-async function speakQueued(items,gap=900){
+async function speakQueued(items,gap=900,opts={}){
   if(!items?.length)return false;
   cancelSpeech();const epoch=speechEpoch;
   for(let index=0;index<items.length;index++){
     if(epoch!==speechEpoch)return false;
-    if(!await speak(items[index].text,items[index].lang,{cancel:false}))return false;
+    if(!await speak(items[index].text,items[index].lang,{...opts,cancel:false}))return false;
     if(index<items.length-1)await new Promise(resolve=>setTimeout(resolve,gap));
   }
   return epoch===speechEpoch;

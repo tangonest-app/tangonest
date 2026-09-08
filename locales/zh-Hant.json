@@ -676,7 +676,7 @@
   "quiz.noAnswer": "未作答",
   "quiz.reviewMore": "這個單字會更頻繁出現。",
   "library.recentlyUpdated": "最近更新",
-  "ui.auto_smart_2_2_3_2s": "自動（0.8–1.25秒）",
+  "ui.auto_smart_2_2_3_2s": "自動（正確1.2秒／錯誤2.5秒）",
   "ui.value_words_about_value_min": "{p0}個單字 · 約{p1}分鐘",
   "ui.value_accuracy": "正確率{p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "帳號已建立。請透過電子郵件確認帳號後登入。",
@@ -686,5 +686,12 @@
   "bulk.complete": "匯入完成",
   "bulk.paused": "匯入已暫停",
   "quiz.chooseMeaning": "請選擇正確的意思。",
-  "quiz.endSession": "結束學習"
+  "quiz.endSession": "結束學習",
+  "quiz.pauseAdvance": "暫停自動前進",
+  "quiz.resumeAdvance": "繼續",
+  "quiz.answeredCount": "計畫{total}題，已答{count}題。正確率按已答題計算。",
+  "study.cannotResume": "學習資料已變更。請開始新的學習。",
+  "listen.followCurrent": "返回正在播放的項目",
+  "bulk.editRow": "修改第{row}行",
+  "listen.preparing": "正在準備音訊"
 }

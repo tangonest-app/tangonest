@@ -676,7 +676,7 @@
   "quiz.noAnswer": "Нет ответа",
   "quiz.reviewMore": "Это слово будет появляться чаще.",
   "library.recentlyUpdated": "Недавно обновлено",
-  "ui.auto_smart_2_2_3_2s": "Авто (0,8–1,25 с)",
+  "ui.auto_smart_2_2_3_2s": "Авто (1,2 с верно / 2,5 с неверно)",
   "ui.value_words_about_value_min": "Слов: {p0} · около {p1} мин",
   "ui.value_accuracy": "Точность: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Аккаунт создан. Подтверди его по почте, затем войди.",
@@ -686,5 +686,12 @@
   "bulk.complete": "Импорт завершён",
   "bulk.paused": "Импорт приостановлен",
   "quiz.chooseMeaning": "Выбери правильное значение.",
-  "quiz.endSession": "Завершить занятие"
+  "quiz.endSession": "Завершить занятие",
+  "quiz.pauseAdvance": "Приостановить автопереход",
+  "quiz.resumeAdvance": "Продолжить",
+  "quiz.answeredCount": "Отвечено: {count} из {total}. Точность рассчитана по данным ответам.",
+  "study.cannotResume": "Данные занятия изменились. Начни новое занятие.",
+  "listen.followCurrent": "К текущему слову",
+  "bulk.editRow": "Изменить строку {row}",
+  "listen.preparing": "Подготовка аудио"
 }

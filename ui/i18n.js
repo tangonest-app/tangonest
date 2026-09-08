@@ -6,7 +6,7 @@
   const bindings=new Map(),missing=new Set();
   const sourceKeys=new Map(Object.entries(en).map(([id,text])=>[text,id]));
   // Product identity is shared worldwide; instructions and accessible labels remain localized.
-  const brandKeys=new Set(["navigation.home","navigation.library","navigation.addWords","navigation.cards","navigation.quiz","navigation.listen","navigation.settings","ui.bulk_add","ui.language","ui.your_living_library","ui.your_own_language_space","ui.find_rhythm_build_meaning","ui.learn_grow_remember","ui.forest_desk"]);
+  const brandKeys=new Set(["navigation.home","navigation.library","navigation.cards","navigation.quiz","navigation.listen","navigation.settings","ui.bulk_add","ui.language","ui.your_living_library","ui.your_own_language_space","ui.find_rhythm_build_meaning","ui.learn_grow_remember","ui.forest_desk"]);
   const escape=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   function supported(code){
     const value=String(code||"").replace(/_/g,"-");
@@ -64,6 +64,12 @@
     // Navigation placement remains stable; reading direction belongs to each UI surface.
     document.querySelectorAll(".page,.modal,.tn-word-detail-card,.auth-card,.network-status,.toast").forEach(el=>el.dir=locale==="ar"?"rtl":"ltr");
     applyWordDirection();
+    const hints={Home:"ui.continue_learning",Words:"ui.search_your_collection",Study:"ui.flashcards",Quiz:"quiz.chooseMeaning",Audio:"ui.listening_practice_mode",Manage:"ui.preferences_data"};
+    for(const [suffix,id]of Object.entries(hints))for(const prefix of ["nav","mnav"]){
+      const button=document.getElementById(prefix+suffix);if(!button)continue;
+      const label=button.textContent.trim(),hint=t(id);
+      button.setAttribute("aria-label",`${label} · ${hint}`);button.title=hint;
+    }
   }
   async function setLocale(code,{persist=true}={}){
     const next=supported(code)||"en",token=++request;

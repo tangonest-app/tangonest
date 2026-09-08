@@ -676,7 +676,7 @@
   "quiz.noAnswer": "Tanpa jawaban",
   "quiz.reviewMore": "Kata ini akan muncul lebih sering.",
   "library.recentlyUpdated": "Baru diperbarui",
-  "ui.auto_smart_2_2_3_2s": "Otomatis (0,8–1,25 dtk)",
+  "ui.auto_smart_2_2_3_2s": "Otomatis (benar 1,2 dtk / salah 2,5 dtk)",
   "ui.value_words_about_value_min": "{p0} kata · sekitar {p1} menit",
   "ui.value_accuracy": "Akurasi: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Akun dibuat. Konfirmasi melalui email, lalu masuk.",
@@ -686,5 +686,12 @@
   "bulk.complete": "Impor selesai",
   "bulk.paused": "Impor dijeda",
   "quiz.chooseMeaning": "Pilih arti yang benar.",
-  "quiz.endSession": "Akhiri sesi"
+  "quiz.endSession": "Akhiri sesi",
+  "quiz.pauseAdvance": "Jeda perpindahan otomatis",
+  "quiz.resumeAdvance": "Lanjutkan",
+  "quiz.answeredCount": "{count} dijawab dari {total} rencana. Akurasi berdasarkan soal yang dijawab.",
+  "study.cannotResume": "Sesi ini telah berubah. Mulai sesi baru.",
+  "listen.followCurrent": "Kembali ke item yang diputar",
+  "bulk.editRow": "Edit baris {row}",
+  "listen.preparing": "Menyiapkan audio"
 }

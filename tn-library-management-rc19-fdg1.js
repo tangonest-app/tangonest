@@ -21,6 +21,8 @@
   const filterValues={query:"",language:"all",letter:"all",playlist:"all",pos:"all",favorite:"all",learning:"all",sort:"newest"};
   const returnFocus = {rename:null,delete:null,detail:null};
   const selectedWordIds=new Set();
+  let detailWordId="",detailScroll=0;
+  const detailWide=matchMedia("(min-width: 1180px)");
   window.__tnLibraryManagementActive = true;
 
   function isDefaultList(list){
@@ -320,6 +322,10 @@
   function renderLibrary(){
     const mount = $("tn82LibraryMount");
     if(!mount||renderingLibrary)return;
+    const focused=mount.contains(document.activeElement)?document.activeElement:null;
+    const focusId=focused?.id,wordId=focused?.dataset.openWord;
+    const previousIndex=wordId?[...mount.querySelectorAll("[data-open-word]")].indexOf(focused):-1;
+    const selection=focused?.tagName==="INPUT"?[focused.selectionStart,focused.selectionEnd]:null;
     renderingLibrary=true;
     try{
       const data=ensureData();
@@ -334,6 +340,9 @@
         if(validIds.has(returnFocus.detail.wordId))renderWordDetail(returnFocus.detail.wordId);
         else hideWordDetail();
       }
+      const rows=[...mount.querySelectorAll("[data-open-word]")];
+      const next=focusId?$(focusId):wordId?rows.find(row=>row.dataset.openWord===wordId)||rows[Math.max(0,Math.min(previousIndex,rows.length-1))]:null;
+      if(next){next.focus({preventScroll:true});if(selection)try{next.setSelectionRange(...selection)}catch(error){}}
     }finally{renderingLibrary=false}
   }
 
@@ -410,6 +419,11 @@
   function stableNavigate(page){
     page = normalizePage(page);
     if(!["home","create","library","cards","quiz","listen","settings"].includes(page))page = "home";
+    window.tnStudyContinuity?.capture();
+    if(page!=="quiz")window.clearQuizTimers?.();
+    if(page!=="cards")window.stopFlashAuto?.();
+    if(page!=="listen")window.stopAudio?.();
+    hideWordDetail(false);
     localStorage.setItem("tangonest_last_page_v2",page);
 
     const ids = {
@@ -448,6 +462,7 @@
     document.title=`${labels[1]} · TangoNest`;
     try{window.tnUpdateShellContext?.(page)}catch(error){}
     stabilizeHeader();
+    window.tnStudyContinuity?.enter(page);
     if(page==="create"&&window.matchMedia?.("(min-width: 901px)").matches){
       const focusFront=()=>{
         try{$("front")?.focus({preventScroll:true})}catch(error){}
@@ -564,11 +579,19 @@
       panel = document.createElement("div");
       panel.id = "tnWordDetailPanel";
       panel.className = "tn-word-detail-panel";
-      document.body.appendChild(panel);
+      $("pageWords").appendChild(panel);
     }
     const focusedAction=panel.classList.contains("show")&&panel.contains(document.activeElement)
       ? document.activeElement.getAttributeNames().find(name=>name.startsWith("data-")) : null;
-    if(!panel.classList.contains("show"))returnFocus.detail={element:trigger||document.activeElement,wordId:id};
+    const focusNew=!!trigger||!panel.classList.contains("show");
+    if(!panel.classList.contains("show")){returnFocus.detail={element:trigger||document.activeElement,wordId:id};detailScroll=scrollY}
+    else if(trigger)returnFocus.detail={element:trigger,wordId:id};
+    const opening=!detailWordId;
+    detailWordId=id;
+    if(new URL(location.href).searchParams.get("word")!==id){
+      const url=new URL(location.href);url.searchParams.set("word",id);
+      history[opening?"pushState":"replaceState"]({...history.state,tnWord:id},"",url);
+    }
     panel.innerHTML = `
       <div class="tn-word-detail-card" role="dialog" aria-modal="true" aria-labelledby="tnWordDetailTitle">
         <button type="button" class="tn-detail-close" data-close-word-detail>${window.TNI18n.mark("common.close",{})}</button>
@@ -599,17 +622,34 @@
       </div>
     `;
     panel.classList.add("show");
+    updateDetailLayout();
     if(focusedAction)panel.querySelector(`[${focusedAction}]`)?.focus({preventScroll:true});
-    else setTimeout(()=>panel.querySelector("[data-close-word-detail]")?.focus({preventScroll:true}),0);
+    else if(focusNew)setTimeout(()=>panel.querySelector("[data-close-word-detail]")?.focus({preventScroll:true}),0);
   }
 
-  function hideWordDetail(){
+  function updateDetailLayout(){
+    const panel=$("tnWordDetailPanel");if(!panel)return;
+    $("pageWords").classList.toggle("has-word-detail",panel.classList.contains("show"));
+    const dialog=panel.querySelector("[role='dialog']");
+    dialog?.setAttribute("aria-modal",String(!detailWide.matches));
+    document.querySelectorAll("[data-open-word]").forEach(button=>button.setAttribute("aria-current",String(button.dataset.openWord===detailWordId)));
+  }
+  detailWide.addEventListener("change",updateDetailLayout);
+  window.addEventListener("popstate",()=>{
+    const id=new URL(location.href).searchParams.get("word");
+    if(id&&wordById(id))renderWordDetail(id);else hideWordDetail(false);
+  });
+  function hideWordDetail(back=true){
+    const wasOpen=!!detailWordId;
     $("tnWordDetailPanel")?.classList.remove("show");
     const target=returnFocus.detail?.element?.isConnected&&returnFocus.detail.element.matches?.("[data-open-word]")
       ? returnFocus.detail.element
       : [...document.querySelectorAll("[data-open-word]")].find(element=>element.dataset.openWord===returnFocus.detail?.wordId);
-    target?.focus({preventScroll:true});
+    const nearby=target||document.querySelector("[data-open-word],#tnLibrarySearch");
+    if(wasOpen){nearby?.focus({preventScroll:true});window.scrollTo(0,detailScroll)}
     returnFocus.detail=null;
+    detailWordId="";updateDetailLayout();
+    if(back&&wasOpen&&history.state?.tnWord)history.back();
   }
 
   function renamePlaylist(listId,trigger=null){
@@ -827,15 +867,6 @@
           renderLimit = WORD_RENDER_LIMIT;
           const update=()=>{
             renderLibrary();
-            if(!shouldRefocus)return;
-            requestAnimationFrame(() => {
-              const next = $("tnLibrarySearch");
-              if(next){
-                try{next.focus({preventScroll:true})}catch(e){next.focus()}
-                const len = next.value.length;
-                try{ next.setSelectionRange(len,len); }catch(e){}
-              }
-            });
           };
           if(shouldRefocus){
             clearTimeout(searchRenderTimer);
@@ -1048,7 +1079,7 @@
       confirmRename();
     }
     if(event.key === "Tab"){
-      const dialog=document.querySelector(".tn-rename-modal.show [role='dialog'],.tn-delete-modal.show [role='dialog'],.tn-word-detail-panel.show [role='dialog'],.modal-backdrop.show [role='dialog']");
+      const dialog=document.querySelector(".tn-rename-modal.show [role='dialog'],.tn-delete-modal.show [role='dialog'],.tn-word-detail-panel.show [role='dialog'][aria-modal='true'],.modal-backdrop.show [role='dialog']");
       if(!dialog)return;
       const focusable=[...dialog.querySelectorAll("button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]")];
       if(!focusable.length)return;

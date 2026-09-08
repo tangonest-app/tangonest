@@ -676,7 +676,7 @@
   "quiz.noAnswer": "未作答",
   "quiz.reviewMore": "这个单词会更频繁出现。",
   "library.recentlyUpdated": "最近更新",
-  "ui.auto_smart_2_2_3_2s": "自动（0.8–1.25秒）",
+  "ui.auto_smart_2_2_3_2s": "自动（正确1.2秒／错误2.5秒）",
   "ui.value_words_about_value_min": "{p0}个单词 · 约{p1}分钟",
   "ui.value_accuracy": "正确率{p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "账号已创建。请通过邮件确认账号后登录。",
@@ -686,5 +686,12 @@
   "bulk.complete": "导入完成",
   "bulk.paused": "导入已暂停",
   "quiz.chooseMeaning": "请选择正确的意思。",
-  "quiz.endSession": "结束学习"
+  "quiz.endSession": "结束学习",
+  "quiz.pauseAdvance": "暂停自动前进",
+  "quiz.resumeAdvance": "继续",
+  "quiz.answeredCount": "计划{total}题，已答{count}题。正确率按已答题计算。",
+  "study.cannotResume": "学习数据已更改。请开始新的学习。",
+  "listen.followCurrent": "返回正在播放的项目",
+  "bulk.editRow": "修改第{row}行",
+  "listen.preparing": "正在准备音频"
 }

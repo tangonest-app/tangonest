@@ -676,7 +676,7 @@
   "quiz.noAnswer": "Cevap yok",
   "quiz.reviewMore": "Bu kelime daha sık görünecek.",
   "library.recentlyUpdated": "Yakın zamanda güncellendi",
-  "ui.auto_smart_2_2_3_2s": "Otomatik (0,8–1,25 sn)",
+  "ui.auto_smart_2_2_3_2s": "Otomatik (doğru 1,2 sn / yanlış 2,5 sn)",
   "ui.value_words_about_value_min": "{p0} kelime · yaklaşık {p1} dk",
   "ui.value_accuracy": "Doğruluk: %{p0}",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "Hesap oluşturuldu. E-postayla doğrula, sonra giriş yap.",
@@ -686,5 +686,12 @@
   "bulk.complete": "Aktarım tamamlandı",
   "bulk.paused": "Aktarım duraklatıldı",
   "quiz.chooseMeaning": "Doğru anlamı seç.",
-  "quiz.endSession": "Oturumu bitir"
+  "quiz.endSession": "Oturumu bitir",
+  "quiz.pauseAdvance": "Otomatik ilerlemeyi duraklat",
+  "quiz.resumeAdvance": "Sürdür",
+  "quiz.answeredCount": "Planlanan {total} sorudan {count} yanıtlandı. Doğruluk yanıtlanan sorulara göredir.",
+  "study.cannotResume": "Bu oturum değişti. Yeni oturum başlat.",
+  "listen.followCurrent": "Çalan öğeye dön",
+  "bulk.editRow": "{row}. satırı düzenle",
+  "listen.preparing": "Ses hazırlanıyor"
 }

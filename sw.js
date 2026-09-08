@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg12";
+const CACHE_VERSION="tangonest-shell-v1.0.0-rc.19-fdg13";
 const BASE=new URL("./",self.location.href);
 const SHELL=[
   "./",
@@ -39,6 +39,8 @@ const SHELL=[
   "./tn-learning-flow-rc19-fdg1.js",
   "./ui/runtime-rc19-fdg1.js",
   "./ui/living-library.js",
+  "./ui/study-continuity.js",
+  "./ui/listen-reading.js",
   "./locales/ar.json",
   "./locales/de.json",
   "./locales/en.json",

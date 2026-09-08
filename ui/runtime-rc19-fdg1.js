@@ -8,6 +8,8 @@
   let updateRequested=false;
   let currentHistoryPage="";
   let followingHistory=false;
+  const mobileBar=document.querySelector(".mobile-tabbar");
+  if(mobileBar)new ResizeObserver(()=>document.documentElement.style.setProperty("--tn-mobile-nav-height",`${mobileBar.getBoundingClientRect().height}px`)).observe(mobileBar);
   const pageLabels={
     home:["Forest Desk","Home"],
     create:["Collection","Add Words"],
@@ -36,6 +38,7 @@
     if(writeHistory&&current!==currentHistoryPage&&pageLabels[current]){
       const url=new URL(location.href);
       url.searchParams.set("page",current);
+      url.searchParams.delete("word");
       if(!currentHistoryPage||followingHistory)history.replaceState({tnPage:current},"",url);
       else history.pushState({tnPage:current},"",url);
       currentHistoryPage=current;
@@ -46,6 +49,7 @@
   window.addEventListener("tn:locale",()=>updateShellContext(currentHistoryPage||"home",false));
   window.addEventListener("popstate",()=>{
     const page=new URLSearchParams(location.search).get("page")||"home";
+    if(page===currentHistoryPage)return;
     followingHistory=true;
     try{window.tnStableNavigate?.(page)}finally{followingHistory=false;}
   });

@@ -676,7 +676,7 @@
   "quiz.noAnswer": "بلا إجابة",
   "quiz.reviewMore": "ستظهر هذه الكلمة أكثر.",
   "library.recentlyUpdated": "حُدّث مؤخرًا",
-  "ui.auto_smart_2_2_3_2s": "تلقائي (0.8–1.25 ث)",
+  "ui.auto_smart_2_2_3_2s": "تلقائي (1.2 ث للصحيح / 2.5 ث للخطأ)",
   "ui.value_words_about_value_min": "الكلمات: {p0} · نحو {p1} دقيقة",
   "ui.value_accuracy": "الدقة: {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "أُنشئ الحساب. أكّده من البريد الإلكتروني ثم سجّل الدخول.",
@@ -686,5 +686,12 @@
   "bulk.complete": "اكتمل الاستيراد",
   "bulk.paused": "توقف الاستيراد مؤقتًا",
   "quiz.chooseMeaning": "اختر المعنى الصحيح.",
-  "quiz.endSession": "إنهاء الجلسة"
+  "quiz.endSession": "إنهاء الجلسة",
+  "quiz.pauseAdvance": "إيقاف الانتقال التلقائي مؤقتًا",
+  "quiz.resumeAdvance": "استئناف",
+  "quiz.answeredCount": "أُجيب عن {count} من أصل {total}. تُحسب الدقة من الأسئلة المُجاب عنها.",
+  "study.cannotResume": "تغيّرت هذه الجلسة. ابدأ جلسة جديدة.",
+  "listen.followCurrent": "العودة إلى العنصر الجاري تشغيله",
+  "bulk.editRow": "تعديل الصف {row}",
+  "listen.preparing": "جارٍ تحضير الصوت"
 }

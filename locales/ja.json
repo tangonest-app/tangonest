@@ -676,7 +676,7 @@
   "quiz.noAnswer": "未回答",
   "quiz.reviewMore": "この単語は今後の復習に多めに出題されます。",
   "library.recentlyUpdated": "最近更新",
-  "ui.auto_smart_2_2_3_2s": "自動（0.8〜1.25秒）",
+  "ui.auto_smart_2_2_3_2s": "自動（正解1.2秒／不正解2.5秒）",
   "ui.value_words_about_value_min": "{p0}語・約{p1}分",
   "ui.value_accuracy": "正答率 {p0}%",
   "ui.account_created_check_your_email_to_confirm_your_account_then_login": "アカウントを作成しました。確認メールから認証してログインしてください。",
@@ -686,5 +686,12 @@
   "bulk.complete": "読み込み完了",
   "bulk.paused": "読み込みを一時停止しました",
   "quiz.chooseMeaning": "正しい意味を選んでください。",
-  "quiz.endSession": "学習を終了"
+  "quiz.endSession": "学習を終了",
+  "quiz.pauseAdvance": "自動進行を一時停止",
+  "quiz.resumeAdvance": "再開",
+  "quiz.answeredCount": "{total}問中{count}問に回答。正答率は回答済みの問題から計算します。",
+  "study.cannotResume": "学習データが変更されています。新しいセッションを開始してください。",
+  "listen.followCurrent": "再生中の項目へ戻る",
+  "bulk.editRow": "{row}行目を修正",
+  "listen.preparing": "音声を準備中"
 }

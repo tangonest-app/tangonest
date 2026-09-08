@@ -201,7 +201,7 @@
   "ui.due_reviews_first": "Due reviews first",
   "ui.newest_words_first": "Newest words first",
   "ui.after_answering": "After answering",
-  "ui.auto_smart_2_2_3_2s": "Auto (0.8–1.25s)",
+  "ui.auto_smart_2_2_3_2s": "Auto (1.2s correct / 2.5s incorrect)",
   "ui.quick_1_5s": "Quick · 1.5s",
   "ui.calm_2_5s": "Calm · 2.5s",
   "ui.review_4_0s": "Review · 4.0s",
@@ -686,5 +686,12 @@
   "bulk.error": "Error",
   "bulk.warning": "Warning",
   "quiz.chooseMeaning": "Choose the correct meaning.",
-  "quiz.endSession": "End session"
+  "quiz.endSession": "End session",
+  "quiz.pauseAdvance": "Pause auto advance",
+  "quiz.resumeAdvance": "Resume",
+  "quiz.answeredCount": "{count} answered / {total} planned. Accuracy uses answered questions.",
+  "study.cannotResume": "This session has changed. Start a new session.",
+  "listen.followCurrent": "Return to playing item",
+  "bulk.editRow": "Edit row {row}",
+  "listen.preparing": "Preparing audio"
 }
