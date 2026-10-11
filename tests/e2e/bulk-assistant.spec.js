@@ -1,6 +1,6 @@
 const {test,expect}=require("@playwright/test");
 const fs=require("node:fs"),path=require("node:path");
-const fixture=fs.readFileSync(path.resolve(__dirname,"../../qa/cloud-fixture.js"),"utf8");
+const fixture=fs.readFileSync(path.resolve(__dirname,"./cloud-fixture.js"),"utf8");
 test.beforeEach(async({page})=>{
   await page.addInitScript({content:fixture+'\nif(!localStorage.getItem("tn-audit-cloud-fdg10"))window.__tnQA.seed("bulk@example.test",0);'});
   await page.route("**/vendor/supabase-*.js",route=>route.fulfill({contentType:"application/javascript",body:"window.supabase={};"}));
