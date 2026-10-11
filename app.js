@@ -353,24 +353,17 @@ function loadTangoNestDB(){
   tnWriteData(fresh);
   return fresh;
 }
-const LANGUAGE_OPTIONS=Object.freeze([
-  ["en-US","English","word"],["ja-JP","Japanese","意味"],["ko-KR","Korean","단어"],["fr-FR","French","mot"],["zh-CN","Chinese Simplified","词"],["zh-TW","Chinese Traditional","詞"],["es-ES","Spanish","palabra"],["de-DE","German","Wort"],["it-IT","Italian","parola"],["pt-BR","Portuguese","palavra"],["ar-SA","Arabic","كلمة"],["ru-RU","Russian","слово"],["nl-NL","Dutch","woord"],["vi-VN","Vietnamese","tu"],["th-TH","Thai","คำ"],["tr-TR","Turkish","kelime"],["hi-IN","Hindi","शब्द"],["id-ID","Indonesian","kata"],["el-GR","Greek","λέξη"],["he-IL","Hebrew","מילה"]
-]);
+const LANGUAGE_OPTIONS=window.TangoNestLanguages.options;
 const LANGS=LANGUAGE_OPTIONS;
-const LANGUAGE_PRIORITY=new Map(LANGUAGE_OPTIONS.map((item,index)=>[item[0],index]));
-try{
-  window.TangoNestLanguages=Object.freeze({
-    options:LANGUAGE_OPTIONS,
-    label:code=>(LANGUAGE_OPTIONS.find(item=>item[0]===code)||[code,code])[1],
-    priority:code=>LANGUAGE_PRIORITY.has(code)?LANGUAGE_PRIORITY.get(code):LANGUAGE_OPTIONS.length
-  });
-}catch(e){}
 let db=loadTangoNestDB();
 db.prefs=db.prefs||{frontLang:"en-US",backLang:"ja-JP"};db.lists=Array.isArray(db.lists)?db.lists:[];db.words=db.words||[];db.mistakes=Array.isArray(db.mistakes)?db.mistakes:[];
 try{window.db=db;}catch(e){}
 let current=null,flipped=false,flashTimers=[],audioTimer=null,audioQueue=[],audioIndex=0,audioPaused=false,selectedIds=new Set();
+let audioRunToken=0,speechEpoch=0;
+const pendingSpeech=new Set();
 const modalReturnFocus={edit:null,detail:null};
 let quiz={queue:[],wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:"choice",direction:"front",total:0,listeningReplayUsed:0};let quizAutoTimer=null,quizTimerInterval=null,quizListeningAudioTimer=null,quizQuestionStartedAt=0;
+let quizFeedback=null,quizEpoch=0,quizInputReadyAt=0,quizInputUnlockTimer=null,quizHiddenAt=0,cardRated=false;
 let smartSessionQueue=[];
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
@@ -478,7 +471,7 @@ function mistakeWords(){
 }
 function startMistakeReview(){
   const words=mistakeWords().filter(word=>(db.words||[]).some(live=>live.id===word.id));
-  if(!words.length)return toast("No mistakes yet");
+  if(!words.length)return toast(window.TNI18n.t("ui.no_mistakes_yet",{}));
   if($("quizList")){
     const firstList=words[0]?.listId||db.lists?.[0]?.id;
     if(firstList&&[...$("quizList").options].some(o=>o.value===firstList))$("quizList").value=firstList;
@@ -489,36 +482,38 @@ function startMistakeReview(){
   setTimeout(()=>{try{startQuiz()}catch(e){}},80);
 }
 function clearMistakes(){
-  if(!ensureMistakes().length)return toast("No mistakes yet");
-  if(!confirm("Clear the Mistake Notebook? Your words will stay saved."))return;
+  if(!ensureMistakes().length)return toast(window.TNI18n.t("ui.no_mistakes_yet",{}));
+  if(!confirm(window.TNI18n.t("ui.clear_the_mistake_notebook_your_words_will_stay_saved",{})))return;
   db.mistakes=[];
   persist();
   renderMistakeNotebook();
-  toast("Mistake Notebook cleared");
+  toast(window.TNI18n.t("ui.mistake_notebook_cleared",{}));
 }
 function mistakeNotebookHtml(limit){
   const entries=mistakeEntriesSorted();
-  if(!entries.length)return '<div class="empty"><div><strong>No mistakes yet</strong><span>Your missed answers will collect here for focused review.</span></div><button type="button" class="btn" onclick="appShow(\'quiz\')">Start Quiz</button></div>';
+  if(!entries.length)return `<div class="empty"><div class="tn-mistakes-empty-copy"><strong>${window.TNI18n.mark("ui.no_mistakes_yet",{})}</strong><span>${window.TNI18n.mark("ui.your_missed_answers_will_collect_here_for_focused_review",{})}</span></div><button type="button" class="btn" onclick="appShow('quiz')">${window.TNI18n.mark("ui.start_quiz",{})}</button></div>`;
   const rows=entries.slice(0,limit||entries.length).map(entry=>{
     const live=(db.words||[]).find(word=>word.id===entry.wordId)||entry;
-    const date=entry.lastWrongAt?new Date(entry.lastWrongAt).toLocaleDateString():"-";
-    const meta=[entry.playlistName,entry.sourceMode,entry.language?langName(entry.language):""].filter(Boolean).join(" · ");
+    const date=entry.lastWrongAt?new Date(entry.lastWrongAt).toLocaleDateString(window.TNI18n.locale):"-";
+    const modeNames={quiz:"Quiz",typing:"Typing",listening:"Listening Quiz",cards:"Cards",flashcards:"Cards",listen:"Listen"};
+    const mode=window.TNI18n.uiText(modeNames[entry.sourceMode]||entry.sourceMode||"");
+    const meta=[entry.playlistName,mode,entry.language?window.TNI18n.studyName(entry.language):""].filter(Boolean).join(" · ");
     const id=jsArg(entry.wordId);
     return `<div class="mistake-row">
       <button type="button" class="mistake-word" onclick="openDetail(${id})"><b>${esc(live.front||entry.front||"")}</b><span>${esc(live.back||entry.back||"")}</span></button>
-      <div class="mistake-meta"><span>${esc(meta||"Mistake")}</span><span>${Number(entry.wrongCount||0)} wrong · ${esc(date)}</span>${entry.lastUserAnswer?`<small>Your answer: ${esc(entry.lastUserAnswer)}</small>`:""}</div>
-      <div class="mistake-actions"><button type="button" onclick="startMistakeReview()">Review</button><button type="button" onclick="removeMistake(${id})">Clear</button></div>
+      <div class="mistake-meta"><span>${esc(meta||"Mistake")}</span><span>${window.TNI18n.mark("ui.value_wrong_value",{p4:Number(entry.wrongCount||0),p5:esc(date)})}</span>${entry.lastUserAnswer?`<small>${window.TNI18n.mark("ui.your_answer_value",{p0:esc(entry.lastUserAnswer)})}</small>`:""}</div>
+      <div class="mistake-actions"><button type="button" onclick="startMistakeReview()">${window.TNI18n.mark("ui.review_2",{})}</button><button type="button" onclick="removeMistake(${id})">${window.TNI18n.mark("ui.clear",{})}</button></div>
     </div>`;
   }).join("");
-  const more=limit&&entries.length>limit?`<p class="desc">${entries.length-limit} more mistakes in Library.</p>`:"";
-  return `<div class="mistake-head"><span>${entries.length} saved mistakes</span><div><button type="button" onclick="startMistakeReview()">Review Mistakes</button><button type="button" onclick="clearMistakes()">Clear All</button></div></div><div class="mistake-list">${rows}</div>${more}`;
+  const more=limit&&entries.length>limit?`<p class="desc">${window.TNI18n.mark("ui.value_more_mistakes_in_library",{p0:entries.length-limit})}</p>`:"";
+  return `<div class="mistake-head"><span>${window.TNI18n.mark("ui.value_saved_mistakes",{p0:entries.length})}</span><div><button type="button" onclick="startMistakeReview()">${window.TNI18n.mark("ui.review_mistakes",{})}</button><button type="button" onclick="clearMistakes()">${window.TNI18n.mark("ui.clear_all",{})}</button></div></div><div class="mistake-list">${rows}</div>${more}`;
 }
 function renderMistakeNotebook(){
   const home=$("mistakeNotebookHome");
   if(home)home.innerHTML=mistakeNotebookHtml(4);
   const library=$("mistakeNotebookLibrary");
   if(library){
-    library.innerHTML=`<h2>Mistake Notebook</h2><p class="desc">Wrong answers from Quiz, Typing, Listening, and Hard flashcards.</p>${mistakeNotebookHtml()}`;
+    library.innerHTML=`<h2>${window.TNI18n.mark("ui.mistake_notebook",{})}</h2><p class="desc">${window.TNI18n.mark("ui.wrong_answers_from_quiz_typing_listening_and_hard_flashcards",{})}</p>${mistakeNotebookHtml()}`;
   }
 }
 try{
@@ -532,7 +527,14 @@ function cap(s){return s[0].toUpperCase()+s.slice(1)}
 
 function langName(c){c=safeLang(c);return (LANGS.find(l=>l[0]===c)||[c,c])[1]}
 function placeholderFor(c){c=safeLang(c);return (LANGS.find(l=>l[0]===c)||["","", "word"])[2]}
-function optionsHTML(selected){selected=safeLang(selected);return LANGS.map(l=>`<option value="${l[0]}" ${l[0]===selected?"selected":""}>${l[1]}</option>`).join("")}
+function optionsHTML(selected){selected=safeLang(selected);return LANGS.map(l=>`<option value="${l[0]}" ${l[0]===selected?"selected":""}>${esc(window.TNI18n.studyName(l[0]))}</option>`).join("")}
+window.addEventListener("tn:locale",()=>{
+  document.querySelectorAll(".tn-language-picker select").forEach(select=>{
+    for(const option of select.options)if(window.TangoNestLanguages.find(option.value))option.textContent=window.TNI18n.studyName(option.value);
+    syncLanguagePicker(select);
+  });
+  updateBulkAssistant();
+});
 function closeLanguagePickers(except){
   document.querySelectorAll(".tn-language-picker.is-open").forEach(picker=>{
     if(picker===except)return;
@@ -547,7 +549,7 @@ function syncLanguagePicker(select){
   const trigger=picker.querySelector(".tn-language-picker-trigger");
   const menu=picker.querySelector(".tn-language-picker-menu");
   const selected=[...select.options].find(option=>option.value===select.value)||select.options[0];
-  if(trigger)trigger.textContent=selected?.textContent||"Select language";
+  if(trigger)window.TNI18n.bindText(trigger,()=>(selected?.textContent||window.TNI18n.t("ui.select_language",{})));
   if(!menu)return;
   menu.replaceChildren(...[...select.options].map(option=>{
     const button=document.createElement("button");
@@ -657,8 +659,8 @@ function renderSelect(id){
   const allWords=["studyList","quizList","audioList"].includes(id);
   const availableLists=db.lists;
   el.innerHTML="";
-  if(unfiled){const option=document.createElement("option");option.value="";option.textContent="No playlist";el.appendChild(option)}
-  if(allWords){const option=document.createElement("option");option.value="all";option.textContent="All words";el.appendChild(option)}
+  if(unfiled){const option=document.createElement("option");option.value="";window.TNI18n.bindText(option,()=>(window.TNI18n.t("ui.no_playlist",{})));el.appendChild(option)}
+  if(allWords){const option=document.createElement("option");option.value="all";window.TNI18n.bindText(option,()=>(window.TNI18n.t("ui.all_words",{})));el.appendChild(option)}
   availableLists.forEach(list=>{const option=document.createElement("option");option.value=list.id;option.textContent=list.name;el.appendChild(option)});
   const canRestore=[...el.options].some(option=>option.value===previous) && (previous!=="" || !unfiled || hasRendered);
   if(canRestore)el.value=previous;
@@ -685,10 +687,10 @@ function listWords(listId){
 }
 function playlistLangMeta(listId){
   const words=listWords(listId);
-  if(!words.length)return "No words yet";
+  if(!words.length)return window.TNI18n.t("ui.no_words");
   const first=words[0];
-  const front=langName(first.frontLang)||first.frontLang||"Front";
-  const back=langName(first.backLang)||first.backLang||"Back";
+  const front=window.TNI18n.studyName(first.frontLang)||first.frontLang||"Front";
+  const back=window.TNI18n.studyName(first.backLang)||first.backLang||"Back";
   return `${front} → ${back}`;
 }
 function activeListId(){
@@ -705,11 +707,11 @@ function updateBrandContext(){
   const total=db.words.length;
   const learned=masteredWords().length;
   const listId=activeListId();
-  const list=db.lists.find(item=>item.id===listId)||{id:"all",name:"All Words"};
+  const list=db.lists.find(item=>item.id===listId)||{id:"all",name:window.TNI18n.t("ui.all_words")};
   const words=listWords(list.id);
   const meta=playlistLangMeta(list.id);
   if($("heroPhoneDeck"))$("heroPhoneDeck").textContent=list.name;
-  if($("heroPhoneMeta"))$("heroPhoneMeta").textContent=`${meta} · ${words.length} words`;
+  if($("heroPhoneMeta"))window.TNI18n.bindText($("heroPhoneMeta"),()=>(window.TNI18n.t("ui.value_value_words",{p0:meta,p1:words.length})));
 }
 function goStudy(listId,mode){
   ["quizList","studyList","audioList"].forEach(id=>{const el=$(id);if(el)el.value=listId;});
@@ -729,22 +731,21 @@ function renderManage(){
   };
   Object.entries(counts).forEach(([id,value])=>{const el=$(id);if(el)el.textContent=String(value)});
 }
-function render(){fillLangSelects();["addList","bulkList","studyList","quizList","audioList","renameListSelect","editList"].forEach(id=>renderSelect(id,false));renderHome();if(typeof window.tnLibraryRender==="function")window.tnLibraryRender();else if(!$('tn82LibraryMount')&&typeof renderWords==="function")renderWords();renderMistakeNotebook();renderManage();updateStudyStar();updateStudyProgress();updateBulkDestinationSummary();try{updateQuizModeSettings()}catch(e){}}
+function render(){fillLangSelects();["addList","bulkList","studyList","quizList","audioList","renameListSelect","editList"].forEach(id=>renderSelect(id,false));renderHome();if(typeof window.tnLibraryRender==="function")window.tnLibraryRender();else if(!$('tn82LibraryMount')&&typeof renderWords==="function")renderWords();renderMistakeNotebook();renderManage();updateStudyStar();updateStudyProgress();updateBulkDestinationSummary();try{updateQuizModeSettings();restoreStudySettingsForOwner()}catch(e){}}
 function startSmartSession(kind="random"){
-  if(!db.words.length){appShow("add");return toast("Add your first words")}
+  if(!db.words.length){appShow("add");return toast(window.TNI18n.t("ui.add_your_first_words",{}))}
   const engine=learningEngine();
   const matches=kind==="due"?dueWords():kind==="weak"?weakWords():kind==="new"?db.words.filter(w=>Number(w.reviewCount||0)===0):kind==="saved"?db.words.filter(w=>w.saved):kind==="today"&&engine?engine.buildSmartSession(db.words,{limit:20}):db.words;
-  if(!matches.length)return toast(kind==="due"?"You are all caught up":kind==="weak"?"No weak words right now":kind==="new"?"No new words waiting":"No words in this session");
+  if(!matches.length)return toast(kind==="due"?window.TNI18n.t("ui.you_are_all_caught_up",{}):kind==="weak"?window.TNI18n.t("ui.no_weak_words_right_now",{}):kind==="new"?window.TNI18n.t("ui.no_new_words_waiting",{}):window.TNI18n.t("ui.no_words_in_this_session",{}));
   smartSessionQueue=kind==="random"?[]:[...matches];
   const firstList=db.lists.find(list=>matches.some(word=>word.listId===list.id))||db.lists.find(list=>db.words.some(word=>word.listId===list.id))||null;
   if($("quizList"))$("quizList").value=firstList?.id||"all";
   if($("quizType"))$("quizType").value="choice";
-  if($("quizOrderMode"))$("quizOrderMode").value=kind==="today"?"playlist":kind==="weak"?"weak":kind==="due"?"due":"random";
   if($("quizScope")){
     $("quizScope").value=kind==="due"?"due":kind==="weak"?"hard":kind==="saved"?"star":"all";
   }
   appShow("quiz");
-  setTimeout(()=>{try{startQuiz()}catch(e){toast("Quiz could not start")}},80);
+  setTimeout(()=>{try{startQuiz()}catch(e){toast(window.TNI18n.t("ui.quiz_could_not_start",{}))}},80);
 }
 function renderHome(){
   const set=(id,value)=>{const el=$(id);if(el)el.textContent=value};
@@ -765,45 +766,46 @@ function renderHome(){
   const memoryPath=$("homeMemoryPath");
   if(memoryPath){
     const stages={new:0,learning:0,review:0,mastered:0};
-    (db.words||[]).forEach(word=>{
-      const reviewCount=Number(word.reviewCount||word.seen||0);
+    (db.words||[]).forEach(source=>{
+      const word=learningEngine()?.normalizeWord(source)||source;
+      const reviewCount=Number(word.reviewCount||0);
       const level=Number(word.level||1);
       const interval=Number(word.reviewIntervalDays||0);
       const streak=Number(word.consecutiveCorrect||0);
-      if(learningEngine()?.isMasteredWord(word)||word.status==="learned")stages.mastered++;
-      else if(reviewCount===0&&String(word.learningState||"new")==="new")stages.new++;
+      if(learningEngine()?.isMasteredWord(word)??word.status==="learned")stages.mastered++;
+      else if(reviewCount===0)stages.new++;
       else if(interval>=7||streak>=3||level>=4)stages.review++;
       else stages.learning++;
     });
     const total=Math.max(1,db.words.length);
     const items=[
-      {key:"new",label:"New",note:"Seeds",count:stages.new},
-      {key:"learning",label:"Learning",note:"Taking root",count:stages.learning},
-      {key:"review",label:"Review",note:"Growing",count:stages.review},
-      {key:"mastered",label:"Mastered",note:"Established",count:stages.mastered}
+      {key:"new",label:window.TNI18n.t("ui.new",{}),note:window.TNI18n.t("ui.seeds",{}),count:stages.new},
+      {key:"learning",label:window.TNI18n.t("ui.learning",{}),note:window.TNI18n.t("ui.taking_root",{}),count:stages.learning},
+      {key:"review",label:window.TNI18n.t("ui.review_2",{}),note:window.TNI18n.t("ui.growing",{}),count:stages.review},
+      {key:"mastered",label:window.TNI18n.t("ui.mastered",{}),note:window.TNI18n.t("ui.established",{}),count:stages.mastered}
     ];
-    memoryPath.innerHTML=db.words.length?`<div class="tn-memory-track" aria-hidden="true">${items.map(item=>`<i class="${item.key}" style="--tn-memory-share:${(item.count/total).toFixed(4)}"></i>`).join("")}</div><div class="tn-memory-stages">${items.map(item=>`<div><span class="tn-memory-dot ${item.key}"></span><b>${item.count}</b><strong>${item.label}</strong><small>${item.note}</small></div>`).join("")}</div>`:`<div class="tn-memory-empty"><strong>Your memory path begins with one word.</strong><button type="button" class="btn" onclick="appShow('add')">Add the first word</button></div>`;
+    memoryPath.innerHTML=db.words.length?`<div class="tn-memory-track" aria-hidden="true">${items.map(item=>`<i class="${item.key}" style="--tn-memory-share:${(item.count/total).toFixed(4)}"></i>`).join("")}</div><div class="tn-memory-stages">${items.map(item=>`<div><span class="tn-memory-dot ${item.key}"></span><b>${item.count}</b><strong>${item.label}</strong><small>${item.note}</small></div>`).join("")}</div>`:`<div class="tn-memory-empty"><strong>${window.TNI18n.mark("ui.your_memory_path_begins_with_one_word",{})}</strong><button type="button" class="btn" onclick="appShow('add')">${window.TNI18n.mark("ui.add_the_first_word",{})}</button></div>`;
   }
   const todayPlan=$("todayPlan");
   if(todayPlan){
     const newCount=session.new;
     const primary=due.length||weak.length||newCount
-      ? {label:"Today’s Session",detail:`${session.total} words · about ${session.minutes} min`,action:"startSmartSession('today')",button:"Start Today’s Session"}
+      ? {label:window.TNI18n.t("ui.today_s_session",{}),detail:window.TNI18n.t("ui.value_words_about_value_min",{p0:session.total,p1:session.minutes}),action:"startSmartSession('today')",button:window.TNI18n.t("ui.start_today_s_session",{})}
       : db.words.length
-        ? {label:"Keep the rhythm moving",detail:"Run a short random quiz",action:"startSmartSession('random')",button:"Start Quiz"}
-        : {label:"Build your first collection",detail:"Add 3-5 words to begin",action:"appShow('add')",button:"Add Words"};
+        ? {label:window.TNI18n.t("ui.keep_the_rhythm_moving",{}),detail:window.TNI18n.t("ui.run_a_short_random_quiz",{}),action:"startSmartSession('random')",button:window.TNI18n.t("ui.start_quiz",{})}
+        : {label:window.TNI18n.t("ui.build_your_first_collection",{}),detail:window.TNI18n.t("ui.add_3_5_words_to_begin",{}),action:"appShow('add')",button:window.TNI18n.t("navigation.addWords",{})};
     todayPlan.innerHTML=`
       <div class="tn-today-primary">
-        <div><span class="tn-today-label">Recommended</span><strong>${esc(primary.label)}</strong><em>${esc(primary.detail)}</em></div>
+        <div><span class="tn-today-label">${window.TNI18n.mark("ui.recommended",{})}</span><strong>${esc(primary.label)}</strong><em>${esc(primary.detail)}</em></div>
         <button type="button" class="btn primary" onclick="${primary.action}">${esc(primary.button)}</button>
       </div>
       <div class="tn-today-grid">
-        <button type="button" onclick="startSmartSession('due')"><b>${session.due}</b><span>Due today</span></button>
-        <button type="button" onclick="startSmartSession('weak')"><b>${session.weak}</b><span>Needs practice</span></button>
-        <button type="button" onclick="startSmartSession('new')"><b>${session.new}</b><span>New</span></button>
-        <button type="button" onclick="window.tnOpenLibraryView?tnOpenLibraryView('mastered'):appShow('words')"><b>${session.mastered}</b><span>Mastered</span></button>
+        <button type="button" onclick="startSmartSession('due')"><b>${session.due}</b><span>${window.TNI18n.mark("ui.due_today",{})}</span></button>
+        <button type="button" onclick="startSmartSession('weak')"><b>${session.weak}</b><span>${window.TNI18n.mark("ui.needs_practice",{})}</span></button>
+        <button type="button" onclick="startSmartSession('new')"><b>${session.new}</b><span>${window.TNI18n.mark("ui.new",{})}</span></button>
+        <button type="button" onclick="window.tnOpenLibraryView?tnOpenLibraryView('mastered'):appShow('words')"><b>${session.mastered}</b><span>${window.TNI18n.mark("ui.mastered",{})}</span></button>
       </div>
-      <div class="tn-recent-strip">${recent.length?recent.map(w=>`<button type="button" onclick="openDetail(${jsArg(w.id)})"><b>${esc(w.front)}</b><span>${esc(w.back)}</span></button>`).join(""):"<span class='desc'>Recent words will appear here after you add them.</span>"}</div>
+      <div class="tn-recent-strip">${recent.length?recent.map(w=>`<button type="button" onclick="openDetail(${jsArg(w.id)})"><b>${esc(w.front)}</b><span>${esc(w.back)}</span></button>`).join(""):`<span class='desc'>${window.TNI18n.mark("ui.recent_words_will_appear_here_after_you_add_them",{})}</span>`}</div>
     `;
   }
   const homeLists=$("homeLists");
@@ -819,20 +821,20 @@ function renderHome(){
         <div class="playlist-icon">${esc(l.name.slice(0,1).toUpperCase())}</div>
         <div>
           <b>${esc(l.name)}</b>
-          <span>${esc(meta)} · ${ws.length} words</span>
+          <span>${window.TNI18n.mark("ui.value_value_words_2",{p2:esc(meta),p3:ws.length})}</span>
         </div>
       </div>
       <div class="playlist-stats">
-        <span>${learned} learned</span>
-        <span>${hard} hard</span>
+        <span>${window.TNI18n.mark("ui.value_learned",{p4:learned})}</span>
+        <span>${window.TNI18n.mark("ui.value_hard",{p5:hard})}</span>
       </div>
       <div class="playlist-actions">
-        <button class="btn small primary" onclick="goStudy(${id},'quiz')">Quiz</button>
-        <button class="btn small" onclick="goStudy(${id},'cards')">Cards</button>
-        <button class="btn small" onclick="goStudy(${id},'audio')">Listen</button>
+        <button class="btn small primary" onclick="goStudy(${id},'quiz')">${window.TNI18n.mark("navigation.quiz",{})}</button>
+        <button class="btn small" onclick="goStudy(${id},'cards')">${window.TNI18n.mark("navigation.cards",{})}</button>
+        <button class="btn small" onclick="goStudy(${id},'audio')">${window.TNI18n.mark("navigation.listen",{})}</button>
       </div>
     </div>`
-  }).join("")||'<div class="empty"><div><strong>No lists yet</strong><span>Create a list when you want to group words by language, topic, or goal.</span></div><button type="button" class="btn" onclick="appShow(\'add\')">Create List</button></div>';
+  }).join("")||`<div class="empty"><div><strong>${window.TNI18n.mark("ui.no_lists_yet",{})}</strong><span>${window.TNI18n.mark("ui.create_a_list_when_you_want_to_group_words_by_language_topic_or_goal",{})}</span></div><button type="button" class="btn" onclick="appShow('add')">${window.TNI18n.mark("ui.create_list",{})}</button></div>`;
   updateBrandContext();
 }
 
@@ -861,61 +863,7 @@ function splitBulkLine(line){
 }
 
 function parseBulk(text){
-  return String(text||"")
-    .split(/\r?\n/)
-    .map((line,i)=>({line:String(line||"").trim(),row:i+1}))
-    .filter(x=>x.line)
-    .map(({line,row})=>{
-      let exampleFromPipe="";
-      let before=line;
-      if(line.includes("|")){
-        const pieces=line.split("|");
-        before=pieces.shift().trim();
-        exampleFromPipe=pieces.join("|").trim();
-      }
-
-      let parts=splitBulkLine(before);
-      let front="",back="",pos="",gender="",memo="",pronunciation="";
-
-      if(parts.length>=5){
-        front=parts[0];
-        back=parts[1];
-        pos=parts[2];
-        gender=parts[3];
-        if(exampleFromPipe)pronunciation=parts.slice(4).join(" ");
-        else memo=parts.slice(4).join(" ");
-      }else if(parts.length===4){
-        front=parts[0];
-        back=parts[1];
-        pos=parts[2];
-        gender=parts[3];
-      }else if(parts.length===3){
-        front=parts[0];
-        back=parts[1];
-        pos=parts[2];
-      }else if(parts.length===2){
-        front=parts[0];
-        back=parts[1];
-      }else{
-        front=line;
-      }
-
-      if(exampleFromPipe){
-        memo=exampleFromPipe;
-      }
-
-      const normalized=window.TangoNestExampleFields?.normalizeFields(memo,pronunciation)||{memo,pronunciation};
-      return {
-        row,
-        front:cleanBulkValue(front),
-        back:cleanBulkValue(back),
-        pos:cleanBulkValue(pos),
-        gender:cleanBulkValue(gender),
-        memo:cleanBulkValue(normalized.memo),
-        pronunciation:cleanBulkValue(normalized.pronunciation)
-      };
-    })
-    .filter(r=>r.front && r.back);
+  return window.TangoNestBulkFormat.parse(text,$("bulkFormat")?.value||"complete").rows.filter(row=>!row.errors.length);
 }
 
 function duplicateMatch(row,listId){
@@ -943,27 +891,72 @@ function softDuplicateMatch(row,listId){
   return db.words.find(w=>w.listId===listId && String(w.front||"").trim().toLowerCase()===f);
 }
 function bulkRows(){
-  let listId=$("bulkList").value,seenExact=new Set(),seenFront=new Set();
-  return parseBulk($("bulkText").value).map(r=>{
-    let exactKey=[r.front,r.back,r.pos].map(x=>String(x||"").trim().toLowerCase()).join("||");
-    let frontKey=String(r.front||"").trim().toLowerCase();
-    let exactDuplicate=!!duplicateMatch(r,listId)||seenExact.has(exactKey);
-    let frontDuplicate=!!softDuplicateMatch(r,listId)||seenFront.has(frontKey);
-    seenExact.add(exactKey);
-    seenFront.add(frontKey);
-    return{...r,duplicate:exactDuplicate,frontDuplicate,existing:softDuplicateMatch(r,listId)||null};
-  });
+  return bulkParseStats().rows.filter(row=>!row.errors.length);
 }
 function bulkParseStats(){
-  const lines=String($("bulkText")?.value||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-  const rows=bulkRows();
-  return {lines:lines.length,valid:rows.length,invalid:Math.max(0,lines.length-rows.length),rows};
+  const result=window.TangoNestBulkFormat.analyze($("bulkText")?.value||"",{
+    format:$("bulkFormat")?.value||"complete",words:db.words,...bulkDestination(),
+    pos:[...($("pos")?.options||[])].map(option=>option.value).filter(Boolean),
+    genders:[...($("gender")?.options||[])].map(option=>option.value).filter(Boolean)
+  });
+  const diagnostic=text=>{
+    const columns=text.match(/^Expected at most (\d+) columns; found (\d+)\. Check the format or delimiters\.$/);
+    return columns?window.TNI18n.t("bulk.columnCount",{expected:columns[1],actual:columns[2]}):window.TNI18n.uiText(text);
+  };
+  for(const row of result.rows){row.errors=row.errors.map(diagnostic);row.warnings=row.warnings.map(diagnostic);}
+  return result;
+}
+window.bulkParseStats=bulkParseStats;
+function updateBulkAssistant(){
+  const api=window.TangoNestBulkFormat,select=$("bulkFormat");
+  if(!api||!select)return;
+  if(!select.options.length)select.innerHTML=api.formats.map(format=>`<option value="${format.id}">${esc(window.TNI18n.uiText(format.label))}</option>`).join("");
+  for(const option of select.options){const format=api.formats.find(item=>item.id===option.value);if(format)option.textContent=window.TNI18n.uiText(format.label);}
+  $("bulkFormatGuide").textContent=api.formatText(select.value);
+  $("bulkText").placeholder=api.sample({...bulkDestination(),format:select.value});
+}
+window.updateBulkAssistant=updateBulkAssistant;
+window.updateBulkActionDock=updateBulkActionDock;
+async function copyBulkAssistant(kind){
+  const target=bulkDestination(),format=$("bulkFormat").value;
+  const api=window.TangoNestBulkFormat;
+  const text=kind==="format"?api.formatText(format):api.prompt({format,frontLabel:langName(target.frontLang),backLabel:langName(target.backLang),count:$("bulkPromptCount").value,pos:[...$("pos").options].map(option=>option.value).filter(Boolean),genders:[...$("gender").options].map(option=>option.value).filter(Boolean)});
+  try{
+    await navigator.clipboard.writeText(text);
+    window.TNI18n.bindText($("bulkAssistantStatus"),()=>(kind==="format"?window.TNI18n.t("ui.format_copied",{}):window.TNI18n.t("ui.prompt_copied_paste_it_into_your_ai_tool_then_bring_the_word_rows_back_here",{})));
+    $("bulkCopyFallback").hidden=true;
+  }catch(error){
+    $("bulkCopyFallback").hidden=false;
+    $("bulkCopyText").value=text;
+    $("bulkCopyText").focus();$("bulkCopyText").select();
+    window.TNI18n.bindText($("bulkAssistantStatus"),()=>(window.TNI18n.t("ui.clipboard_access_is_unavailable_the_text_below_is_selected_for_copying",{})));
+  }
+}
+function insertBulkSample(){
+  if($("bulkText").value.trim()&&!confirm(window.TNI18n.t("ui.replace_the_pasted_text_with_two_sample_rows",{})))return;
+  $("bulkText").value=window.TangoNestBulkFormat.sample({...bulkDestination(),format:$("bulkFormat").value});
+  clearBulkPreview();previewBulk();
+  window.TNI18n.bindText($("bulkAssistantStatus"),()=>(window.TNI18n.t("ui.two_sample_rows_inserted_review_them_before_importing",{})));
 }
 let approvedBulkConfirmationKey="";
 let lastLocalBulkUndo=null;
 let localBulkImportInFlight=false;
 let bulkDockTimer=0;
 let bulkProgressHideTimer=0;
+let bulkStopRequested=false;
+const bulkDisabledControls=new Set();
+function setBulkControlsBusy(busy){
+  if(busy){
+    $("bulkCard")?.querySelectorAll("input,select,textarea,button").forEach(control=>{
+      if(!control.disabled){bulkDisabledControls.add(control);control.disabled=true;}
+    });
+  }else{
+    bulkDisabledControls.forEach(control=>control.disabled=false);
+    bulkDisabledControls.clear();
+  }
+  const cancel=$("bulkCancelButton");
+  if(cancel){cancel.hidden=!busy;cancel.disabled=false;window.TNI18n.bindText(cancel,()=>(window.TNI18n.t("ui.stop_after_this_batch",{})));}
+}
 function bulkDestination(){
   const listId=$("bulkList")?.value||"";
   const list=db.lists.find(item=>item.id===listId);
@@ -976,13 +969,13 @@ function bulkDestination(){
 }
 function bulkConfirmationKey(rows,mode){
   const target=bulkDestination();
-  return JSON.stringify({listId:target.listId,frontLang:target.frontLang,backLang:target.backLang,mode:mode||"skip",rows:rows.map(row=>[row.front,row.back,row.pos])});
+  return JSON.stringify({...target,mode:mode||"skip",rows:rows.map(row=>window.TangoNestBulkFormat.fields.map(field=>row[field.key]))});
 }
 function updateBulkDestinationSummary(){
   const box=$("bulkTargetSummary");
   if(!box)return;
   const target=bulkDestination();
-  box.innerHTML=`<span>Destination</span><strong>${esc(target.listName)}</strong><small>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small>`;
+  box.innerHTML=`<span>${window.TNI18n.mark("ui.destination",{})}</span><strong>${esc(target.listName)}</strong><small>${esc(window.TNI18n.studyName(target.frontLang))} → ${esc(window.TNI18n.studyName(target.backLang))}</small>`;
 }
 function hideBulkDestinationConfirmation(){
   approvedBulkConfirmationKey="";
@@ -998,7 +991,8 @@ function requestBulkDestinationConfirmation(rows,mode){
   const duplicatePanel=$("bulkDuplicatePanel");
   if(duplicatePanel)duplicatePanel.classList.remove("show");
   panel.hidden=false;
-  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">Confirm destination</span><strong id="bulkConfirmTitle">${esc(target.listName)}</strong><small>${rows.length} words · ${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>Go back</button><button type="button" data-bulk-approve>Import here</button></div>`;
+  const stats=bulkParseStats();
+  panel.innerHTML=`<div><span class="tn-bulk-confirm-kicker">${window.TNI18n.mark("ui.confirm_destination",{})}</span><strong id="bulkConfirmTitle">${esc(target.listName)}</strong><small>${window.TNI18n.mark("ui.value_words_value_value",{p1:rows.length,p2:esc(window.TNI18n.studyName(target.frontLang)),p3:esc(window.TNI18n.studyName(target.backLang))})}</small><small>${window.TNI18n.mark("ui.value_warning_rows_value_skipped",{p4:stats.warnings,p5:Math.max(0,stats.valid-rows.length)})}</small></div><div class="tn-bulk-confirm-actions"><button type="button" data-bulk-cancel>${window.TNI18n.mark("ui.go_back",{})}</button><button type="button" data-bulk-approve>${window.TNI18n.mark("ui.import_value_words_here",{p6:rows.length})}</button></div>`;
   panel.querySelector("[data-bulk-cancel]")?.addEventListener("click",hideBulkDestinationConfirmation);
   panel.querySelector("[data-bulk-approve]")?.addEventListener("click",()=>{approvedBulkConfirmationKey=key;window.bulkImport(mode||undefined)});
   setTimeout(()=>panel.querySelector("[data-bulk-approve]")?.focus({preventScroll:true}),0);
@@ -1013,25 +1007,28 @@ function setBulkProgress(current,total,label,state="working"){
   const percent=Math.max(0,Math.min(100,Math.round(safeCurrent/safeTotal*100)));
   panel.hidden=false;
   panel.dataset.state=state;
-  if($("bulkProgressLabel"))$("bulkProgressLabel").textContent=label||"Saving your words";
-  if($("bulkProgressDetail"))$("bulkProgressDetail").textContent=state==="done"?`${safeCurrent} words are safely in your collection.`:state==="error"?"Nothing else will be changed until you try again.":`${safeCurrent} of ${safeTotal} words saved · keep this tab open.`;
+  if($("bulkProgressLabel"))window.TNI18n.bindText($("bulkProgressLabel"),()=>(window.TNI18n.uiText(label)||window.TNI18n.t("ui.saving_your_words",{})));
+  if($("bulkProgressDetail"))window.TNI18n.bindText($("bulkProgressDetail"),()=>(state==="done"?window.TNI18n.t("ui.value_words_are_safely_in_your_collection",{p0:safeCurrent}):state==="error"?window.TNI18n.t("ui.value_of_value_confirmed_your_import_can_be_resumed_without_repeating_saved_rows",{p0:safeCurrent,p1:safeTotal}):window.TNI18n.t("ui.value_of_value_words_saved_keep_this_tab_open",{p0:safeCurrent,p1:safeTotal})));
   if($("bulkProgressPercent"))$("bulkProgressPercent").textContent=`${percent}%`;
   if($("bulkProgressFill"))$("bulkProgressFill").style.transform=`scaleX(${percent/100})`;
 }
-function beginBulkProgress(total){setBulkProgress(0,total,"Preparing your collection","working")}
-function updateBulkProgress(current,total,label){setBulkProgress(current,total,label||"Planting words in your library","working")}
-function finishBulkProgress(total){setBulkProgress(total,total,"Import complete","done");bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},1400)}
-function failBulkProgress(current,total,message){setBulkProgress(current,total,message||"Import paused","error");bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},3200)}
+function beginBulkProgress(total){bulkStopRequested=false;setBulkControlsBusy(true);setBulkProgress(0,total,"Preparing your collection","working")}
+function updateBulkProgress(current,total,label){setBulkProgress(current,total,label||window.TNI18n.t("ui.saving_your_words"),"working")}
+function finishBulkProgress(total){setBulkControlsBusy(false);setBulkProgress(total,total,window.TNI18n.t("bulk.complete"),"done");updateBulkActionDock();bulkProgressHideTimer=setTimeout(()=>{const panel=$("bulkProgressPanel");if(panel)panel.hidden=true},1400)}
+function failBulkProgress(current,total,message){setBulkControlsBusy(false);setBulkProgress(current,total,message||window.TNI18n.t("bulk.paused"),"error");updateBulkActionDock()}
 function bulkProgressBusy(){return localBulkImportInFlight||$("bulkProgressPanel")?.dataset.state==="working"}
-window.tnBulkProgress={start:beginBulkProgress,update:updateBulkProgress,finish:finishBulkProgress,fail:failBulkProgress,busy:bulkProgressBusy};
+window.tnBulkProgress={start:beginBulkProgress,update:updateBulkProgress,finish:finishBulkProgress,fail:failBulkProgress,busy:bulkProgressBusy,cancelled:()=>bulkStopRequested};
 function updateBulkActionDock(){
   const dock=$("bulkActionDock");
   if(!dock)return;
-  const parsed=parseBulk($("bulkText")?.value||"");
-  dock.hidden=!parsed.length;
-  if($("bulkDockCount"))$("bulkDockCount").textContent=parsed.length?`${parsed.length} readable word${parsed.length===1?"":"s"}`:"Paste words to begin";
-  if($("bulkDockMeta"))$("bulkDockMeta").textContent=parsed.length>=500?"Large import ready · progress will be shown while every batch is saved.":"Preview checks duplicates and the destination before saving.";
-  if($("bulkRegisterBtn"))$("bulkRegisterBtn").textContent=parsed.length?`Review & Import ${parsed.length}`:"Review & Import";
+  const stats=bulkParseStats();
+  dock.hidden=!stats.lines;
+  if($("bulkDockCount"))window.TNI18n.bindText($("bulkDockCount"),()=>(window.TNI18n.t("ui.value_rows_detected",{p0:stats.lines})));
+  if($("bulkDockMeta"))window.TNI18n.bindText($("bulkDockMeta"),()=>(window.TNI18n.t("ui.value_ready_value_warnings_value_errors",{p0:stats.ready,p1:stats.warnings,p2:stats.invalid})));
+  if($("bulkRegisterBtn")){
+    window.TNI18n.bindText($("bulkRegisterBtn"),()=>(window.TNI18n.t("ui.review_import_value",{p0:stats.valid})));
+    $("bulkRegisterBtn").disabled=!!stats.invalid||!stats.valid||bulkProgressBusy();
+  }
 }
 function queueBulkActionDock(){clearTimeout(bulkDockTimer);bulkDockTimer=setTimeout(updateBulkActionDock,120)}
 function clearBulkInput(){if($("bulkText"))$("bulkText").value="";clearBulkPreview();updateBulkActionDock()}
@@ -1040,17 +1037,17 @@ function showBulkUndo(info){
   const panel=$("bulkUndoPanel");
   if(!panel)return;
   panel.hidden=false;
-  panel.innerHTML=`<div><strong>${Number(info?.count||0)} words added to ${esc(info?.playlistName||"the selected playlist")}</strong><small>You can undo this import without affecting earlier words.</small></div><button type="button" onclick="undoLastBulkImport()">Undo last Bulk Add</button>`;
+  panel.innerHTML=`<div><strong>${window.TNI18n.mark("ui.value_words_added_to_value",{p0:Number(info?.count||0),p1:esc(info?.playlistName||"the selected playlist")})}</strong><small>${window.TNI18n.mark("ui.you_can_undo_this_import_without_affecting_earlier_words",{})}</small></div><button type="button" onclick="undoLastBulkImport()">${window.TNI18n.mark("ui.undo_last_bulk_add",{})}</button>`;
 }
 function clearBulkUndo(){lastLocalBulkUndo=null;const panel=$("bulkUndoPanel");if(panel){panel.hidden=true;panel.innerHTML=""}}
 async function undoLastBulkImport(){
-  if(!lastLocalBulkUndo)return toast("There is no Bulk Add to undo");
+  if(!lastLocalBulkUndo)return toast(window.TNI18n.t("ui.there_is_no_bulk_add_to_undo",{}));
   if(lastLocalBulkUndo.type==="snapshot")db.words=lastLocalBulkUndo.words;
   else{const ids=new Set(lastLocalBulkUndo.ids||[]);db.words=db.words.filter(word=>!ids.has(word.id))}
   const count=lastLocalBulkUndo.count||0;
   clearBulkUndo();
   save();
-  toast(`${count} imported words removed`);
+  toast(window.TNI18n.t("ui.value_imported_words_removed",{p0:count}));
 }
 function clearBulkPreview(){
   let b=$("bulkPreview");if(b){b.style.display="none";b.innerHTML=""}
@@ -1065,39 +1062,62 @@ function renderDuplicatePanel(rows){
   if(!dup.length){panel.classList.remove("show");panel.innerHTML="";return;}
   const visible=dup.slice(0,60);
   panel.classList.add("show");
-  panel.innerHTML=`<div class="dup-panel-head"><div id="bulkDuplicateTitle" class="dup-title">Duplicate front words found: ${dup.length}</div><button type="button" class="dup-close" data-dup-close aria-label="Close duplicate review">Close</button></div>
-  <p class="desc">Frontが同じ単語があります。自動スキップせず、下のボタンで登録方法を選んでください。</p>
+  panel.innerHTML=`<div class="dup-panel-head"><div id="bulkDuplicateTitle" class="dup-title">${window.TNI18n.mark("ui.duplicate_front_words_found_value",{p0:dup.length})}</div><button type="button" class="dup-close" data-dup-close aria-label="Close duplicate review" data-i18n-aria-label="ui.close_duplicate_review">${window.TNI18n.mark("common.close",{})}</button></div>
+  <p class="desc">${window.TNI18n.mark("ui.some_words_have_the_same_front_choose_how_to_import_them_nothing_is_skipped_automatically",{})}</p>
   <div class="dup-list">`+visible.map(r=>{
     let ex=r.existing;
     return `<div class="dup-item"><b>${esc(r.front)}</b>
-      <span class="badge">New: ${esc(r.back)} / ${esc(r.pos||"—")}</span>
-      ${ex?`<span class="badge yellow">Existing: ${esc(ex.back)} / ${esc(ex.pos||"—")}</span>`:"<span class='badge'>Duplicate in pasted rows</span>"}
+      <span class="badge">${window.TNI18n.mark("ui.new_value_value",{p1:esc(r.back),p2:esc(r.pos||"—")})}</span>
+      ${ex?`<span class="badge yellow">${window.TNI18n.mark("ui.existing_value_value",{p0:esc(ex.back),p1:esc(ex.pos||"—")})}</span>`:`<span class='badge'>${window.TNI18n.mark("ui.duplicate_in_pasted_rows",{})}</span>`}
     </div>`
-  }).join("")+(dup.length>visible.length?`<div class="dup-more">${dup.length-visible.length} more duplicate rows are included in this decision.</div>`:"")+`</div>
+  }).join("")+(dup.length>visible.length?`<div class="dup-more">${window.TNI18n.mark("ui.value_more_duplicate_rows_are_included_in_this_decision",{p0:dup.length-visible.length})}</div>`:"")+`</div>
   <div class="dup-actions">
-    <button class="btn red" type="button" data-bulk-mode="skip">Skip Exact Duplicates</button>
-    <button class="btn green" type="button" data-bulk-mode="addBoth">Add Both</button>
-    <button class="btn blue" type="button" data-bulk-mode="replace">Replace Existing</button>
+    <button class="btn red" type="button" data-bulk-mode="skip">${window.TNI18n.mark("ui.skip_exact_duplicates",{})}</button>
+    <button class="btn green" type="button" data-bulk-mode="addBoth">${window.TNI18n.mark("ui.add_both",{})}</button>
+    <button class="btn blue" type="button" data-bulk-mode="replace" ${TN_LOCAL_QA_MODE?'':'disabled title="Cloud Replace is disabled to protect saved words. Edit individual words in Library."'}>${window.TNI18n.mark("ui.replace_existing",{})}</button>
   </div>`;
   panel.querySelector("[data-dup-close]")?.addEventListener("click",()=>panel.classList.remove("show"));
   panel.querySelectorAll("[data-bulk-mode]").forEach(button=>button.addEventListener("click",()=>window.bulkImport(button.dataset.bulkMode)));
   setTimeout(()=>panel.querySelector("[data-bulk-mode='addBoth']")?.focus({preventScroll:true}),0);
 }
-function previewBulk(){
+function previewBulk(reviewDuplicates=false){
   let stats=bulkParseStats(),rows=stats.rows,box=$("bulkPreview");
+  box.dataset.inputVersion=JSON.stringify([$("bulkText").value,$("bulkFormat").value,bulkDestination()]);
   box.style.display="block";
-  if(!rows.length){box.innerHTML='<div class="empty"><h3>No readable words</h3><p>Each row needs at least Front and Back.</p></div>';return}
-  renderDuplicatePanel(rows);
+  if(!rows.length){box.innerHTML=`<div class="empty"><h3>${window.TNI18n.mark("ui.no_readable_words",{})}</h3><p>${window.TNI18n.mark("ui.each_row_needs_at_least_front_and_back",{})}</p></div>`;return}
+  if(!stats.invalid&&reviewDuplicates)renderDuplicatePanel(rows);
+  else $("bulkDuplicatePanel")?.classList.remove("show");
   const target=bulkDestination();
   const visible=rows.slice(0,60);
-  box.innerHTML=`<div class="tn-bulk-preview-target"><b>Import to ${esc(target.listName)}</b><span>${esc(langName(target.frontLang))} → ${esc(langName(target.backLang))}</span></div><div class="tn-bulk-summary"><span>${stats.valid} valid</span><span>${stats.invalid} invalid</span><span>${rows.filter(r=>r.duplicate).length} exact duplicates</span><span>${rows.filter(r=>r.frontDuplicate).length} same-front</span></div>${rows.length>visible.length?`<p class="tn-bulk-preview-limit">Showing the first ${visible.length} rows. All ${rows.length} validated rows will be imported.</p>`:""}<div class="tablewrap"><table><thead><tr><th>Row</th><th>Front</th><th>Back</th><th>POS</th><th>Gender</th><th>Pronunciation</th><th>Example</th><th>Status</th></tr></thead><tbody>`+visible.map(r=>`<tr><td>${r.row}</td><td><b>${esc(r.front)}</b></td><td>${esc(r.back)}</td><td>${esc(r.pos)}</td><td>${esc(r.gender)}</td><td>${esc(r.pronunciation)}</td><td>${esc(r.memo)}</td><td>${r.duplicate?'<span class="badge red">Exact Duplicate</span>':r.frontDuplicate?'<span class="badge yellow">Same Front</span>':'<span class="badge green">Ready</span>'}</td></tr>`).join("")+"</tbody></table></div>"
+  const fields=window.TangoNestBulkFormat.fields;
+  box.innerHTML=`<div class="tn-bulk-preview-target"><b>${window.TNI18n.mark("ui.import_to_value",{p0:esc(target.listName)})}</b><span>${esc(window.TNI18n.studyName(target.frontLang))} → ${esc(window.TNI18n.studyName(target.backLang))}</span></div><div class="tn-bulk-summary" role="status"><span>${window.TNI18n.mark("ui.value_ready",{p3:stats.ready})}</span><span>${window.TNI18n.mark("ui.value_warnings",{p4:stats.warnings})}</span><span>${window.TNI18n.mark("ui.value_errors",{p5:stats.invalid})}</span><span>${window.TNI18n.mark("ui.value_valid",{p6:stats.valid})}</span><span>${window.TNI18n.mark("ui.value_exact_duplicates",{p7:rows.filter(r=>r.duplicate).length})}</span></div><p class="tn-bulk-validation-note">${window.TNI18n.mark("ui.errors_must_be_corrected_before_importing_warnings_can_be_imported_after_review",{})}</p>${rows.length>visible.length?`<p class="tn-bulk-preview-limit">${window.TNI18n.mark("ui.showing_value_of_value_rows_every_row_is_validated",{p0:visible.length,p1:rows.length})}</p>`:""}<div class="tablewrap" tabindex="0" role="region" aria-label="Bulk Add preview" data-i18n-aria-label="ui.bulk_add_preview"><table><thead><tr><th>${window.TNI18n.mark("ui.row",{})}</th>${fields.map(field=>`<th>${esc(window.TNI18n.uiText(field.label))}</th>`).join("")}<th>${window.TNI18n.mark("ui.status",{})}</th></tr></thead><tbody>`+visible.map(r=>`<tr><td>${r.row}</td>${fields.map(field=>`<td dir="auto">${esc(r[field.key])}</td>`).join("")}<td><strong>${r.status==="error"?window.TNI18n.uiText("Error"):r.status==="warning"?window.TNI18n.uiText("Warning"):window.TNI18n.uiText("Ready")}</strong><span class="tn-bulk-row-issues">${esc([...r.errors,...r.warnings].join(" "))}</span></td></tr>`).join("")+"</tbody></table></div>";
+  const issues=rows.filter(row=>row.errors.length);
+  if(issues.length)box.innerHTML+=`<div class="tn-bulk-errors" role="alert">${issues.slice(0,30).map(row=>`<p>${window.TNI18n.mark("ui.row_value_value",{p0:row.row,p1:esc(row.errors.join(" "))})}</p>`).join("")}${issues.length>30?`<p>${window.TNI18n.mark("ui.value_additional_rows_need_correction",{p0:issues.length-30})}</p>`:""}</div>`;
+  const problems=rows.filter(row=>row.errors.length||row.warnings.length);
+  if(problems.length){
+    const list=document.createElement("div");list.className="bulk-problem-links";
+    for(const row of problems){
+      const button=document.createElement("button");button.type="button";
+      button.textContent=window.TNI18n.t("bulk.editRow",{row:row.row})+" · "+[...row.errors,...row.warnings].join(" ");
+      button.onclick=()=>focusBulkRow(row.row);list.appendChild(button);
+    }
+    box.prepend(list);
+  }
+}
+function focusBulkRow(row){
+  const input=$("bulkText"),lines=input.value.split("\n");
+  const start=lines.slice(0,row-1).reduce((length,line)=>length+line.length+1,0);
+  input.focus();input.setSelectionRange(start,start+(lines[row-1]||"").length);
+  input.scrollTop=(row-1)*(parseFloat(getComputedStyle(input).lineHeight)||22);
+  input.scrollIntoView({block:"center",behavior:"instant"});
 }
 async function bulkImport(mode){
-  if(localBulkImportInFlight)return toast("Bulk Add is already running");
+  if(localBulkImportInFlight)return toast(window.TNI18n.t("ui.bulk_add_is_already_running",{}));
+  if(bulkParseStats().invalid){previewBulk();return toast(window.TNI18n.t("ui.fix_the_highlighted_rows_before_importing",{}))}
   let rows=bulkRows();
-  if(!rows.length)return toast("No readable words");
+  if(!rows.length)return toast(window.TNI18n.t("ui.no_readable_words",{}));
   const hasFrontDup=rows.some(r=>r.frontDuplicate);
-  if(hasFrontDup&&!mode){previewBulk();return toast("Duplicate words need confirmation");}
+  if(hasFrontDup&&!mode){previewBulk(true);return toast(window.TNI18n.t("ui.duplicate_words_need_confirmation",{}));}
   let listId=$("bulkList").value,frontLang=$("bulkFrontLang").value,backLang=$("bulkBackLang").value;
   const target=bulkDestination();
   if(mode==="replace"){
@@ -1112,7 +1132,7 @@ async function bulkImport(mode){
       }
     });
     lastLocalBulkUndo={type:"snapshot",words:beforeWords,count:rows.length};
-    $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:rows.length,playlistName:target.listName});return toast(`${rows.length} processed`);
+    $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:rows.length,playlistName:target.listName});return toast(window.TNI18n.t("ui.value_processed",{p0:rows.length}));
   }
   if(mode==="skip"||!mode){
     rows=rows.filter(r=>!r.duplicate);
@@ -1126,7 +1146,7 @@ async function bulkImport(mode){
       return true;
     });
   }
-  if(!rows.length)return toast("No new words to add");
+  if(!rows.length)return toast(window.TNI18n.t("ui.no_new_words_to_add",{}));
   if(!requestBulkDestinationConfirmation(rows,mode))return;
   localBulkImportInFlight=true;
   beginBulkProgress(rows.length);
@@ -1134,28 +1154,30 @@ async function bulkImport(mode){
     const additions=[];
     const chunkSize=200;
     for(let start=0;start<rows.length;start+=chunkSize){
+      if(bulkStopRequested){failBulkProgress(0,rows.length,"Import stopped. No local words were added.");return;}
       const chunk=rows.slice(start,start+chunkSize).map(r=>({id:uid(),front:r.front,back:r.back,frontLang,backLang,listId,memo:r.memo,pronunciation:r.pronunciation,pos:r.pos,gender:r.gender,tags:"",saved:false,status:"new",seen:0,level:1,nextReview:today(),learningState:"new",reviewIntervalDays:0,consecutiveCorrect:0,lastResult:"",createdAt:new Date().toISOString()}));
       additions.push(...chunk);
       updateBulkProgress(additions.length,rows.length,`Preparing batch ${Math.floor(start/chunkSize)+1}`);
       await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
     }
+    if(bulkStopRequested){failBulkProgress(0,rows.length,"Import stopped. No local words were added.");return;}
     db.words=[...db.words,...additions];
     lastLocalBulkUndo={type:"ids",ids:additions.map(word=>word.id),count:additions.length};
-    $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:additions.length,playlistName:target.listName});finishBulkProgress(additions.length);toast(`${additions.length} added`);
+    $("bulkText").value="";clearBulkPreview();save();showBulkUndo({count:additions.length,playlistName:target.listName});finishBulkProgress(additions.length);toast(window.TNI18n.t("ui.value_added",{p0:additions.length}));
   }catch(error){
     failBulkProgress(0,rows.length,"Import could not be completed");
-    toast("Couldn't add these words. Please try again.");
-  }finally{localBulkImportInFlight=false}
+    toast(window.TNI18n.t("ui.couldn_t_add_these_words_please_try_again",{}));
+  }finally{localBulkImportInFlight=false;updateBulkActionDock()}
 }
 try{window.bulkRows=bulkRows;window.previewBulk=previewBulk;window.clearBulkPreview=clearBulkPreview;window.requestBulkDestinationConfirmation=requestBulkDestinationConfirmation;window.showBulkUndo=showBulkUndo;window.clearBulkUndo=clearBulkUndo;window.undoLastBulkImport=undoLastBulkImport;window.updateBulkDestinationSummary=updateBulkDestinationSummary;}catch(e){}
 function posBadge(pos){return pos?`<span class="badge ${["noun","verb","adjective","adverb","phrase"].includes(pos)?pos:""}">${esc(pos)}</span>`:""}
 function genderBadge(g){if(!g)return"";let letter=g==="masculine"?"M":g==="feminine"?"F":g==="neutral"?"N":g==="plural"?"PL":String(g)[0].toUpperCase();let cls=g==="masculine"?"m":g==="feminine"?"f":"n";return`<span class="badge ${cls}">${esc(letter)}</span>`}
-function moveWord(id,dir){let w=db.words.find(x=>x.id===id);if(!w)return;let same=db.words.filter(x=>x.listId===w.listId),pos=same.findIndex(x=>x.id===id),target=same[pos+dir];if(!target)return toast("Cannot move further");let i1=db.words.findIndex(x=>x.id===id),i2=db.words.findIndex(x=>x.id===target.id);[db.words[i1],db.words[i2]]=[db.words[i2],db.words[i1]];save()}
+function moveWord(id,dir){let w=db.words.find(x=>x.id===id);if(!w)return;let same=db.words.filter(x=>x.listId===w.listId),pos=same.findIndex(x=>x.id===id),target=same[pos+dir];if(!target)return toast(window.TNI18n.t("ui.cannot_move_further",{}));let i1=db.words.findIndex(x=>x.id===id),i2=db.words.findIndex(x=>x.id===target.id);[db.words[i1],db.words[i2]]=[db.words[i2],db.words[i1]];save()}
 function toggleSelected(id,c){c?selectedIds.add(id):selectedIds.delete(id)}
-function deleteSelected(){if(!selectedIds.size)return toast("Select words first");if(!confirm(`${selectedIds.size} words will be deleted.`))return;db.words=db.words.filter(w=>!selectedIds.has(w.id));db.mistakes=ensureMistakes().filter(entry=>!selectedIds.has(entry.wordId));selectedIds.clear();save()}
-function removeWord(id){if(!confirm("Delete this word?"))return;db.words=db.words.filter(w=>w.id!==id);db.mistakes=ensureMistakes().filter(entry=>entry.wordId!==id);selectedIds.delete(id);save()}
+function deleteSelected(){if(!selectedIds.size)return toast(window.TNI18n.t("ui.select_words_first",{}));if(!confirm(window.TNI18n.t("ui.value_words_will_be_deleted",{p0:selectedIds.size})))return;db.words=db.words.filter(w=>!selectedIds.has(w.id));db.mistakes=ensureMistakes().filter(entry=>!selectedIds.has(entry.wordId));selectedIds.clear();save()}
+function removeWord(id){if(!confirm(window.TNI18n.t("ui.delete_this_word",{})))return;db.words=db.words.filter(w=>w.id!==id);db.mistakes=ensureMistakes().filter(entry=>entry.wordId!==id);selectedIds.delete(id);save()}
 function toggleStar(id){db.words=db.words.map(w=>w.id===id?{...w,saved:!w.saved}:w);if(current&&current.id===id)current=db.words.find(w=>w.id===id);save()}
-function openDetail(id){let w=db.words.find(x=>x.id===id);if(!w)return;modalReturnFocus.detail=document.activeElement;const view=learningPresentation();const learning=view?.state(w)||{label:learningEngine()?.levelName(w.level)||"Learning"};const review=view?.review(w)||{label:w.nextReview||"Review not scheduled"};const accuracy=view?.accuracy(w)||{label:`${Math.round((learningEngine()?.accuracy(w)||0)*100)}% accuracy`};const lastStudied=view?.lastStudied(w)||(w.lastAnsweredAt?new Date(w.lastAnsweredAt).toLocaleDateString():"Not studied yet");$("detailContent").innerHTML=`<div class="dict-title">${esc(w.front)}</div><div class="dict-meaning">${esc(w.back)}</div><div>${posBadge(w.pos)} ${genderBadge(w.gender)} ${w.tags?`<span class="badge">${esc(w.tags)}</span>`:""}</div><div class="actions"><button class="btn blue" onclick="speak(${jsArg(w.front)},${jsArg(safeLang(w.frontLang))})">Play Front</button><button class="btn blue" onclick="speak(${jsArg(w.back)},${jsArg(safeLang(w.backLang,"ja-JP"))})">Play Back</button><button class="btn" onclick="openEdit(${jsArg(w.id)})">Edit</button></div><div class="dict-grid"><div class="dict-box"><b>Languages</b>${langName(w.frontLang)} → ${langName(w.backLang)}</div><div class="dict-box"><b>Learning</b>${esc(learning.label)}</div><div class="dict-box"><b>Accuracy</b>${esc(accuracy.label)}</div><div class="dict-box"><b>Next Review</b>${esc(review.label)}</div><div class="dict-box"><b>Last Studied</b>${esc(lastStudied)}</div><div class="dict-box"><b>Memo / Example</b>${esc(w.memo||"-")}</div></div>`;$("detailModal").classList.add("show");setTimeout(()=>$("detailModal")?.querySelector("button")?.focus({preventScroll:true}),0)}
+function openDetail(id){let w=db.words.find(x=>x.id===id);if(!w)return;modalReturnFocus.detail=document.activeElement;const view=learningPresentation();const learning=view?.state(w)||{label:learningEngine()?.levelName(w.level)||"Learning"};const review=view?.review(w)||{label:w.nextReview||"Review not scheduled"};const accuracy=view?.accuracy(w)||{label:window.TNI18n.t("ui.value_accuracy",{p0:Math.round((learningEngine()?.accuracy(w)||0)*100)})};const lastStudied=view?.lastStudied(w)||(w.lastAnsweredAt?new Date(w.lastAnsweredAt).toLocaleDateString():"Not studied yet");$("detailContent").innerHTML=`<div class="dict-title">${esc(w.front)}</div><div class="dict-meaning">${esc(w.back)}</div><div>${posBadge(w.pos)} ${genderBadge(w.gender)} ${w.tags?`<span class="badge">${esc(w.tags)}</span>`:""}</div><div class="actions"><button class="btn blue" onclick="speak(${jsArg(w.front)},${jsArg(safeLang(w.frontLang))})">${window.TNI18n.mark("ui.play_front",{})}</button><button class="btn blue" onclick="speak(${jsArg(w.back)},${jsArg(safeLang(w.backLang,"ja-JP"))})">${window.TNI18n.mark("ui.play_back",{})}</button><button class="btn" onclick="openEdit(${jsArg(w.id)})">${window.TNI18n.mark("ui.edit",{})}</button></div><div class="dict-grid"><div class="dict-box"><b>${window.TNI18n.mark("ui.languages",{})}</b>${window.TNI18n.studyName(w.frontLang)} → ${window.TNI18n.studyName(w.backLang)}</div><div class="dict-box"><b>${window.TNI18n.mark("ui.learning",{})}</b>${esc(learning.label)}</div><div class="dict-box"><b>${window.TNI18n.mark("ui.accuracy",{})}</b>${esc(accuracy.label)}</div><div class="dict-box"><b>${window.TNI18n.mark("ui.next_review",{})}</b>${esc(review.label)}</div><div class="dict-box"><b>${window.TNI18n.mark("ui.last_studied",{})}</b>${esc(lastStudied)}</div><div class="dict-box"><b>${window.TNI18n.mark("ui.memo_example",{})}</b>${esc(w.memo||"-")}</div></div>`;$("detailModal").classList.add("show");setTimeout(()=>$("detailModal")?.querySelector("button")?.focus({preventScroll:true}),0)}
 function closeDetail(){$("detailModal").classList.remove("show");if(modalReturnFocus.detail?.isConnected)modalReturnFocus.detail.focus({preventScroll:true});modalReturnFocus.detail=null}
 function openEdit(id){let w=db.words.find(x=>x.id===id);if(!w)return;modalReturnFocus.edit=document.activeElement;$("editId").value=w.id;$("editFront").value=w.front;$("editBack").value=w.back;$("editFrontLang").innerHTML=optionsHTML(w.frontLang);$("editBackLang").innerHTML=optionsHTML(w.backLang);syncLanguagePicker($("editFrontLang"));syncLanguagePicker($("editBackLang"));$("editList").value=w.listId;$("editPOS").value=w.pos||"";$("editGender").value=w.gender||"";$("editTags").value=w.tags||"";$("editMemo").value=w.memo||"";$("editModal").classList.add("show");setTimeout(()=>$("editFront")?.focus({preventScroll:true}),0)}
 function closeEdit(){$("editModal").classList.remove("show");if(modalReturnFocus.edit?.isConnected)modalReturnFocus.edit.focus({preventScroll:true});modalReturnFocus.edit=null}
@@ -1167,26 +1189,28 @@ function updateStudyProgress(){
   const words=studyWords();
   const due=words.filter(isDue).length;
   const hard=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard").length;
-  el.textContent=words.length?`${words.length} cards · ${due} due · ${hard} weak · Space flips · 1-4 rates`:"No cards in this view.";
+  window.TNI18n.bindText(el,()=>(words.length?window.TNI18n.t("ui.value_cards_value_due_value_weak_space_flips_1_4_rates",{p0:words.length,p1:due,p2:hard}):window.TNI18n.t("ui.no_cards_in_this_view",{})));
 }
-function resetCard(){clearFlashTimers();current=null;flipped=false;$("flash").classList.remove("is-flipped");$("frontWord").textContent="---";$("backWord").textContent="---";$("frontMemo").textContent="";$("backMemo").textContent="";updateStudyStar();updateStudyProgress()}
+function resetCard(){clearFlashTimers();current=null;flipped=false;cardRated=false;$("flash").classList.remove("is-flipped");$("frontWord").textContent=window.TNI18n.t(studyWords().length?"ui.next_card":"ui.no_cards_in_this_view");$("backWord").textContent="";$("frontMemo").textContent="";$("backMemo").textContent="";updateCardRating();updateStudyStar();updateStudyProgress()}
 function weighted(words){if(!words.length)return null;const ordered=[...words].sort((a,b)=>(learningEngine()?.learningWeight(b)||0)-(learningEngine()?.learningWeight(a)||0));const top=ordered.slice(0,Math.max(1,Math.ceil(ordered.length/2)));return top[Math.floor(Math.random()*top.length)]}
-function nextCard(){clearFlashTimers();let words=studyWords();if(!words.length){resetCard();return toast("No words")}const candidates=current&&words.length>1?words.filter(word=>word.id!==current.id):words;current=weighted(candidates);flipped=false;$("flash").classList.remove("is-flipped");current.seen=(current.seen||0)+1;drawCard();persist();updateStudyStar();updateStudyProgress()}
+function nextCard(){clearFlashTimers();let words=studyWords();if(!words.length){resetCard();return toast(window.TNI18n.t("ui.no_words",{}))}const candidates=current&&words.length>1?words.filter(word=>word.id!==current.id):words;current=weighted(candidates);flipped=false;cardRated=false;$("flash").classList.remove("is-flipped");current.seen=(current.seen||0)+1;drawCard();persist();updateCardRating();updateStudyStar();updateStudyProgress();window.tnStudyContinuity?.capture()}
 function drawCard(){if(!current)return;let mode=$("studyMode").value;if(mode==="back"){$("frontWord").textContent=current.back;$("backWord").textContent=current.front;$("backMemo").textContent=current.memo||""}else{$("frontWord").textContent=current.front;$("backWord").textContent=current.back;$("backMemo").textContent=current.memo||""}$("frontMemo").textContent=[current.pos,current.gender].filter(Boolean).join(" / ")}
-function flipCard(){if(!current)return;flipped=!flipped;$("flash").classList.toggle("is-flipped",flipped)}
+function updateCardRating(){document.querySelectorAll(".tn-card-rating button").forEach(button=>button.disabled=!current||!flipped||cardRated);const sides=$("flash")?.querySelectorAll(".front,.back");sides?.forEach(side=>side.setAttribute("aria-hidden",String(side.classList.contains("back")?!flipped:flipped)))}
+function flipCard(){if(!current)return;flipped=!flipped;$("flash").classList.toggle("is-flipped",flipped);updateCardRating();window.tnStudyContinuity?.capture()}
 function speakCard(){if(!current)return;let mode=$("studyMode").value,text,lang;if(mode==="back"){text=flipped?current.front:current.back;lang=flipped?current.frontLang:current.backLang}else{text=flipped?current.back:current.front;lang=flipped?current.backLang:current.frontLang}speak(text,lang)}
-function markCard(rating,autoNext=false){if(!current)return;const normalized=learningEngine()?.normalizeRating(rating)||rating;if(normalized==="again")recordMistake(current,"flashcard","Again",current.back);const updated=updateWordLearning(current.id,normalized,{mode:"cards"});current=updated||db.words.find(w=>w.id===current.id);if(normalized==="good"||normalized==="easy")markMistakeCorrect(current.id);const feedback=learningPresentation()?.rating(current,normalized);toast(feedback?`${feedback.label} · ${feedback.review}`:`${normalized[0].toUpperCase()+normalized.slice(1)} saved`);if(autoNext)flashTimers.push(setTimeout(()=>nextCard(),700))}
+function markCard(rating,autoNext=false){if(!current||!flipped||cardRated)return;cardRated=true;updateCardRating();const normalized=learningEngine()?.normalizeRating(rating)||rating;if(normalized==="again")recordMistake(current,"flashcard","Again",current.back);const updated=updateWordLearning(current.id,normalized,{mode:"cards"});current=updated||db.words.find(w=>w.id===current.id);if(normalized==="good"||normalized==="easy")markMistakeCorrect(current.id);const feedback=learningPresentation()?.rating(current,normalized);toast(feedback?`${feedback.label} · ${feedback.review}`:window.TNI18n.t("ui.value_saved",{p0:normalized[0].toUpperCase()+normalized.slice(1)}));window.tnStudyContinuity?.capture();if(autoNext)flashTimers.push(setTimeout(()=>nextCard(),220))}
 function toggleCardStar(){if(current)toggleStar(current.id)}
-function updateStudyStar(){let b=$("studyStar");if(b)b.textContent=current&&current.saved?"★ Saved":"☆ Save"}
+function updateStudyStar(){let b=$("studyStar");if(b)window.TNI18n.bindText(b,()=>(current&&current.saved?window.TNI18n.t("ui.saved_2",{}):window.TNI18n.t("ui.save",{})))}
 function clearFlashTimers(){flashTimers.forEach(t=>clearTimeout(t));flashTimers=[]}
 function startFlashAuto(){$("flashAutoMode").value="on";playFlashAutoCycle()}
 function stopFlashAuto(){clearFlashTimers();$("flashAutoMode").value="off"}
 function playFlashAutoCycle(){clearFlashTimers();if($("flashAutoMode").value!=="on")return;nextCard();if(!current)return stopFlashAuto();let mode=$("studyMode").value,frontText=mode==="back"?current.back:current.front,frontLang=mode==="back"?current.backLang:current.frontLang,backText=mode==="back"?current.front:current.back,backLang=mode==="back"?current.frontLang:current.backLang;speak(frontText,frontLang);let flipDelay=parseInt($("flashFlipDelay").value),nextDelay=parseInt($("flashNextDelay").value);flashTimers.push(setTimeout(()=>{if($("flashAutoMode").value!=="on")return;if(!flipped)flipCard();speak(backText,backLang)},flipDelay));flashTimers.push(setTimeout(()=>playFlashAutoCycle(),flipDelay+nextDelay))}
 function updateWordLearning(id,rating,context={}){const engine=learningEngine();const at=new Date();const eventId=context.eventId||learningEventId();let updated=null;db.words=db.words.map(w=>{if(w.id!==id)return w;updated=engine?engine.calculateLearningUpdate(w,{rating,mode:context.mode||"study",at}):w;return updated});if(!updated)return null;persist();const event={eventId,wordId:id,rating:engine?.normalizeRating(rating)||rating,mode:context.mode||"study",answeredAt:at.toISOString(),localWord:{...updated}};try{window.tnRecordLearningResult?.(event)}catch(e){console.warn("Learning sync queued locally",e)}try{renderHome();window.tnLibraryRender?.();updateStudyProgress()}catch(e){}return updated}
 function quizLearningWeight(w){return learningEngine()?.learningWeight(w)??1}
-function quizAdaptiveOrder(words){return [...words].sort((a,b)=>((Math.random()/Math.max(.1,quizLearningWeight(a)))-(Math.random()/Math.max(.1,quizLearningWeight(b)))))}
-function quizPool(){let list=$("quizList").value,scope=$("quizScope").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(scope==="mistakes"){const ids=new Set(ensureMistakes().map(entry=>entry.wordId));words=db.words.filter(w=>ids.has(w.id))}else{if(scope==="hard")words=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard");if(scope==="due")words=words.filter(isDue);if(scope==="star")words=words.filter(w=>w.saved)}return words}
+function quizAdaptiveOrder(words){return words.map(word=>({word,key:-Math.log(Math.max(Number.EPSILON,Math.random()))/Math.max(.1,quizLearningWeight(word))})).sort((a,b)=>a.key-b.key).map(item=>item.word)}
+function quizPool(){let list=$("quizList").value,scope=$("quizScope").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(scope==="mistakes"){const ids=new Set(ensureMistakes().map(entry=>entry.wordId));words=words.filter(w=>ids.has(w.id))}else{if(scope==="hard")words=words.filter(w=>learningEngine()?.isWeakWord(w)??w.status==="hard");if(scope==="due")words=words.filter(isDue);if(scope==="star")words=words.filter(w=>w.saved)}return words}
 function quizOrderedWords(words){
+  words=uniqueStudyWords(words);
   const order=$("quizOrderMode")?.value||"random";
   if(order==="playlist")return [...words];
   if(order==="weak")return [...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));
@@ -1195,8 +1219,9 @@ function quizOrderedWords(words){
   return shuffle(words);
 }
 function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function uniqueStudyWords(words){const ids=new Set();return words.filter(word=>word?.id&&!ids.has(word.id)&&ids.add(word.id))}
 const QUIZ_FEEDBACK_SPEED_KEY="tangonest_quiz_feedback_speed_v1";
-const QUIZ_AUTO_ADVANCE_MIGRATION_KEY="tangonest_quiz_auto_feedback_fdg9_v1";
+const QUIZ_AUTO_ADVANCE_MIGRATION_KEY="tangonest_quiz_auto_feedback_fdg14_v1";
 function ensureQuizFeedbackDefault(){
   const el=$("quizAutoAdvance");
   if(!el)return;
@@ -1208,7 +1233,7 @@ function ensureQuizFeedbackDefault(){
   try{
     migrated=localStorage.getItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY)==="complete";
     saved=localStorage.getItem(QUIZ_FEEDBACK_SPEED_KEY)||"";
-    if(!migrated){saved="auto";localStorage.setItem(QUIZ_FEEDBACK_SPEED_KEY,saved);localStorage.setItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY,"complete")}
+    if(!migrated){if(!saved||["manual","off"].includes(saved))saved="auto";localStorage.setItem(QUIZ_FEEDBACK_SPEED_KEY,saved);localStorage.setItem(QUIZ_AUTO_ADVANCE_MIGRATION_KEY,"complete")}
   }catch(e){}
   const values=[...el.options].map(option=>option.value);
   el.value=values.includes(saved)?saved:"auto";
@@ -1216,13 +1241,14 @@ function ensureQuizFeedbackDefault(){
 function updateQuizModeSettings(forceDefaults=false){
   const type=$("quizType")?.value||"choice";
   const difficulty=$("listeningDifficulty")?.value||"normal";
+  if($("quizTimeLimit"))$("quizTimeLimit").disabled=$("quizHardMode")?.value!=="on";
+  updateStudySettingsSummary();
   document.querySelectorAll("[data-quiz-setting]").forEach(node=>{
     const modes=String(node.dataset.quizSetting||"").split(/\s+/).filter(Boolean);
     const visible=modes.includes("all")||modes.includes(type)||(type==="listening"&&difficulty==="hard"&&modes.includes("listening-hard"));
     node.hidden=!visible;
   });
   if(type==="listening"){
-    if($("quizAudioAfter"))$("quizAudioAfter").value="off";
     if(difficulty==="hard"){
       if(forceDefaults||$("listeningReplayLimit")?.value==="unlimited")$("listeningReplayLimit").value="1";
       if(forceDefaults||$("listeningTimerMode")?.value==="off")$("listeningTimerMode").value="10";
@@ -1239,18 +1265,17 @@ function placeTypingArea(inListeningCard){
   if(target&&area.parentElement!==target)target.appendChild(area);
 }
 function resetQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();quiz={queue:[],wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:"choice",direction:"front",total:0,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};if($("quizType"))$("quizType").value="choice";updateQuizModeSettings();placeTypingArea(false);$("quizSetup").style.display="block";$("quizRun").style.display="none";$("quizEnd").style.display="none";$("pageQuiz")?.classList.remove("quiz-focus-active");if($("listeningPanel"))$("listeningPanel").style.display="none";resetQuizAnswerVisualState()}
-function startQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();updateQuizModeSettings();let words=smartSessionQueue.length?[...smartSessionQueue]:quizPool();smartSessionQueue=[];let requested=parseInt($("quizCount").value,10)||10;if(requested<1)requested=1;if(!words.length)return toast("No words");let actual=Math.min(requested,words.length);quiz={queue:quizOrderedWords(words).slice(0,actual),wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:$("quizType").value||"choice",direction:$("quizDirection").value,total:actual,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};$("quizSetup").style.display="none";$("quizRun").style.display="grid";$("quizEnd").style.display="none";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion();window.scrollTo(0,0)}
+function startQuiz(){clearQuizTimers();ensureQuizFeedbackDefault();updateQuizModeSettings();let words=uniqueStudyWords(smartSessionQueue.length?[...smartSessionQueue]:quizPool());smartSessionQueue=[];let requested=parseInt($("quizCount").value,10)||10;if(requested<1)requested=1;if(!words.length)return toast(window.TNI18n.t("ui.no_words",{}));let actual=Math.min(requested,words.length);quiz={queue:quizOrderedWords(words).slice(0,actual),wrong:[],allWrong:[],index:0,score:0,current:null,answered:false,type:$("quizType").value||"choice",direction:$("quizDirection").value,total:actual,previousQuestionId:"",previousQuestionKey:"",selectedAnswer:null,listeningReplayUsed:0};$("quizSetup").style.display="none";$("quizRun").style.display="grid";$("quizEnd").style.display="none";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion();window.scrollTo(0,0)}
 function resetQuizAnswerVisualState(){quiz.selectedAnswer=null;document.querySelectorAll(".choice").forEach(b=>{b.disabled=false;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){}});$("choiceArea")?.classList.remove("is-answered");const result=$("quizResult");if(result){result.className="result-box";result.textContent=""}const answer=$("quizQuestionAnswer");if(answer){answer.className="quiz-question-answer";answer.textContent=""}const front=$("quizQuestionFront");const back=$("quizQuestionBack");if(front)front.setAttribute("aria-hidden","false");if(back)back.setAttribute("aria-hidden","true");const skip=$("quizSkipButton");if(skip)skip.hidden=false;const card=$("quizQuestionCard");if(card){card.classList.remove("is-answered","has-long-answer","is-listening")}}
 function quizQuestionKey(word){if(!word)return "";const text=quiz.type==="listening"?listeningPromptText(word):(quiz.direction==="back"?word.back:word.front);return normalize(text)}
-function avoidConsecutiveDuplicateQuestion(){if(!quiz.queue||quiz.queue.length<=1)return;const current=quiz.queue[quiz.index];if(!current)return;const prevId=quiz.previousQuestionId||"";const prevKey=quiz.previousQuestionKey||"";const sameId=prevId&&current.id===prevId;const sameKey=prevKey&&quizQuestionKey(current)===prevKey;if(!sameId&&!sameKey)return;const swapIndex=quiz.queue.findIndex((w,i)=>i>quiz.index&&w&&w.id!==prevId&&quizQuestionKey(w)!==prevKey);if(swapIndex>-1){const tmp=quiz.queue[quiz.index];quiz.queue[quiz.index]=quiz.queue[swapIndex];quiz.queue[swapIndex]=tmp;return}const fallback=quiz.queue.find(w=>w&&w.id!==prevId&&quizQuestionKey(w)!==prevKey);if(fallback)quiz.queue[quiz.index]=fallback}
 function listeningPromptText(word=quiz.current){if(!word)return"";return word.front}
-function listeningPromptLang(word=quiz.current){if(!word)return"en-US";return word.frontLang}
+function listeningPromptLang(word=quiz.current){return frontSpeech(word).lang}
 function listeningIsHard(){return ($("listeningDifficulty")?.value||"normal")==="hard"}
 function listeningReplayLimit(){if(!listeningIsHard())return Infinity;const raw=$("listeningReplayLimit")?.value||"1";return raw==="unlimited"?Infinity:Math.max(1,parseInt(raw,10)||1)}
 function listeningTimerLimit(){if(!listeningIsHard())return 0;const raw=$("listeningTimerMode")?.value||"10";return raw==="off"?0:Math.max(2,parseInt(raw,10)||10)}
 function updateListeningTimerInline(value){
   const el=$("listeningTimeInline");
-  if(el)el.textContent=value?`Time: ${value}`:"No time limit";
+  if(el)window.TNI18n.bindText(el,()=>(value?window.TNI18n.t("ui.time_value",{p0:value}):window.TNI18n.t("ui.no_time_limit",{})));
 }
 function renderListeningPanel(){
   const panel=$("listeningPanel");
@@ -1258,16 +1283,16 @@ function renderListeningPanel(){
   if(quiz.type!=="listening"||!quiz.current){panel.style.display="none";panel.innerHTML="";placeTypingArea(false);return}
   const limit=listeningReplayLimit();
   const used=Number(quiz.listeningReplayUsed||0);
-  const replayText=limit===Infinity?"Replay: Unlimited":`Replay: ${Math.max(0,limit-used)} left`;
+  const replayText=`${window.TNI18n.t("ui.replay_limit")}: ${limit===Infinity?window.TNI18n.t("ui.unlimited"):Math.max(0,limit-used)}`;
   const timeLimit=listeningTimerLimit();
   const pronunciation=wordPronunciation(quiz.current);
-  const hint=$("listeningHintMode")?.value==="on"&&pronunciation?`<span class="listening-hint">Pronunciation: ${esc(pronunciation)}</span>`:"";
+  const hint=$("listeningHintMode")?.value==="on"&&pronunciation?`<span class="listening-hint">${window.TNI18n.mark("ui.pronunciation_value",{p0:esc(pronunciation)})}</span>`:"";
   const input=$("quizAnswer");
   const previousValue=input?.value||"";
   const hadFocus=document.activeElement===input;
   placeTypingArea(false);
   panel.style.display="grid";
-  panel.innerHTML=`<div class="listening-main"><button type="button" class="listening-play" onclick="playListeningAudio(true)">▶ Play Audio</button><span>${esc(replayText)}</span><span id="listeningTimeInline">${timeLimit?`Time: ${timeLimit}s`:"No time limit"}</span>${hint}</div><p>Type what you hear</p><div id="listeningInputSlot"></div>`;
+  panel.innerHTML=`<div class="listening-main"><button type="button" class="listening-play" onclick="playListeningAudio(true)">${window.TNI18n.mark("ui.play_front",{})}</button><span>${esc(replayText)}</span><span id="listeningTimeInline">${timeLimit?window.TNI18n.mark("ui.time_value",{p0:timeLimit+"s"}):window.TNI18n.mark("ui.no_time_limit")}</span>${hint}</div><div id="listeningInputSlot"></div>`;
   placeTypingArea(true);
   const nextInput=$("quizAnswer");
   if(nextInput){
@@ -1280,10 +1305,10 @@ function playListeningAudio(manual){
   if(quiz.type==="listening"&&manual){
     const limit=listeningReplayLimit();
     const used=Number(quiz.listeningReplayUsed||0);
-    if(limit!==Infinity&&used>=limit){renderListeningPanel();return toast("Replay limit reached")}
+    if(limit!==Infinity&&used>=limit){renderListeningPanel();return toast(window.TNI18n.t("ui.replay_limit_reached",{}))}
     quiz.listeningReplayUsed=used+1;
   }
-  speak(listeningPromptText(),listeningPromptLang());
+  speakFront(quiz.current);
   renderListeningPanel();
 }
 function focusQuizInput(){
@@ -1292,15 +1317,44 @@ function focusQuizInput(){
   if(!input||quiz.answered)return;
   setTimeout(()=>{try{input.focus({preventScroll:true});input.select()}catch(e){try{input.focus()}catch(err){}}},80);
 }
-function showQuizQuestion(){clearQuizTimers();resetQuizAnswerVisualState();quiz.answered=false;quiz.selectedAnswer=null;quiz.listeningReplayUsed=0;avoidConsecutiveDuplicateQuestion();quiz.current=quiz.queue[quiz.index];if(!quiz.current)return endQuiz();$("quizProgress").textContent=(quiz.index+1)+" / "+quiz.total;$("quizScore").textContent=quiz.score+" / "+quiz.total;const isListening=quiz.type==="listening";let q=isListening?"":(quiz.direction==="front"?quiz.current.front:quiz.current.back);$("quizWord").textContent=q;$("quizLabel").textContent=isListening?"Listening Quiz":(quiz.direction==="front"?"Front → ?":"Back → ?");if(!isListening)placeTypingArea(false);$("typingArea").style.display=(quiz.type==="typing"||isListening)?"block":"none";$("choiceArea").style.display=quiz.type==="choice"?"grid":"none";$("quizAnswer").value="";$("quizAnswer").placeholder=isListening?"Type the front word":"Type answer";const card=document.querySelector(".quiz-question");if(card)card.classList.toggle("is-listening",isListening);renderListeningPanel();if(quiz.type==="choice")renderChoices();startQuestionTimer();focusQuizInput();if(isListening)quizListeningAudioTimer=setTimeout(()=>{if(!quiz.answered)playListeningAudio(false)},180)}
+function showQuizQuestion(){
+  clearQuizTimers();resetQuizAnswerVisualState();quiz.answered=false;quiz.selectedAnswer=null;quiz.listeningReplayUsed=0;
+  quiz.current=quiz.queue[quiz.index];if(!quiz.current)return endQuiz();
+  quizInputReadyAt=performance.now()+(quiz.index>0?350:0);
+  window.TNI18n.bindText($("quizProgress"),()=>`${window.TNI18n.t("ui.question")} ${quiz.index+1} / ${quiz.total}`);
+  $("quizSessionProgress").max=quiz.total;$("quizSessionProgress").value=quiz.index+1;
+  const isListening=quiz.type==="listening";
+  $("quizWord").textContent=isListening?"":(quiz.direction==="front"?quiz.current.front:quiz.current.back);
+  $("quizPronunciation").textContent=!isListening&&quiz.direction==="front"?wordPronunciation(quiz.current):"";
+  window.TNI18n.bindText($("quizLabel"),()=>window.TNI18n.t(isListening?"ui.type_what_you_hear":quiz.type==="choice"?"quiz.chooseMeaning":"ui.type_answer"));
+  if(!isListening)placeTypingArea(false);
+  $("typingArea").style.display=(quiz.type==="typing"||isListening)?"block":"none";
+  $("choiceArea").style.display=quiz.type==="choice"?"grid":"none";
+  $("quizAnswer").value="";$("quizAnswer").disabled=false;
+  $("quizAnswer").placeholder=window.TNI18n.t(isListening?"ui.type_the_front_word":"ui.type_answer");
+  $("quizQuestionCard").classList.toggle("is-listening",isListening);
+  renderListeningPanel();if(quiz.type==="choice")renderChoices();
+  $("quizAnswer").readOnly=quiz.index>0;
+  if(quiz.index>0){
+    document.querySelectorAll(".choice").forEach(button=>button.disabled=true);
+    quizInputUnlockTimer=setTimeout(()=>{if(quiz.answered)return;document.querySelectorAll(".choice").forEach(button=>button.disabled=false);$("quizAnswer").readOnly=false},350);
+  }
+  startQuestionTimer();focusQuizInput();
+  if(quiz.type==="choice")$("quizWord").focus({preventScroll:true});
+  if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    $("quizQuestionCard").getAnimations().forEach(animation=>animation.cancel());
+    $("quizQuestionCard").animate([{opacity:.5},{opacity:1}],{duration:240,easing:"ease-out"});
+  }
+  if(isListening)quizListeningAudioTimer=setTimeout(()=>{if(!quiz.answered)playListeningAudio(false)},180);
+}
 function correctAnswer(){return quiz.type==="listening"?listeningPromptText():(quiz.direction==="front"?quiz.current.back:quiz.current.front)}
 function correctAnswerLang(){return quiz.type==="listening"?listeningPromptLang():(quiz.direction==="front"?quiz.current.backLang:quiz.current.frontLang)}
 function quizAnswerText(word){return quiz.direction==="front"?word.back:word.front}
 function quizAnswerLang(word){return quiz.direction==="front"?word.backLang:word.frontLang}
 function normalize(s){return String(s||"").trim().toLowerCase()}
-function checkTypingAnswer(){if(quiz.answered)return;const input=$("quizAnswer");const value=input?.value||"";if(!value.trim()){focusQuizInput();return}quiz.selectedAnswer=value;finishAnswer(normalize(value)===normalize(correctAnswer()))}
+function checkTypingAnswer(){if(quiz.answered||performance.now()<quizInputReadyAt)return;const input=$("quizAnswer");const value=input?.value||"";if(!value.trim()){focusQuizInput();return}quiz.selectedAnswer=value;finishAnswer(normalize(value)===normalize(correctAnswer()))}
 function handleQuizAnswerKey(event){
-  if(event.key!=="Enter")return;
+  if(event.isComposing||event.keyCode===229||event.repeat||event.key!=="Enter")return;
   event.preventDefault();
   if(quiz.answered)return nextQuizQuestion();
   checkTypingAnswer();
@@ -1326,62 +1380,274 @@ function renderChoices(){
   pool.splice(3);
   let choices=shuffle([correct,...pool]);
   quiz.currentChoices=choices;
-  $("choiceArea").innerHTML=choices.map((c,index)=>`<button type="button" class="choice" data-shortcut="${index+1}" onclick="chooseAnswer(this,quiz.currentChoices[${index}])" aria-label="Answer ${index+1}: ${esc(c)}">${esc(c)}</button>`).join("");
+  $("choiceArea").innerHTML=choices.map((c,index)=>`<button type="button" class="choice" dir="auto" lang="${esc(answerLang)}" data-shortcut="${index+1}" onclick="chooseAnswer(this,quiz.currentChoices[${index}])" aria-label="${index+1}. ${esc(c)}">${esc(c)}</button>`).join("");
 }
-function chooseAnswer(btn,ans){if(quiz.answered)return;quiz.selectedAnswer=ans;let ok=normalize(ans)===normalize(correctAnswer());[...document.querySelectorAll(".choice")].forEach(b=>{b.disabled=true;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){};if(normalize(b.textContent)===normalize(correctAnswer()))b.classList.add("correct")});btn.classList.add("selected");if(!ok)btn.classList.add("wrong");finishAnswer(ok)}
-function quizLearningMessage(word,ok){if(!word)return"";const view=learningPresentation();const state=view?.state(word);const review=view?.review(word);return [state?.label,review?.label,!ok?"This word will appear more often.":""].filter(Boolean).join(" · ")}
-function quizFeedbackHtml(ok,word){const answer=correctAnswer();const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||"No answer";const learning=quizLearningMessage(word,ok);const auto=isAutoAdvance();const delay=nextDelay(ok);const timing=auto?`<span class="quiz-auto-note">Next question in ${(delay/1000).toFixed(1)}s<i style="--quiz-auto-delay:${delay}ms"></i></span>`:"";return `<div class="quiz-feedback-copy"><strong>${ok?"✓ Correct":"× Incorrect"}</strong><span>Your answer: ${esc(selected)}</span>${ok?"":`<span>Correct answer: ${esc(answer)}</span>`}${learning?`<span class="quiz-level-note">${esc(learning)}</span>`:""}${timing}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">Play answer</button><button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">Next now</button></div>`}
-function renderQuizQuestionAnswer(ok){const box=$("quizQuestionAnswer");if(!box||!quiz.current)return;const card=$("quizQuestionCard");if(card)card.classList.add("is-answered");const front=$("quizQuestionFront");const back=$("quizQuestionBack");if(front)front.setAttribute("aria-hidden","true");if(back)back.setAttribute("aria-hidden","false");box.className=`quiz-question-answer show ${ok?"ok":"no"}`;box.innerHTML=`<div class="quiz-answer-status ${ok?"ok":"no"}">${ok?"✓ Correct":"× Incorrect"}</div><strong class="quiz-reveal-answer">${esc(correctAnswer())}</strong>${ok?"":`<span class="quiz-reveal-selected">You chose: ${esc(quiz.selectedAnswer||$("quizAnswer")?.value||"No answer")}</span>`}`}
-function finishAnswer(ok){if(quiz.answered)return;quiz.answered=true;quiz.previousQuestionId=quiz.current?.id||quiz.previousQuestionId;quiz.previousQuestionKey=quizQuestionKey(quiz.current)||quiz.previousQuestionKey;clearInterval(quizTimerInterval);const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";let fresh=null;if(ok){quiz.score++;fresh=updateWordLearning(quiz.current.id,"good",{mode:quiz.type||"quiz"});markMistakeCorrect(quiz.current.id);$("quizResult").className="result-box show ok";$("quizResult").innerHTML=quizFeedbackHtml(true,fresh)}else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());fresh=updateWordLearning(quiz.current.id,"again",{mode:quiz.type||"quiz"});$("quizResult").className="result-box show no";$("quizResult").innerHTML=quizFeedbackHtml(false,fresh);quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}$("choiceArea")?.classList.add("is-answered");renderQuizQuestionAnswer(ok);const skip=$("quizSkipButton");if(skip)skip.hidden=true;$("quizScore").textContent=quiz.score+" / "+quiz.total;if($("quizAudioAfter").value==="on")setTimeout(()=>{try{speakQuizFront()}catch(e){}},80);if(isAutoAdvance())scheduleNext(ok)}
+function chooseAnswer(btn,ans){if(quiz.answered||!btn?.isConnected||performance.now()<quizInputReadyAt)return;quiz.selectedAnswer=ans;let ok=normalize(ans)===normalize(correctAnswer());[...document.querySelectorAll(".choice")].forEach(b=>{b.disabled=true;b.classList.remove("selected","active","correct","incorrect","wrong","is-selected","is-active","is-correct","is-wrong");try{b.blur()}catch(e){};if(normalize(b.textContent)===normalize(correctAnswer()))b.classList.add("correct")});btn.classList.add("selected");if(!ok)btn.classList.add("wrong");finishAnswer(ok)}
+function quizLearningMessage(word,ok){if(!word)return"";const view=learningPresentation();const state=view?.state(word);const review=view?.review(word);return [state?.label,review?.label,!ok?window.TNI18n.t("quiz.reviewMore"):""].filter(Boolean).join(" · ")}
+function quizFeedbackHtml(ok){
+  const selected=quiz.selectedAnswer||($("quizAnswer")?.value||"").trim()||window.TNI18n.t("quiz.noAnswer");
+  const answer=`<bdi lang="${esc(correctAnswerLang())}">${esc(correctAnswer())}</bdi>`;
+  const detail=ok?"":`<span>${window.TNI18n.mark("ui.your_answer_value_2",{p1:`<bdi>${esc(selected)}</bdi>`})}</span><span>${window.TNI18n.mark("ui.correct_answer_value",{p0:answer})}</span>`;
+  const memo=String(quiz.current.memo||"").trim();
+  const extra=memo?`<details class="quiz-explanation" ontoggle="if(this.open)pauseQuizAdvance()"><summary onclick="if(!this.parentElement.open)pauseQuizAdvance()">${window.TNI18n.mark("ui.example")}</summary><p dir="auto">${esc(memo)}</p></details>`:"";
+  return `<div class="quiz-feedback-copy"><strong>${window.TNI18n.t(ok?"quiz.correctFeedback":"quiz.incorrectFeedback")}</strong>${detail}<span id="quizAdvanceStatus"></span>${extra}</div><div class="quiz-feedback-actions"><button type="button" class="quiz-answer-audio" onclick="speakCorrectAnswer()">${window.TNI18n.mark("ui.play_front")}</button>${isAutoAdvance()?`<button type="button" id="quizPauseAdvance" onclick="toggleQuizAdvance()">${window.TNI18n.mark("quiz.pauseAdvance")}</button>`:`<button type="button" class="quiz-next-btn" onclick="nextQuizQuestion()">${window.TNI18n.mark("common.next")}</button>`}</div>`;
+}
+function renderQuizQuestionAnswer(){
+  // Keep the prompt in place; feedback belongs to the single status region below the choices.
+  $("quizQuestionCard")?.classList.add("is-answered");
+}
+function finishAnswer(ok){
+  if(quiz.answered||!quiz.current||quiz.ended)return;
+  quiz.answered=true;
+  quiz.previousQuestionId=quiz.current.id;quiz.previousQuestionKey=quizQuestionKey(quiz.current);
+  clearInterval(quizTimerInterval);clearTimeout(quizListeningAudioTimer);
+  const selected=quiz.selectedAnswer||$("quizAnswer")?.value||"";
+  quiz.records=quiz.records||[];
+  quiz.records.push({id:quiz.current.id,ok,eventId:learningEventId()});
+  if(ok){quiz.score++;markMistakeCorrect(quiz.current.id)}
+  else{recordMistake(quiz.current,quiz.type||"quiz",selected,correctAnswer());quiz.wrong.push(quiz.current);if(!quiz.allWrong.some(w=>w.id===quiz.current.id))quiz.allWrong.push(quiz.current)}
+  updateWordLearning(quiz.current.id,ok?"good":"again",{mode:quiz.type||"quiz",eventId:quiz.records.at(-1).eventId});
+  $("quizAnswer").readOnly=true;
+  $("quizResult").className="result-box show "+(ok?"ok":"no");$("quizResult").innerHTML=quizFeedbackHtml(ok);
+  $("choiceArea")?.classList.add("is-answered");renderQuizQuestionAnswer();
+  $("quizSkipButton").hidden=true;$("quizScore").textContent=quiz.score+" / "+quiz.total;
+  scheduleNext(ok);
+}
 function isAutoAdvance(){const mode=$("quizAutoAdvance")?.value||"auto";return mode!=="manual"&&mode!=="off"}
-function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"auto";if(mode==="auto")return ok?2200:3200;let v=mode==="manual"||mode==="off"?2.5:parseFloat(mode);if(!Number.isFinite(v))v=2.5;v=Math.max(1.2,Math.min(10,v));return Math.round(v*1000)}
-function scheduleNext(ok){clearTimeout(quizAutoTimer);quizAutoTimer=setTimeout(()=>advanceQuiz(),nextDelay(ok))}
-function advanceQuiz(){clearQuizTimers();if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}quiz.index++;if(quiz.index>=quiz.queue.length)return endQuiz();showQuizQuestion()}
-function nextQuizQuestion(){if(!quiz.current)return;if(!quiz.answered){finishAnswer(false);return}advanceQuiz()}
-function speakQuizQuestion(){if(!quiz.current)return;if(quiz.type==="listening")return playListeningAudio(true);let text=quiz.direction==="front"?quiz.current.front:quiz.current.back,lang=quiz.direction==="front"?quiz.current.frontLang:quiz.current.backLang;speak(text,lang)}
-function speakCorrectAnswer(){if(!quiz.current)return;speak(correctAnswer(),correctAnswerLang())}
-function speakQuizFront(){if(!quiz.current)return;speak(quiz.current.front,quiz.current.frontLang)}
+const QUIZ_NEXT_TIMING=Object.freeze({correct:1200,incorrect:2500});
+function nextDelay(ok){const mode=$("quizAutoAdvance")?.value||"auto";if(mode==="auto")return ok?QUIZ_NEXT_TIMING.correct:QUIZ_NEXT_TIMING.incorrect;let v=mode==="manual"||mode==="off"?2.5:parseFloat(mode);if(!Number.isFinite(v))v=2.5;v=Math.max(1.2,Math.min(10,v));return Math.round(v*1000)}
+function scheduleNext(ok){
+  clearTimeout(quizAutoTimer);
+  const state=quizFeedback={epoch:quizEpoch,ok,paused:document.hidden,displayed:false,minDone:false,audioDone:$("quizAudioAfter").value!=="on",failed:false,advanced:false};
+  // Two frames ensure the feedback has been painted before its reading time starts.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(quizFeedback!==state)return;
+    state.displayed=true;
+    if(!state.paused)armQuizFeedback(state);
+    if(!state.audioDone&&!document.hidden)playQuizFeedbackAudio(state);
+    updateQuizAdvanceControl();
+  }));
+}
+function armQuizFeedback(state,delay=nextDelay(state.ok)){
+  clearTimeout(quizAutoTimer);state.minDone=false;
+  if(state.paused||document.hidden||quizFeedback!==state)return;
+  quizAutoTimer=setTimeout(()=>{if(quizFeedback!==state)return;state.minDone=true;maybeAdvanceQuiz(state)},delay);
+}
+async function playQuizFeedbackAudio(state,review=false){
+  const attempt=(state.audioAttempt||0)+1;state.audioAttempt=attempt;state.audioDone=false;
+  let timeout;
+  const watchdog=new Promise(resolve=>{timeout=setTimeout(()=>{if(quizFeedback===state&&state.audioAttempt===attempt)cancelSpeech();resolve(false)},speechWatchdogDelay(frontSpeech(quiz.current).text)+1000)});
+  let ok=false;
+  try{ok=await Promise.race([speakFront(quiz.current),watchdog])}catch(error){}
+  clearTimeout(timeout);
+  if(quizFeedback!==state||state.audioAttempt!==attempt)return;
+  state.audioDone=true;state.failed=!ok;state.reviewing=false;
+  if(!ok)toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings"));
+  if(review&&!state.paused)armQuizFeedback(state,600);
+  else if(!ok&&!state.paused)armQuizFeedback(state);
+  updateQuizAdvanceControl();maybeAdvanceQuiz(state);
+}
+function maybeAdvanceQuiz(state){
+  if(quizFeedback!==state||state.epoch!==quizEpoch||state.advanced||state.paused||state.reviewing||document.hidden||!state.minDone||!state.audioDone||!isAutoAdvance())return;
+  state.advanced=true;advanceQuiz();
+}
+function updateQuizAdvanceControl(){
+  const state=quizFeedback;if(!state)return;
+  window.TNI18n.bindText($("quizPauseAdvance"),()=>window.TNI18n.t(state.paused?"quiz.resumeAdvance":"quiz.pauseAdvance"));
+  window.TNI18n.bindText($("quizAdvanceStatus"),()=>state.failed?window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings"):state.paused?window.TNI18n.t("ui.paused"):!state.audioDone?window.TNI18n.t("ui.now_playing"):isAutoAdvance()?window.TNI18n.t("quiz.advancing"):"");
+}
+function toggleQuizAdvance(){
+  if(!quizFeedback)return;
+  if(!quizFeedback.paused)return pauseQuizAdvance();
+  if(document.hidden)return;
+  quizFeedback.paused=false;if(!quizFeedback.audioDone&&!quizFeedback.audioAttempt)playQuizFeedbackAudio(quizFeedback);armQuizFeedback(quizFeedback);updateQuizAdvanceControl();
+}
+function advanceQuiz(){if(!quiz.current||!quiz.answered||quiz.ended)return;clearQuizTimers();quiz.index++;if(quiz.index>=quiz.queue.length)return endQuiz();showQuizQuestion()}
+function nextQuizQuestion(allowSkip=false){if(!quiz.current||performance.now()<quizInputReadyAt)return;if(!quiz.answered){if(allowSkip)finishAnswer(false);return}advanceQuiz()}
+function speakQuizQuestion(){if(!quiz.current)return;if(quiz.answered)return speakCorrectAnswer();if(quiz.type==="listening")return playListeningAudio(true)}
+function pauseQuizAdvance(){clearTimeout(quizAutoTimer);if(quizFeedback){quizFeedback.paused=true;updateQuizAdvanceControl()}}
+function speakCorrectAnswer(){if(!quiz.current||!quiz.answered)return;if(quizFeedback){clearTimeout(quizAutoTimer);quizFeedback.minDone=false;quizFeedback.reviewing=true;playQuizFeedbackAudio(quizFeedback,true);updateQuizAdvanceControl()}else speakFront(quiz.current)}
+function speakQuizFront(){return speakQuizQuestion()}
 function speakQuizBack(){if(!quiz.current)return;speak(quiz.current.back,quiz.current.backLang)}
-function clearQuizTimers(){clearTimeout(quizAutoTimer);clearTimeout(quizListeningAudioTimer);clearInterval(quizTimerInterval);quizAutoTimer=null;quizListeningAudioTimer=null;quizTimerInterval=null}
-function startQuestionTimer(){let wrap=$("quizTimerWrap"),fill=$("quizTimerFill"),text=$("quizTimerText"),label=$("quizTimerLabel");if(!wrap||!fill||!text)return;let limit=0;if(quiz.type==="listening")limit=listeningTimerLimit();else if($("quizHardMode").value==="on")limit=Math.max(2,parseInt($("quizTimeLimit").value||"8",10));if(!limit){wrap.classList.remove("show");if(label)label.textContent="Time limit: Off";text.textContent="";fill.style.width="0%";fill.classList.remove("danger");if(quiz.type==="listening")updateListeningTimerInline("");return}quizQuestionStartedAt=Date.now();wrap.classList.toggle("show",quiz.type!=="listening");if(label)label.textContent=quiz.type==="listening"?"Listening timer":"Time limit";fill.style.width="100%";fill.classList.remove("danger");text.textContent=limit+"s";if(quiz.type==="listening")updateListeningTimerInline(limit+"s");quizTimerInterval=setInterval(()=>{if(quiz.answered){clearInterval(quizTimerInterval);return}let remain=Math.max(0,limit-(Date.now()-quizQuestionStartedAt)/1000),pct=remain/limit*100;fill.style.width=pct+"%";if(pct<30)fill.classList.add("danger");const shown=Math.ceil(remain)+"s";text.textContent=shown;if(quiz.type==="listening")updateListeningTimerInline(shown);if(remain<=0){clearInterval(quizTimerInterval);finishAnswer(false)}},200)}
+function clearQuizTimers(){quizEpoch++;if(quizFeedback&&!quizFeedback.audioDone)cancelSpeech();quizFeedback=null;clearTimeout(quizInputUnlockTimer);clearTimeout(quizAutoTimer);clearTimeout(quizListeningAudioTimer);clearInterval(quizTimerInterval);quizAutoTimer=null;quizListeningAudioTimer=null;quizTimerInterval=null}
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){quizHiddenAt=Date.now();pauseQuizAdvance();if(quizFeedback&&!quizFeedback.audioDone)cancelSpeech()}
+  else if(quizHiddenAt){quizQuestionStartedAt+=Date.now()-quizHiddenAt;quizHiddenAt=0}
+});
+function startQuestionTimer(){
+  const wrap=$("quizTimerWrap"),fill=$("quizTimerFill"),text=$("quizTimerText"),label=$("quizTimerLabel");
+  if(!wrap||!fill||!text)return;
+  const limit=quiz.type==="listening"?listeningTimerLimit():$("quizHardMode").value==="on"?Math.max(2,parseInt($("quizTimeLimit").value||"8",10)):0;
+  if(!limit){wrap.classList.remove("show");window.TNI18n.bindText(label,()=>window.TNI18n.t("ui.time_limit_off"));text.textContent="";fill.style.width="0%";fill.classList.remove("danger");if(quiz.type==="listening")updateListeningTimerInline("");return}
+  quizQuestionStartedAt=Date.now();quizHiddenAt=document.hidden?Date.now():0;
+  wrap.classList.toggle("show",quiz.type!=="listening");window.TNI18n.bindText(label,()=>window.TNI18n.t(quiz.type==="listening"?"ui.listening_timer":"ui.time_limit"));
+  fill.style.width="100%";fill.classList.remove("danger");text.textContent=limit+"s";if(quiz.type==="listening")updateListeningTimerInline(limit+"s");
+  quizTimerInterval=setInterval(()=>{
+    if(quiz.answered){clearInterval(quizTimerInterval);return}
+    if(document.hidden)return;
+    const remain=Math.max(0,limit-(Date.now()-quizQuestionStartedAt)/1000),pct=remain/limit*100;
+    fill.style.width=pct+"%";fill.classList.toggle("danger",pct<30);
+    const shown=Math.ceil(remain)+"s";text.textContent=shown;if(quiz.type==="listening")updateListeningTimerInline(shown);
+    if(remain<=0){clearInterval(quizTimerInterval);finishAnswer(false)}
+  },200);
+}
 function renderQuizSummary(){
   const box=$("quizResultSummary");
   if(!box)return;
-  const wrong=(quiz.allWrong||[]).length;
-  const accuracy=quiz.total?Math.round(quiz.score/quiz.total*100):0;
-  const improved=quiz.queue.filter(word=>!learningEngine()?.isWeakWord(word)).length;
-  const stillWeak=quiz.queue.filter(word=>learningEngine()?.isWeakWord(word)).length;
-  const next=wrong?"Retry mistakes or review weak words.":"Nice. Add a few new words or keep listening.";
+  const records=quiz.records||[],wrong=records.filter(record=>!record.ok).length;
+  const accuracy=records.length?Math.round(quiz.score/records.length*100):null;
+  const improved=new Set(records.filter(record=>record.ok).map(record=>record.id)).size;
+  const studied=Array.from(new Set(records.map(record=>record.id))).map(id=>db.words.find(word=>word.id===id)).filter(Boolean);
+  const stillWeak=studied.filter(word=>learningEngine()?.isWeakWord(word)).length;
+  const next=!records.length?window.TNI18n.t("quiz.noAnswer"):wrong?window.TNI18n.t("ui.review_weak_words"):window.TNI18n.t("ui.no_wrong_answers_great_job");
   box.innerHTML=`
-    <div><b>${quiz.score}</b><span>Correct</span></div>
-    <div><b>${wrong}</b><span>Wrong</span></div>
-    <div><b>${accuracy}%</b><span>Accuracy</span></div>
-    <div><b>${improved}</b><span>Improved</span></div>
-    <div><b>${stillWeak}</b><span>Still weak</span></div>
-    <div class="wide"><strong>${esc(next)}</strong></div>
+    <div><b>${quiz.score}</b><span>${window.TNI18n.mark("ui.correct",{})}</span></div>
+    <div><b>${wrong}</b><span>${window.TNI18n.mark("ui.wrong",{})}</span></div>
+    <div><b>${accuracy===null?"—":accuracy+"%"}</b><span>${window.TNI18n.mark("ui.accuracy",{})}</span></div>
+    <div><b>${improved}</b><span>${window.TNI18n.mark("ui.improved",{})}</span></div>
+    <div><b>${stillWeak}</b><span>${window.TNI18n.mark("ui.still_weak",{})}</span></div>
+    <div class="wide"><span>${window.TNI18n.mark("quiz.answeredCount",{count:records.length,total:quiz.total})}</span><strong>${esc(next)}</strong></div>
   `;
 }
-function endQuiz(){clearQuizTimers();$("quizRun").style.display="none";$("quizEnd").style.display="block";$("pageQuiz")?.classList.remove("quiz-focus-active");$("quizEndText").textContent=`Score: ${quiz.score} / ${quiz.total}`;renderQuizSummary();renderWrongList();render()}
-function renderWrongList(){let box=$("quizWrongList"),wrong=quiz.allWrong||[];if(!wrong.length){box.innerHTML='<div class="empty">No wrong answers. Great job!</div>';return}box.innerHTML='<h2 style="margin-top:8px">Wrong Answers</h2>'+wrong.map(item=>{let w=db.words.find(x=>x.id===item.id)||item,q=quiz.direction==="front"?w.front:w.back,a=quiz.direction==="front"?w.back:w.front,lang=safeLang(quiz.direction==="front"?w.frontLang:w.backLang);let id=jsArg(w.id);return`<div class="quiz-wrong-card"><button type="button" class="quiz-wrong-copy" onclick="openDetail(${id})"><span class="quiz-wrong-front">${esc(q)}</span><span class="quiz-wrong-back">Answer: ${esc(a)}</span></button><div class="quiz-wrong-actions"><button type="button" onclick="speak(${jsArg(q)},${jsArg(lang)})" aria-label="Play word audio">Play</button><button type="button" class="${w.saved?'starred':''}" onclick="toggleQuizWrongStar(${id})">${w.saved?'★ Saved':'☆ Save'}</button><button type="button" onclick="openDetail(${id})">Detail</button></div></div>`}).join("")}
+function endQuiz(){quiz.ended=true;clearQuizTimers();cancelSpeech();$("quizRun").style.display="none";$("quizEnd").style.display="block";$("pageQuiz")?.classList.remove("quiz-focus-active");window.TNI18n.bindText($("quizEndText"),()=>(window.TNI18n.t("ui.score_value_value",{p0:quiz.score,p1:(quiz.records||[]).length})));renderQuizSummary();renderWrongList();render();window.tnStudyContinuity?.complete("quiz")}
+function renderWrongList(){let box=$("quizWrongList"),wrong=quiz.allWrong||[];if(!quiz.records?.length){box.innerHTML="";return}if(!wrong.length){box.innerHTML=`<div class="empty">${window.TNI18n.mark("ui.no_wrong_answers_great_job",{})}</div>`;return}box.innerHTML=`<h2 style="margin-top:8px">${window.TNI18n.mark("ui.wrong_answers",{})}</h2>`+wrong.map(item=>{let w=db.words.find(x=>x.id===item.id)||item,q=quiz.direction==="front"?w.front:w.back,a=quiz.direction==="front"?w.back:w.front;let id=jsArg(w.id);return`<div class="quiz-wrong-card"><button type="button" class="quiz-wrong-copy" onclick="openDetail(${id})"><span class="quiz-wrong-front">${esc(q)}</span><span class="quiz-wrong-back">${window.TNI18n.mark("ui.answer_value",{p2:esc(a)})}</span></button><div class="quiz-wrong-actions"><button type="button" onclick="playQuizWrongFront(${id})">${window.TNI18n.mark("ui.play_front",{})}</button><button type="button" class="${w.saved?'starred':''}" onclick="toggleQuizWrongStar(${id})">${w.saved?window.TNI18n.t("ui.saved"):window.TNI18n.t("ui.save")}</button><button type="button" onclick="openDetail(${id})">${window.TNI18n.mark("ui.detail",{})}</button></div></div>`}).join("")}
+function playQuizWrongFront(id){const word=db.words.find(word=>word.id===id)||(quiz.allWrong||[]).find(word=>word.id===id);if(word)return speakFront(word)}
 function toggleQuizWrongStar(id){toggleStar(id);renderWrongList()}
-function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion()}
-function audioWords(){let list=$("audioList").value,order=$("audioOrder").value;let words=list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||""));if(order==="star")words=words.filter(w=>w.saved);if(order==="due")words=words.filter(isDue);if(order==="hard")words=[...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));if(order==="random")words=shuffle(words);return words}
-function setAudioPlayerState(state){const player=$("audioNow")?.closest(".now-playing");if(player)player.dataset.state=state}
-function startAudio(){stopAudio();audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioIndex=0;audioPaused=false;setAudioPlayerState("playing");playAudioCurrent()}
-function pauseAudio(){audioPaused=true;clearTimeout(audioTimer);speechSynthesis.cancel();setAudioPlayerState("paused");toast("Paused")}
-function stopAudio(){clearTimeout(audioTimer);speechSynthesis.cancel();audioPaused=false;audioIndex=0;$("audioNow").textContent="---";$("audioSub").textContent="Choose a playlist and press Play";setAudioPlayerState("idle")}
-function playAudioOnce(){let words=audioWords();if(!words.length)return toast("No words");let w=words[Math.floor(Math.random()*words.length)];updateNow(w);speakByPattern(w)}
-function nextAudio(){clearTimeout(audioTimer);try{speechSynthesis.cancel()}catch(e){};if(!audioQueue.length)audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioPaused=false;playAudioCurrent()}
-function previousAudio(){clearTimeout(audioTimer);try{speechSynthesis.cancel()}catch(e){};if(!audioQueue.length)audioQueue=audioWords();if(!audioQueue.length)return toast("No words");audioIndex=Math.max(0,audioIndex-2);audioPaused=false;playAudioCurrent()}
-function playAudioCurrent(){if(audioPaused)return;if(audioIndex>=audioQueue.length){audioIndex=0;if($("audioOrder").value==="random")audioQueue=shuffle(audioQueue)}let w=audioQueue[audioIndex++];updateNow(w);speakByPattern(w);audioTimer=setTimeout(playAudioCurrent,Math.max(.5,parseFloat($("audioIntervalCustom").value||"5"))*1000)}
-function updateNow(w){$("audioNow").textContent=w.front;$("audioSub").textContent=w.back;setAudioPlayerState("playing")}
-function speakByPattern(w){speakPair(w,$("audioPattern").value)}
-function speakPair(w,p){
-  let gap=Math.max(.1,parseFloat($("pairGapCustom")?.value||"1.8"))*1000;
-  if(p==="front")speak(w.front,w.frontLang);
-  if(p==="back")speak(w.back,w.backLang);
-  if(p==="frontBack")speakQueued([{text:w.front,lang:w.frontLang},{text:w.back,lang:w.backLang}],gap);
-  if(p==="backFront")speakQueued([{text:w.back,lang:w.backLang},{text:w.front,lang:w.frontLang}],gap);
+function restartWrongQuiz(){let wrong=quiz.allWrong||[];if(!wrong.length)return resetQuiz();quiz={...quiz,queue:shuffle(wrong),wrong:[],allWrong:[],records:[],ended:false,index:0,score:0,current:null,answered:false,total:wrong.length};$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz")?.classList.add("quiz-focus-active");showQuizQuestion()}
+function audioWords(){let list=$("audioList").value,order=$("audioOrder").value;let words=uniqueStudyWords(list==="all"?[...db.words]:db.words.filter(w=>(w.listId||"")===(list||"")));if(order==="star")words=words.filter(w=>w.saved);if(order==="due")words=words.filter(isDue);if(order==="hard")words=[...words].sort((a,b)=>Number(learningEngine()?.isWeakWord(b))-Number(learningEngine()?.isWeakWord(a))||quizLearningWeight(b)-quizLearningWeight(a));if(order==="random")words=shuffle(words);return words}
+function setAudioPlayerState(state){const player=$("audioNow")?.closest(".now-playing");if(player)player.dataset.state=state;window.tnListenReading?.state(state)}
+let listenRun={phase:"idle",part:0,errors:[],consecutive:0,beforePause:"idle"};
+const LISTEN_PREF_KEY="tangonest_listen_options_v1";
+function listenParts(word){
+  const front={...frontSpeech(word),field:"front",strict:true},back={text:word.back,lang:word.backLang,field:"back"},example={text:word.memo,lang:frontSpeech(word).lang,field:"example",strict:true};
+  const patterns={front:[front],back:[back],frontBack:[front,back],backFront:[back,front],frontBackExample:[front,back,example]};
+  return (patterns[$("audioPattern").value]||patterns.front).filter(part=>part.field==="front"||sanitizeSpeechText(part.text));
+}
+function listenState(phase){
+  listenRun.phase=phase;setAudioPlayerState(phase);
+  $("audioPlayButton")?.setAttribute("aria-pressed",String(["playing","preparing","waiting"].includes(phase)));
+}
+function invalidateListen(){audioRunToken++;clearTimeout(audioTimer);audioTimer=null;cancelSpeech()}
+function startAudio(){
+  if(["playing","preparing","waiting"].includes(listenRun.phase))return;
+  const resume=audioQueue.length&&(audioPaused||["paused","unavailable","error"].includes(listenRun.phase));
+  invalidateListen();audioPaused=false;listenRun.once=false;
+  if(resume){
+    listenRun.consecutive=0;
+    if(listenRun.beforePause==="waiting"&&listenRun.part>=listenParts(audioQueue[audioIndex-1]).length)return scheduleAudioNext(audioRunToken);
+    return playAudioCurrent(true);
+  }
+  audioQueue=audioWords();audioIndex=0;listenRun={phase:"idle",part:0,errors:[],consecutive:0,beforePause:"idle"};
+  if(!audioQueue.length)return toast(window.TNI18n.t("ui.no_words"));
+  playAudioCurrent();
+}
+function pauseAudio(){
+  if(["idle","completed"].includes(listenRun.phase))return;
+  listenRun.beforePause=listenRun.phase;invalidateListen();audioPaused=true;listenState("paused");
+}
+function stopAudio(){
+  invalidateListen();audioPaused=false;audioIndex=0;audioQueue=[];listenRun={phase:"idle",part:0,errors:[],consecutive:0,beforePause:"idle"};
+  $("audioNow").textContent="";window.TNI18n.bindText($("audioSub"),()=>window.TNI18n.t("ui.choose_a_playlist_and_press_play"));
+  $("audioPronunciation").textContent="";$("audioExample").textContent="";$("audioPosition").textContent="0 / 0";$("audioSeek").disabled=true;listenState("idle");
+}
+async function playAudioOnce(){
+  stopAudio();audioQueue=audioWords();if(!audioQueue.length)return toast(window.TNI18n.t("ui.no_words"));
+  listenRun.once=true;return playAudioCurrent();
+}
+function selectAudioItem(index,play=!audioPaused){
+  invalidateListen();if(!audioQueue.length)audioQueue=audioWords();
+  if(!audioQueue.length)return;
+  index=Math.max(0,Math.min(audioQueue.length-1,index));listenRun.part=0;listenRun.beforePause="paused";
+  audioPaused=!play;audioIndex=index+1;updateNow(audioQueue[index]);
+  if(!play)return listenState("paused");
+  audioIndex=index;playAudioCurrent();
+}
+function nextAudio(){selectAudioItem(Math.min(audioQueue.length-1,audioIndex))}
+function previousAudio(){selectAudioItem(Math.max(0,audioIndex-2))}
+function scheduleAudioNext(token){
+  if(token!==audioRunToken||audioPaused)return;
+  const repeat=$("audioRepeat")?.value||"off";
+  if(listenRun.once||!$("audioAutoPlay").checked){audioPaused=true;listenState("paused");return}
+  if(audioIndex>=audioQueue.length&&repeat==="off"){listenState("completed");window.tnStudyContinuity?.complete("listen");return}
+  listenState("waiting");
+  const seconds=Number($("audioIntervalCustom").value);
+  audioTimer=setTimeout(()=>{
+    if(token!==audioRunToken||audioPaused||listenRun.phase!=="waiting")return;
+    if(repeat==="word")audioIndex=Math.max(0,audioIndex-1);
+    else if(audioIndex>=audioQueue.length)audioIndex=0;
+    playAudioCurrent();
+  },Math.max(0,Number.isFinite(seconds)?seconds:.4)*1000);
+}
+async function playAudioCurrent(resumePart=false){
+  if(audioPaused||!audioQueue.length)return;
+  const token=audioRunToken;
+  const index=resumePart?Math.max(0,audioIndex-1):audioIndex;
+  if(index>=audioQueue.length){listenState("completed");return}
+  const word=audioQueue[index],parts=listenParts(word);
+  audioIndex=index+1;if(!resumePart)listenRun.part=0;
+  updateNow(word);listenState("preparing");
+  let failure=null;
+  cancelSpeech();
+  for(let part=listenRun.part;part<parts.length;part++){
+    if(token!==audioRunToken||audioPaused)return;
+    listenRun.part=part;
+    const item=parts[part];let reason="";
+    const ok=await speak(item.text,item.lang,{strict:item.strict,cancel:false,onstart:()=>{if(token===audioRunToken&&!audioPaused)listenState("playing")},onerror:error=>{reason=error}});
+    if(token!==audioRunToken||audioPaused)return;
+    if(!ok){failure={wordId:word.id,part:item.field,reason:reason||"speech-failed"};break}
+    listenRun.part=part+1;
+    if(part<parts.length-1){listenState("preparing");if(!await speechGap(Math.max(0,Number($("pairGapCustom").value)||0)*1000,speechEpoch))return;}
+  }
+  if(token!==audioRunToken||audioPaused)return;
+  if(!parts.length)failure={wordId:word.id,part:"empty",reason:"empty-item"};
+  if(failure){
+    listenRun.errors.push(failure);listenRun.consecutive++;
+    const blocked=["not-allowed","audio-busy","audio-hardware","voice-unavailable","language-unavailable","synthesis-unavailable","timeout"].includes(failure.reason);
+    toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings"));
+    if(blocked||listenRun.consecutive>=2){audioPaused=true;listenRun.beforePause="error";listenState("error");return}
+  }else listenRun.consecutive=0;
+  scheduleAudioNext(token);
+}
+function updateNow(w){
+  window.TNI18n.unbind($("audioSub"));
+  $("audioNow").textContent=w.front;$("audioNow").lang=w.frontLang||"";
+  $("audioSub").textContent=w.back;$("audioSub").lang=w.backLang||"";
+  $("audioPronunciation").textContent=wordPronunciation(w);$("audioExample").textContent=String(w.memo||"").trim();$("audioExample").lang=w.frontLang||"";
+  for(const id of ["audioSub","audioPronunciation","audioExample"])$(id).hidden=!$(id).textContent.trim();
+  $("audioPosition").textContent=`${audioIndex} / ${audioQueue.length}`;
+  const seek=$("audioSeek");seek.max=String(Math.max(1,audioQueue.length));seek.value=String(Math.max(1,audioIndex));seek.disabled=!audioQueue.length;
+  window.TangoNestMotion?.enter($("audioNow"),true);window.tnListenReading?.update();
+}
+$("audioSeek")?.addEventListener("change",event=>selectAudioItem(Number(event.target.value)-1));
+$("audioList")?.addEventListener("change",stopAudio);
+for(const id of ["audioPattern","audioRate","audioOrder"]){
+  $(id)?.addEventListener("change",()=>{
+    if(!audioQueue.length)return;
+    if(id==="audioOrder")return stopAudio();
+    const play=!audioPaused&&["playing","preparing","waiting"].includes(listenRun.phase);
+    selectAudioItem(Math.max(0,audioIndex-1),play);
+  });
+}
+function restoreListenOptions(){
+  let prefs={};try{prefs=JSON.parse(localStorage.getItem(LISTEN_PREF_KEY)||"{}")}catch(error){}
+  if(prefs.migration!=="fdg14"){prefs.auto=true;prefs.repeat="off";prefs.migration="fdg14"}
+  $("audioAutoPlay").checked=prefs.auto!==false;
+  $("audioRepeat").value=["off","all","word"].includes(prefs.repeat)?prefs.repeat:"off";
+  if(Number.isFinite(prefs.interval))$("audioIntervalCustom").value=String(prefs.interval);
+  const save=()=>{try{localStorage.setItem(LISTEN_PREF_KEY,JSON.stringify({migration:"fdg14",auto:$("audioAutoPlay").checked,repeat:$("audioRepeat").value,interval:Number($("audioIntervalCustom").value)}))}catch(error){}};
+  save();
+  for(const id of ["audioAutoPlay","audioRepeat","audioIntervalCustom"])$(id).addEventListener("change",()=>{
+    save();
+    if(listenRun.phase==="waiting"){clearTimeout(audioTimer);scheduleAudioNext(audioRunToken)}
+  });
+}
+restoreListenOptions();
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&["preparing","playing","waiting"].includes(listenRun.phase))pauseAudio()});
+function speakByPattern(w){return speakPair(w,$("audioPattern").value)}
+function speakPair(w,p,opts={}){
+  const front={text:w.front,lang:w.frontLang},back={text:w.back,lang:w.backLang},example={text:w.memo,lang:w.frontLang};
+  const parts={front:[front],back:[back],frontBack:[front,back],backFront:[back,front],frontBackExample:[front,back,example]}[p]||[front,back];
+  return speakQueued(parts,Math.max(0,Number($("pairGapCustom")?.value)||0)*1000,opts);
 }
 
 function downloadBackupFile(){
@@ -1396,7 +1662,7 @@ function downloadBackupFile(){
   a.click();
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  toast("Backup downloaded");
+  toast(window.TNI18n.t("ui.backup_downloaded",{}));
 }
 
 function exportDataText(){
@@ -1405,22 +1671,22 @@ function exportDataText(){
     : {app:"TangoNest",version:"backup-v2",exportedAt:new Date().toISOString(),data:db};
   const text=JSON.stringify(data,null,2),box=$("syncDataBox");
   box.value=text;box.focus();box.select();
-  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast("Copied export data")).catch(()=>toast("Export data is ready"));
-  else toast("Export data is ready. Copy the text.");
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast(window.TNI18n.t("ui.copied_export_data",{}))).catch(()=>toast(window.TNI18n.t("ui.export_data_is_ready",{})));
+  else toast(window.TNI18n.t("ui.export_data_is_ready_copy_the_text",{}));
 }
 function importDataText(){
   if(typeof window.tnImportDataToCloud==="function")return window.tnImportDataToCloud();
-  toast("Import requires a signed-in account with online sync available.");
+  toast(window.TNI18n.t("ui.import_requires_a_signed_in_account_with_online_sync_available",{}));
 }
 function clearLocalCache(){
   if(typeof window.tnClearLocalCache==="function")return window.tnClearLocalCache();
-  if(!confirm("Clear this browser cache? Cloud data will be loaded again after sync."))return;
+  if(!confirm(window.TNI18n.t("ui.clear_this_browser_cache_cloud_data_will_be_loaded_again_after_sync",{})))return;
   tnPurgeUserStorage(tnActiveStorageUserId);
-  db=tnEmptyData("manual-clear-local-cache");shareDb();resetCard();resetQuiz();render();toast("Local cache cleared");
+  db=tnEmptyData("manual-clear-local-cache");shareDb();resetCard();resetQuiz();render();toast(window.TNI18n.t("ui.local_cache_cleared",{}));
 }
 function deleteAllAccountData(){
   if(typeof window.tnDeleteAllAccountData==="function")return window.tnDeleteAllAccountData();
-  toast("Sign in with online sync available before deleting cloud data.");
+  toast(window.TNI18n.t("ui.sign_in_with_online_sync_available_before_deleting_cloud_data",{}));
 }
 function clearAll(){return clearLocalCache()}
 
@@ -1429,53 +1695,20 @@ let VOICE_CACHE=[];
 const BEST_VOICE_CACHE=new Map();
 let voiceLoadStarted=false;
 const VOICE_PREF_KEY="tangonest_voice_preferences_v1";
-const VOICE_LANGUAGE_SETTINGS=[
-  {lang:"en-US",label:"English",sample:"Hello, this is English."},
-  {lang:"ja-JP",label:"Japanese",sample:"こんにちは。日本語です。"},
-  {lang:"fr-FR",label:"French",sample:"Bonjour, ceci est le français."},
-  {lang:"ko-KR",label:"Korean",sample:"안녕하세요. 한국어입니다."},
-  {lang:"zh-CN",label:"Chinese",sample:"你好，这是中文。"},
-  {lang:"es-ES",label:"Spanish",sample:"Hola, esto es español."}
-];
+const VOICE_LANGUAGE_SETTINGS=window.TangoNestLanguages.registry.map(item=>({lang:item.ttsLocale,label:item.name,sample:item.sample}));
 function loadVoicePrefs(){try{return JSON.parse(localStorage.getItem(VOICE_PREF_KEY)||"{}")||{}}catch(e){return{}}}
 function saveVoicePrefs(prefs){try{localStorage.setItem(VOICE_PREF_KEY,JSON.stringify(prefs||{}))}catch(e){}}
 function voiceIdentity(v){return [v?.voiceURI||"",v?.name||"",v?.lang||""].join("||")}
 
 function normalizeVoiceLang(lang){
-  const raw=String(lang||"").trim();
-  const lower=raw.toLowerCase();
-  if(lower.includes("english"))return "en-US";
-  if(lower.includes("japanese")||lower.includes("日本"))return "ja-JP";
-  if(lower.includes("korean"))return "ko-KR";
-  if(lower.includes("chinese")||lower.includes("mandarin"))return "zh-CN";
-  if(lower.includes("french"))return "fr-FR";
-  if(lower.includes("spanish"))return "es-ES";
-  const map={
-    "en":"en-US","en-US":"en-US","en-GB":"en-GB",
-    "fr":"fr-FR","fr-FR":"fr-FR",
-    "ja":"ja-JP","ja-JP":"ja-JP",
-    "ko":"ko-KR","ko-KR":"ko-KR",
-    "zh":"zh-CN","zh-CN":"zh-CN","zh-TW":"zh-TW",
-    "es":"es-ES","es-ES":"es-ES",
-    "ar":"ar-SA","ar-SA":"ar-SA",
-    "it":"it-IT","it-IT":"it-IT",
-    "de":"de-DE","de-DE":"de-DE",
-    "pt":"pt-BR","pt-BR":"pt-BR","pt-PT":"pt-PT",
-    "ru":"ru-RU","ru-RU":"ru-RU",
-    "nl":"nl-NL","nl-NL":"nl-NL",
-    "vi":"vi-VN","vi-VN":"vi-VN",
-    "th":"th-TH","th-TH":"th-TH",
-    "tr":"tr-TR","tr-TR":"tr-TR",
-    "hi":"hi-IN","hi-IN":"hi-IN",
-    "id":"id-ID","id-ID":"id-ID",
-    "el":"el-GR","el-GR":"el-GR",
-    "he":"he-IL","he-IL":"he-IL"
-  };
-  return map[raw]||raw||"en-US";
+  return window.TangoNestLanguages.normalize(lang);
 }
 window.tnNormalizeVoiceLang = normalizeVoiceLang;
 function sanitizeSpeechText(text){
   return String(text||"")
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi," ")
+    .replace(/<[^>]*>/g," ")
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g," ")
     .replace(/[|｜]/g,", ")
     .replace(/\s*\/\s*/g,", ")
     .replace(/[()[\]{}<>]/g," ")
@@ -1489,6 +1722,7 @@ window.tnCleanSpeechText = sanitizeSpeechText;
 function inferSpeechLanguage(text,lang){
   const cleaned=String(text||"").trim();
   const selected=normalizeVoiceLang(lang);
+  if(lang&&window.TangoNestLanguages.find(selected))return selected;
   if(/[가-힣]/.test(cleaned))return"ko-KR";
   if(/[ぁ-んァ-ン]/.test(cleaned))return"ja-JP";
   if(/[一-龯]/.test(cleaned)){
@@ -1603,39 +1837,61 @@ function pickVoice(lang){
 function getBestVoiceForLanguage(language){return pickVoice(language)}
 window.getBestVoiceForLanguage = getBestVoiceForLanguage;
 
+function speechWatchdogDelay(text,rate=Number($("audioRate")?.value)||.92){return Math.max(20000,String(text||"").length*500/Math.max(.3,rate)+5000)}
+function frontSpeech(word){const list=db.lists.find(list=>list.id===word?.listId);return {text:word?.front||"",lang:word?.frontLang||list?.frontLang||""}}
+function speakFront(word,opts={}){const front=frontSpeech(word);return speak(front.text,front.lang,{...opts,strict:true})}
 async function speak(text,lang,opts={}){
   text=sanitizeSpeechText(text);
-  if(!text)return;
-  const finalLang=inferSpeechLanguage(text,lang);
-  if(!window.speechSynthesis)return;
+  if(opts.cancel!==false)cancelSpeech();
+  if(opts.strict&&(!text||!lang||!window.TangoNestLanguages.find(lang))){opts.onerror?.("front-data-missing");toast(window.TNI18n.t("audio.frontMissing"));return false;}
+  if(!text)return true;
+  const finalLang=opts.strict?normalizeVoiceLang(lang):inferSpeechLanguage(text,lang);
+  const epoch=speechEpoch;
+  if(!window.speechSynthesis){opts.onerror?.("synthesis-unavailable");toast(window.TNI18n.t("ui.voice_unavailable_on_this_device",{}));return false;}
   await waitForVoices();
-  try{
-    // Cancel only before a new manual utterance. This prevents overlapped voices.
-    if(opts.cancel!==false)window.speechSynthesis.cancel();
-  }catch(e){}
+  if(epoch!==speechEpoch)return false;
+  const voice=pickVoice(finalLang);
+  if(!voice){opts.onerror?.("voice-unavailable");toast(window.TNI18n.t("ui.voice_unavailable_on_this_device",{}));return false;}
   const u=new SpeechSynthesisUtterance(text);
   u.lang=finalLang;
   u.rate=parseFloat($("audioRate")?.value||"0.92");
   u.pitch=1;
   u.volume=1;
-  const voice=pickVoice(finalLang);
-  if(voice)u.voice=voice;
-  try{
-    window.speechSynthesis.speak(u);
-  }catch(e){
-    console.warn("Speech failed",e);
-  }
+  u.voice=voice;
+  return new Promise(resolve=>{
+    let finished=false;
+    const finish=ok=>{if(finished)return;finished=true;clearTimeout(timeout);pendingSpeech.delete(cancel);resolve(ok);};
+    const cancel=()=>finish(false);
+    let timeout;
+    const arm=(remaining=text)=>{clearTimeout(timeout);timeout=setTimeout(()=>{opts.onerror?.("timeout");finish(false);if(epoch===speechEpoch)cancelSpeech();},speechWatchdogDelay(remaining,u.rate))};
+    arm();
+    pendingSpeech.add(cancel);
+    u.onend=()=>finish(epoch===speechEpoch);
+    u.onstart=()=>{if(!finished&&epoch===speechEpoch){arm();opts.onstart?.()}};
+    u.onboundary=event=>{if(!finished&&epoch===speechEpoch)arm(text.slice(event.charIndex||0))};
+    u.onerror=event=>{if(finished||epoch!==speechEpoch)return;opts.onerror?.(event.error||"speech-failed");if(!["canceled","interrupted"].includes(event.error))toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings",{}));finish(false);};
+    try{window.speechSynthesis.speak(u);}catch(error){opts.onerror?.("not-allowed");finish(false);toast(window.TNI18n.t("ui.voice_playback_failed_try_another_voice_in_settings",{}));}
+  });
 }
 async function speakText(text,language,opts={}){return speak(text,language,opts)}
 window.speakText = speakText;
 
-function speakQueued(items,gap=900){
-  if(!items||!items.length)return;
-  try{window.speechSynthesis.cancel()}catch(e){}
-  let delay=0;
-  items.forEach((it,idx)=>{
-    setTimeout(()=>speak(it.text,it.lang,{cancel:false}),delay);
-    delay+=gap;
+function cancelSpeech(){speechEpoch++;for(const cancel of pendingSpeech)cancel();pendingSpeech.clear();try{window.speechSynthesis?.cancel()}catch(error){}}
+async function speakQueued(items,gap=900,opts={}){
+  items=(items||[]).filter(item=>sanitizeSpeechText(item.text));
+  if(!items?.length)return false;
+  cancelSpeech();const epoch=speechEpoch;
+  for(let index=0;index<items.length;index++){
+    if(epoch!==speechEpoch)return false;
+    if(!await speak(items[index].text,items[index].lang,{...opts,cancel:false}))return false;
+    if(index<items.length-1&&!await speechGap(gap,epoch))return false;
+  }
+  return epoch===speechEpoch;
+}
+function speechGap(ms,epoch){
+  return new Promise(resolve=>{
+    const finish=()=>{clearTimeout(timer);pendingSpeech.delete(finish);resolve(epoch===speechEpoch)};
+    const timer=setTimeout(finish,ms);pendingSpeech.add(finish);
   });
 }
 
@@ -1644,8 +1900,8 @@ function renderVoiceSettings(){
   if(!box)return;
   const voices=refreshVoices();
   if(!voices.length){
-    box.innerHTML='<p class="desc">Browser voices are still loading. Press Refresh Voices if this does not update.</p>';
-    waitForVoices().then(renderVoiceSettings);
+    box.innerHTML=`<p class="desc">${window.TNI18n.mark("ui.browser_voices_are_still_loading_press_refresh_voices_if_this_does_not_update",{})}</p>`;
+    waitForVoices().then(loaded=>{if(loaded.length)renderVoiceSettings();else if(box.isConnected)box.innerHTML=`<p class="desc">${window.TNI18n.mark("ui.voice_unavailable_on_this_device",{})}</p>`;});
     return;
   }
   const rows=VOICE_LANGUAGE_SETTINGS.map(item=>{
@@ -1653,14 +1909,11 @@ function renderVoiceSettings(){
     const matches=matchingVoicesForLanguage(target);
     const current=pickVoice(target);
     const currentId=current?voiceIdentity(current):"";
-    const options=['<option value="">Auto best voice</option>'].concat(matches.map(v=>`<option value="${escAttr(voiceIdentity(v))}" ${voiceIdentity(v)===currentId?"selected":""}>${esc(v.name)} / ${esc(v.lang)}</option>`)).join("");
-    const warning=!matches.length?`<div class="tn-voice-warning">No native ${esc(item.label)} voice found in this browser.</div>`:"";
-    return `<div class="tn-voice-row"><div class="tn-voice-meta"><strong>${esc(item.label)}</strong><span>${current?esc(current.name)+" / "+esc(current.lang):"Auto voice unavailable"}</span>${warning}</div><div class="tn-voice-controls"><select aria-label="Voice for ${esc(item.label)}" onchange="tnSetVoicePreference('${target}',this.value)">${options}</select><button type="button" aria-label="Test ${esc(item.label)} voice" onclick="tnTestVoice('${target}')">Test</button></div></div>`;
+    const options=[`<option value="" data-i18n="ui.auto_best_voice">Auto best voice</option>`].concat(matches.map(v=>`<option value="${escAttr(voiceIdentity(v))}" ${voiceIdentity(v)===currentId?"selected":""}>${esc(v.name)} / ${esc(v.lang)}</option>`)).join("");
+    const warning=!matches.length?`<div class="tn-voice-warning">${window.TNI18n.mark("ui.no_native_value_voice_found_in_this_browser",{p0:esc(item.label)})}</div>`:"";
+    return `<div class="tn-voice-row"><div class="tn-voice-meta"><strong>${esc(item.label)}</strong><span>${current?esc(current.name)+" / "+esc(current.lang):window.TNI18n.t("ui.voice_unavailable_on_this_device")}</span>${warning}</div><div class="tn-voice-controls"><select aria-label="Voice for ${esc(item.label)}" onchange="tnSetVoicePreference('${target}',this.value)">${options}</select><button type="button" aria-label="Test ${esc(item.label)} voice" onclick="tnTestVoice('${target}')">${window.TNI18n.mark("ui.test",{})}</button></div></div>`;
   }).join("");
-  const chineseVoice=pickVoice("zh-CN");
-  const chineseOk=chineseVoice&&voiceMatchesLanguage(chineseVoice,"zh-CN");
-  const chineseWarning=chineseOk?"":'<div class="tn-voice-warning strong">Chinese playback may sound wrong because this browser has no native Mandarin / zh-CN voice loaded.</div>';
-  box.innerHTML=chineseWarning+rows;
+  box.innerHTML=rows;
 }
 function tnSetVoicePreference(lang,value){
   const target=normalizeVoiceLang(lang);
@@ -1675,6 +1928,7 @@ function tnSetVoicePreference(lang,value){
   }
   saveVoicePrefs(prefs);
   BEST_VOICE_CACHE.clear();
+  if(audioQueue.length)selectAudioItem(Math.max(0,audioIndex-1),!audioPaused&&["playing","preparing","waiting"].includes(listenRun.phase));
   renderVoiceSettings();
 }
 function tnTestVoice(lang){
@@ -1689,20 +1943,20 @@ function showVoiceStatus(){
   if(!box)return;
   renderVoiceSettings();
   const voices=refreshVoices();
-  const langs=["en-US","fr-FR","ja-JP","ko-KR","zh-CN","zh-TW","es-ES","de-DE","it-IT","pt-BR","ru-RU"];
+  const langs=window.TangoNestLanguages.registry.map(item=>item.ttsLocale);
   box.style.display="block";
   if(!voices.length){
-    box.innerHTML='<p class="desc">No browser voices loaded yet. Try again after a few seconds, or reload the page.</p>';
-    waitForVoices().then(showVoiceStatus);
+    box.innerHTML=`<p class="desc">${window.TNI18n.mark("ui.no_browser_voices_loaded_yet_try_again_after_a_few_seconds_or_reload_the_page",{})}</p>`;
+    waitForVoices().then(loaded=>{if(loaded.length)showVoiceStatus();});
     return;
   }
   const zh=pickVoice("zh-CN");
-  const zhWarning=zh&&voiceMatchesLanguage(zh,"zh-CN")?"":'<p class="tn-voice-warning strong">No native Chinese / Mandarin voice was found. Install or enable a zh-CN voice for best pronunciation.</p>';
-  box.innerHTML='<p class="desc">Available voices: '+voices.length+'</p>'+zhWarning+
+  const zhWarning=zh&&voiceMatchesLanguage(zh,"zh-CN")?"":`<p class="tn-voice-warning strong">${window.TNI18n.mark("ui.no_native_chinese_mandarin_voice_was_found_install_or_enable_a_zh_cn_voice_for_best_pronunciation",{})}</p>`;
+  box.innerHTML=`<p class="desc">${window.TNI18n.mark("ui.available_voices",{})} `+voices.length+'</p>'+zhWarning+
     langs.map(l=>{
       const v=pickVoice(l);
       const google=v&&String(v.name||"").toLowerCase().includes("google");
-      return `<div style="padding:8px;border-bottom:1px solid var(--line)"><b>${langName(l)||l}</b> → ${v?esc(v.name)+" / "+esc(v.lang):"No voice"} ${google?'<span class="badge green">Google</span>':'<span class="badge">Fallback</span>'}</div>`
+      return `<div style="padding:8px;border-bottom:1px solid var(--line)"><b>${window.TNI18n.studyName(l)||l}</b> → ${v?esc(v.name)+" / "+esc(v.lang):window.TNI18n.t("ui.voice_unavailable_on_this_device")} ${google?`<span class="badge green">${window.TNI18n.mark("ui.google",{})}</span>`:`<span class="badge">${window.TNI18n.mark("ui.fallback",{})}</span>`}</div>`
     }).join("");
 }
 
@@ -1747,7 +2001,15 @@ const TN_SESSION_KEY="tangonest_learning_session_v1";
 function getLastSession(){
   const key=TN_LOCAL_QA_MODE?TN_SESSION_KEY:tnSessionStorageKey();
   if(!key)return{};
-  try{return JSON.parse(localStorage.getItem(key)||"{}")}catch(e){return{}}
+  try{
+    let saved=JSON.parse(localStorage.getItem(key)||"{}");
+    if(!saved||typeof saved!=="object"||Array.isArray(saved))saved={};
+    if(saved.studyDefaultsVersion!=="fdg15"){
+      saved={...saved,quizOrderMode:"random",audioOrder:"random",audioPattern:"front",studyDefaultsVersion:"fdg15"};
+      localStorage.setItem(key,JSON.stringify(saved));
+    }
+    return saved;
+  }catch(e){return{}}
 }
 function setLastSession(patch){
   const key=TN_LOCAL_QA_MODE?TN_SESSION_KEY:tnSessionStorageKey();
@@ -1775,6 +2037,35 @@ function applyLastSessionToControls(){
   if(s.audioPattern&&$("audioPattern"))$("audioPattern").value=s.audioPattern;
   if(s.audioOrder&&$("audioOrder"))$("audioOrder").value=s.audioOrder;
   if(s.studyMode&&$("studyMode"))$("studyMode").value=s.studyMode;
+  updateStudySettingsSummary();
+  updateStudyProgress();
+}
+function restoreStudySettingsForOwner(){
+  const key=TN_LOCAL_QA_MODE?"tangonest_learning_session_v1":tnSessionStorageKey();
+  if(!key||restoreStudySettingsForOwner.key===key)return;
+  applyLastSessionToControls();restoreStudySettingsForOwner.key=key;
+}
+function updateStudySettingsSummary(){
+  const selected=id=>$(id)?.selectedOptions?.[0]?.textContent||"";
+  const advance=$("quizAutoAdvance")?.value==="auto"?window.TNI18n.t("ui.auto_smart_2_2_3_2s"):selected("quizAutoAdvance");
+  if($("quizSettingsSummary"))$("quizSettingsSummary").textContent=[selected("quizOrderMode"),advance,window.TNI18n.t("ui.front_only")+": "+selected("quizAudioAfter")].join(" · ");
+  if($("quizAdvanceValue"))$("quizAdvanceValue").textContent=advance;
+}
+function setupStudySettings(){
+  const setup=$("quizSetup");if(!setup||$("quizAdvanced"))return;
+  const basic=document.createElement("div");basic.className="quiz-basic-settings";
+  for(const id of ["quizList","quizCount","quizOrderMode"])basic.append($(id).parentElement);
+  const summary=document.createElement("p");summary.id="quizSettingsSummary";summary.className="quiz-settings-summary";
+  const details=document.createElement("details");details.id="quizAdvanced";
+  const heading=document.createElement("summary");window.TNI18n.bindText(heading,()=>window.TNI18n.t("ui.session_options"));details.append(heading);
+  const grid=document.createElement("div");grid.className="quiz-advanced-settings";
+  setup.querySelectorAll("[data-quiz-setting]").forEach(node=>grid.append(node));details.append(grid);
+  setup.querySelectorAll(".row,.row3,.row4").forEach(node=>node.remove());setup.prepend(basic,summary,details);
+  const current=document.createElement("small");current.id="quizAdvanceValue";$("quizAutoAdvance").after(current);$("quizAutoAdvance").setAttribute("aria-describedby",current.id);
+  const automatic=$("quizAutoAdvance").querySelector('[value="auto"]');automatic.dataset.i18n="quiz.autoShort";window.TNI18n.bindText(automatic,()=>window.TNI18n.t("quiz.autoShort"));
+  const limitHint=document.createElement("small");limitHint.id="quizLimitHint";$("quizTimeLimit").after(limitHint);$("quizTimeLimit").setAttribute("aria-describedby",limitHint.id);
+  const update=()=>{updateStudySettingsSummary();const enabled=$("quizHardMode").value==="on";$("quizTimeLimit").disabled=!enabled;limitHint.textContent=enabled?"":window.TNI18n.t("ui.time_limit_off")};
+  setup.addEventListener("change",update);window.addEventListener("tn:locale",update);update();
 }
 function rememberCurrentSession(mode){
   const listId=selectedValue(mode==="cards"?"studyList":mode==="audio"?"audioList":mode==="quiz"?"quizList":"addList")||activeListId?.();
@@ -1805,9 +2096,9 @@ function updateHeroPreview(){
   if(!one||!two||!three)return;
   const words=Array.isArray(db?.words)?db.words.filter(w=>w?.front&&w?.back).slice(-8):[];
   if(!words.length){
-    one.innerHTML="<span>Front</span><b>Your word</b><small>Language</small>";
-    two.innerHTML="<span>Back</span><b>Meaning</b><small>Translation</small>";
-    three.innerHTML="<span>Mode</span><b>Quiz</b><small>Ready</small>";
+    one.innerHTML=`<span>${window.TNI18n.mark("ui.front",{})}</span><b>${window.TNI18n.mark("ui.your_word",{})}</b><small>${window.TNI18n.mark("ui.language",{})}</small>`;
+    two.innerHTML=`<span>${window.TNI18n.mark("ui.back",{})}</span><b>${window.TNI18n.mark("ui.meaning_2",{})}</b><small>${window.TNI18n.mark("ui.translation",{})}</small>`;
+    three.innerHTML=`<span>${window.TNI18n.mark("ui.mode",{})}</span><b>${window.TNI18n.mark("navigation.quiz",{})}</b><small>${window.TNI18n.mark("ui.ready",{})}</small>`;
     return;
   }
   const sets=words.map((word,index)=>({
@@ -1818,9 +2109,9 @@ function updateHeroPreview(){
     mode:["Quiz","Cards","Listen"][index%3]
   }));
   const s=sets[sets.length-1];
-  one.innerHTML=`<span>Front</span><b>${esc(s.front)}</b><small>${esc(s.frontLang)}</small>`;
-  two.innerHTML=`<span>Back</span><b>${esc(s.back)}</b><small>${esc(s.backLang)}</small>`;
-  three.innerHTML=`<span>Mode</span><b>${esc(s.mode)}</b><small>Ready</small>`;
+  one.innerHTML=`<span>${window.TNI18n.mark("ui.front",{})}</span><b>${esc(s.front)}</b><small>${esc(s.frontLang)}</small>`;
+  two.innerHTML=`<span>${window.TNI18n.mark("ui.back",{})}</span><b>${esc(s.back)}</b><small>${esc(s.backLang)}</small>`;
+  three.innerHTML=`<span>${window.TNI18n.mark("ui.mode",{})}</span><b>${esc(s.mode)}</b><small>${window.TNI18n.mark("ui.ready",{})}</small>`;
 }
 
 const TN_RECENT_PLAYLIST_KEY="tangonest_recent_playlist_v1";
@@ -1843,7 +2134,8 @@ function resetAccountUiState(){
   clearFlashTimers();
   clearQuizTimers();
   clearTimeout(audioTimer);
-  try{speechSynthesis.cancel()}catch(e){}
+  audioRunToken++;
+  cancelSpeech();
   audioQueue=[];
   audioIndex=0;
   audioPaused=false;
@@ -1857,13 +2149,20 @@ function resetAccountUiState(){
   const now=$("audioNow");
   const sub=$("audioSub");
   if(now)now.textContent="---";
-  if(sub)sub.textContent="Choose a playlist and press Play";
+  if(sub)window.TNI18n.bindText(sub,()=>(window.TNI18n.t("ui.choose_a_playlist_and_press_play",{})));
   setAudioPlayerState("idle");
 }
 window.tnResetAccountUiState=resetAccountUiState;
 function setupCoreInteractions(){
   if(window.__tnCoreInteractions)return;
   window.__tnCoreInteractions=true;
+  $("bulkCancelButton")?.addEventListener("click",()=>{bulkStopRequested=true;$("bulkCancelButton").disabled=true;window.TNI18n.bindText($("bulkCancelButton"),()=>(window.TNI18n.t("ui.stopping_after_this_batch",{})))});
+  window.addEventListener("beforeunload",event=>{if(bulkProgressBusy()){event.preventDefault();event.returnValue="";}});
+  updateBulkAssistant();
+  $("bulkCopyPrompt")?.addEventListener("click",()=>copyBulkAssistant("prompt"));
+  $("bulkCopyFormat")?.addEventListener("click",()=>copyBulkAssistant("format"));
+  $("bulkInsertSample")?.addEventListener("click",insertBulkSample);
+  $("bulkFormat")?.addEventListener("change",()=>{clearBulkPreview();updateBulkAssistant()});
   ["addList","bulkList"].forEach(id=>{
     const el=$(id);
     if(el&&!el.dataset.recentPlaylist){
@@ -1872,16 +2171,29 @@ function setupCoreInteractions(){
     }
   });
   const bulkText=$("bulkText");
-  if(bulkText&&!bulkText.dataset.bulkDock){bulkText.dataset.bulkDock="1";bulkText.addEventListener("input",queueBulkActionDock)}
+  if(bulkText&&!bulkText.dataset.bulkDock){bulkText.dataset.bulkDock="1";bulkText.addEventListener("input",()=>{hideBulkDestinationConfirmation();$("bulkDuplicatePanel")?.classList.remove("show");if($("bulkPreview"))$("bulkPreview").style.display="none";queueBulkActionDock()})}
   document.addEventListener("keydown",event=>{
     if(event.isComposing)return;
+    const bulkModal=!$("bulkTargetConfirm")?.hidden?$("bulkTargetConfirm"):$("bulkDuplicatePanel")?.classList.contains("show")?$("bulkDuplicatePanel"):null;
+    if(bulkModal){
+      if(event.key==="Escape"){
+        event.preventDefault();hideBulkDestinationConfirmation();$("bulkDuplicatePanel")?.classList.remove("show");$("bulkRegisterBtn")?.focus();return;
+      }
+      if(event.key==="Tab"){
+        const buttons=[...bulkModal.querySelectorAll("button:not(:disabled)")];
+        const at=buttons.indexOf(document.activeElement);
+        event.preventDefault();buttons[(at+(event.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();return;
+      }
+    }
     const target=event.target;
     const tag=String(target?.tagName||"").toLowerCase();
-    const inField=["input","textarea","select"].includes(tag);
+    const inField=["input","textarea","select"].includes(tag)||target?.isContentEditable;
     const createActive=$("pageAdd")?.classList.contains("active");
     const quizActive=$("pageQuiz")?.classList.contains("active")&&$("quizRun")?.style.display!=="none"&&quiz.current;
     if(quizActive&&!event.defaultPrevented){
-      if(quiz.answered&&!inField&&(event.key==="Enter"||event.code==="Space")){
+      if(event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;
+      if(event.key==="Escape"&&!inField){event.preventDefault();pauseQuizAdvance();$("quizEndSession")?.focus();return;}
+      if(quiz.answered&&!inField&&tag!=="button"&&(event.key==="Enter"||event.code==="Space")){
         event.preventDefault();
         nextQuizQuestion();
         return;
@@ -1894,7 +2206,8 @@ function setupCoreInteractions(){
     }
     if(createActive&&(event.metaKey||event.ctrlKey)&&event.key==="Enter"){
       event.preventDefault();
-      $("addWordBtn")?.click();
+      if(target?.closest?.("#bulkCard"))$("bulkRegisterBtn")?.click();
+      else $("addWordBtn")?.click();
       return;
     }
     if(createActive&&event.key==="Enter"&&inField&&tag!=="textarea"){
@@ -1917,16 +2230,17 @@ function setupCoreInteractions(){
 }
 
 function enhanceTangoNestApp(){
-  applyLastSessionToControls();
+  restoreStudySettingsForOwner();
   attachSessionMemory();
   setupCoreInteractions();
   restoreRecentPlaylist();
   updateBulkDestinationSummary();
   updateBulkActionDock();
-  ["bulkFrontLang","bulkBackLang"].forEach(id=>$(id)?.addEventListener("change",()=>{hideBulkDestinationConfirmation();updateBulkDestinationSummary()}));
+  ["bulkFrontLang","bulkBackLang"].forEach(id=>$(id)?.addEventListener("change",()=>{clearBulkPreview();updateBulkDestinationSummary();updateBulkAssistant()}));
   updateHeroPreview();
   if(typeof updateBrandContext==="function")updateBrandContext();
 }
+restoreStudySettingsForOwner();setupStudySettings();attachSessionMemory();
 setTimeout(enhanceTangoNestApp,120);
 
 

@@ -1,4 +1,5 @@
 const {defineConfig,devices}=require("@playwright/test");
+const port=Number(process.env.TN_TEST_PORT||4184);
 
 module.exports=defineConfig({
   testDir:"./tests/e2e",
@@ -9,7 +10,8 @@ module.exports=defineConfig({
   reporter:[["list"],["html",{outputFolder:"test-results/report",open:"never"}]],
   snapshotPathTemplate:"{testDir}/__screenshots__/{projectName}/{arg}{ext}",
   use:{
-    baseURL:"http://127.0.0.1:4173",
+    baseURL:`http://127.0.0.1:${port}`,
+    locale:"en-US",
     trace:"retain-on-failure",
     screenshot:"only-on-failure",
     video:"off"
@@ -20,9 +22,9 @@ module.exports=defineConfig({
     {name:"webkit",use:{...devices["Desktop Safari"],viewport:{width:1280,height:720}}}
   ],
   webServer:{
-    command:"python3 -m http.server 4173 --bind 127.0.0.1",
-    url:"http://127.0.0.1:4173",
-    reuseExistingServer:true,
+    command:`python3 -m http.server ${port} --bind 127.0.0.1`,
+    url:`http://127.0.0.1:${port}`,
+    reuseExistingServer:false,
     timeout:10000
   },
   outputDir:"test-results/artifacts"

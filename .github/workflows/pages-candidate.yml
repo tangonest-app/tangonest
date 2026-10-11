@@ -1,0 +1,41 @@
+name: Publish reviewed runtime to Pages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  candidate:
+    # Publishing is an explicit main-branch action after this workflow is adopted.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test tests/e2e/runtime-loading.spec.js tests/e2e/quiz-focus.spec.js tests/e2e/progression.spec.js tests/e2e/random-front.spec.js
+      - run: npm run package:release -- work/pages-candidate
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: work/pages-candidate
+  deploy:
+    needs: candidate
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy reviewed artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

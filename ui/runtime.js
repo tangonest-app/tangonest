@@ -6,6 +6,10 @@
     && new URLSearchParams(location.search).get("qa")==="1";
   let waitingWorker=null;
   let updateRequested=false;
+  let currentHistoryPage="";
+  let followingHistory=false;
+  const mobileBar=document.querySelector(".mobile-tabbar");
+  if(mobileBar)new ResizeObserver(()=>document.documentElement.style.setProperty("--tn-mobile-nav-height",`${mobileBar.getBoundingClientRect().height}px`)).observe(mobileBar);
   const pageLabels={
     home:["Forest Desk","Home"],
     create:["Collection","Add Words"],
@@ -21,17 +25,34 @@
     return {add:"create",words:"library",study:"cards",audio:"listen",manage:"settings"}[value]||value||"home";
   }
 
-  function updateShellContext(page){
+  function updateShellContext(page,writeHistory=true){
     const current=normalizePage(page);
     const labels=pageLabels[current]||pageLabels.home;
     const eyebrow=$("appPageEyebrow");
     const title=$("appPageTitle");
-    if(eyebrow)eyebrow.textContent=labels[0];
-    if(title)title.textContent=labels[1];
-    document.title=`${labels[1]} · TangoNest`;
+    if(eyebrow)eyebrow.textContent=labels[0]==="Practice"?window.TNI18n.t("ui.practice"):labels[0]==="Collection"?window.TNI18n.t("ui.collections"):labels[0];
+    const titleKeys={home:"navigation.home",create:"navigation.addWords",library:"navigation.library",cards:"navigation.cards",quiz:"navigation.quiz",listen:"navigation.listen",settings:"navigation.settings"};
+    const translated=window.TNI18n.t(titleKeys[current]||titleKeys.home);
+    if(title)title.textContent=translated;
+    document.title=`${translated} · TangoNest`;
+    if(writeHistory&&current!==currentHistoryPage&&pageLabels[current]){
+      const url=new URL(location.href);
+      url.searchParams.set("page",current);
+      url.searchParams.delete("word");
+      if(!currentHistoryPage||followingHistory)history.replaceState({tnPage:current},"",url);
+      else history.pushState({tnPage:current},"",url);
+      currentHistoryPage=current;
+    }
   }
 
   window.tnUpdateShellContext=updateShellContext;
+  window.addEventListener("tn:locale",()=>updateShellContext(currentHistoryPage||"home",false));
+  window.addEventListener("popstate",()=>{
+    const page=new URLSearchParams(location.search).get("page")||"home";
+    if(page===currentHistoryPage)return;
+    followingHistory=true;
+    try{window.tnStableNavigate?.(page)}finally{followingHistory=false;}
+  });
 
   const shortcutPage=new URLSearchParams(location.search).get("page");
   if(["home","create","library","cards","quiz","listen","settings"].includes(shortcutPage||"")){
@@ -48,9 +69,9 @@
     const offline=!navigator.onLine;
     banner.hidden=!offline&&!waitingWorker;
     button.hidden=!waitingWorker;
-    text.textContent=waitingWorker
-      ? "A TangoNest update is ready."
-      : "You are offline. Changes will sync when the connection returns.";
+    window.TNI18n.bindText(text,()=>(waitingWorker
+      ? window.TNI18n.t("ui.a_tangonest_update_is_ready",{})
+      : window.TNI18n.t("ui.you_are_offline_changes_will_sync_when_the_connection_returns",{})));
   }
 
   function watchRegistration(registration){
@@ -76,7 +97,6 @@
       const registration=await navigator.serviceWorker.register("./sw.js",{scope:"./",updateViaCache:"none"});
       await registration.update();
       watchRegistration(registration);
-      registration.update().catch(()=>{});
     }catch(error){
       console.warn("TangoNest offline support could not start",error);
     }
@@ -89,11 +109,16 @@
   });
   $("appUpdateButton")?.addEventListener("click",()=>{
     if(!waitingWorker)return;
+    if(window.tnBulkProgress?.busy?.()){
+      window.toast?.("Finish or stop Bulk Add before updating the app.");
+      return;
+    }
     updateRequested=true;
     waitingWorker.postMessage({type:"SKIP_WAITING"});
   });
 
   updateBanner();
-  updateShellContext(document.querySelector(".page.active")?.id.replace(/^page/,"")||shortcutPage||"home");
+  // Auth restore owns the initial route, not the hidden Home shell.
+  updateShellContext(shortcutPage||document.querySelector(".page.active")?.id.replace(/^page/,"")||"home",false);
   registerServiceWorker();
 })();

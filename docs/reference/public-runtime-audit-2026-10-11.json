@@ -1,0 +1,485 @@
+[
+  {
+    "file": "FDG16_REPORT.md",
+    "public": "fc01f188dcec8b19b791b2be5346bb2bde331c80edee41f9d6a8c89651902024",
+    "development": "fc01f188dcec8b19b791b2be5346bb2bde331c80edee41f9d6a8c89651902024",
+    "git": "fc01f188dcec8b19b791b2be5346bb2bde331c80edee41f9d6a8c89651902024",
+    "inventory": "fc01f188dcec8b19b791b2be5346bb2bde331c80edee41f9d6a8c89651902024"
+  },
+  {
+    "file": "app-rc19-fdg1.js",
+    "public": "8b1a1362e80391f84efbcb11c3f31d4002b9192253292a51ad448ff8c9cdf718",
+    "development": "8b1a1362e80391f84efbcb11c3f31d4002b9192253292a51ad448ff8c9cdf718",
+    "git": "8b1a1362e80391f84efbcb11c3f31d4002b9192253292a51ad448ff8c9cdf718",
+    "inventory": "8b1a1362e80391f84efbcb11c3f31d4002b9192253292a51ad448ff8c9cdf718"
+  },
+  {
+    "file": "apple-touch-icon.png",
+    "public": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a",
+    "development": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a",
+    "git": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a",
+    "inventory": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a"
+  },
+  {
+    "file": "assets/botanical-corner.svg",
+    "public": "1375b6fa0fe0745f5c9408ded7b1e045abe055652da89d092a7028b49f8bb046",
+    "development": "1375b6fa0fe0745f5c9408ded7b1e045abe055652da89d092a7028b49f8bb046",
+    "git": "1375b6fa0fe0745f5c9408ded7b1e045abe055652da89d092a7028b49f8bb046",
+    "inventory": "1375b6fa0fe0745f5c9408ded7b1e045abe055652da89d092a7028b49f8bb046"
+  },
+  {
+    "file": "assets/forest-study-login-v1.png",
+    "public": "2f86a9d78dba6a8c030ae1c2d2c5c4874231c55d9eecd174bb75d4676d706fc0",
+    "development": "2f86a9d78dba6a8c030ae1c2d2c5c4874231c55d9eecd174bb75d4676d706fc0",
+    "git": "2f86a9d78dba6a8c030ae1c2d2c5c4874231c55d9eecd174bb75d4676d706fc0",
+    "inventory": "2f86a9d78dba6a8c030ae1c2d2c5c4874231c55d9eecd174bb75d4676d706fc0"
+  },
+  {
+    "file": "assets/icons/fdg16/favicon.ico",
+    "public": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b",
+    "development": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b",
+    "git": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b",
+    "inventory": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b"
+  },
+  {
+    "file": "assets/icons/fdg16/icon-152.png",
+    "public": "2f35353fdc06e6daaa5fd84198ff2e62f7b08a89e57656c8f9673faa38c7ad87",
+    "development": "2f35353fdc06e6daaa5fd84198ff2e62f7b08a89e57656c8f9673faa38c7ad87",
+    "git": "2f35353fdc06e6daaa5fd84198ff2e62f7b08a89e57656c8f9673faa38c7ad87",
+    "inventory": "2f35353fdc06e6daaa5fd84198ff2e62f7b08a89e57656c8f9673faa38c7ad87"
+  },
+  {
+    "file": "assets/icons/fdg16/icon-180.png",
+    "public": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a",
+    "development": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a",
+    "git": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a",
+    "inventory": "3ce8150348ec51b3199f6b0d53b08f67162293002589d34163da8d15e614547a"
+  },
+  {
+    "file": "assets/icons/fdg16/icon-192.png",
+    "public": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0",
+    "development": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0",
+    "git": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0",
+    "inventory": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0"
+  },
+  {
+    "file": "assets/icons/fdg16/icon-32.png",
+    "public": "f33b79dde6560a5dd28d867a3189b0a732cd755d5ed63d84c0fb578439c13e52",
+    "development": "f33b79dde6560a5dd28d867a3189b0a732cd755d5ed63d84c0fb578439c13e52",
+    "git": "f33b79dde6560a5dd28d867a3189b0a732cd755d5ed63d84c0fb578439c13e52",
+    "inventory": "f33b79dde6560a5dd28d867a3189b0a732cd755d5ed63d84c0fb578439c13e52"
+  },
+  {
+    "file": "assets/icons/fdg16/icon-512.png",
+    "public": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347",
+    "development": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347",
+    "git": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347",
+    "inventory": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347"
+  },
+  {
+    "file": "assets/icons/fdg16/icon-64.png",
+    "public": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7",
+    "development": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7",
+    "git": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7",
+    "inventory": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7"
+  },
+  {
+    "file": "assets/icons/fdg16/maskable-512.png",
+    "public": "dde666b52c9ad256dc1974e350f29c0105ff957ad715573e0b0f78870debab31",
+    "development": "dde666b52c9ad256dc1974e350f29c0105ff957ad715573e0b0f78870debab31",
+    "git": "dde666b52c9ad256dc1974e350f29c0105ff957ad715573e0b0f78870debab31",
+    "inventory": "dde666b52c9ad256dc1974e350f29c0105ff957ad715573e0b0f78870debab31"
+  },
+  {
+    "file": "assets/icons/fdg16/provenance.json",
+    "public": "e0a00607dabbebe99f6977f196536f280fd5c357b9aece5eac3d91172295e7dc",
+    "development": "e0a00607dabbebe99f6977f196536f280fd5c357b9aece5eac3d91172295e7dc",
+    "git": "e0a00607dabbebe99f6977f196536f280fd5c357b9aece5eac3d91172295e7dc",
+    "inventory": "e0a00607dabbebe99f6977f196536f280fd5c357b9aece5eac3d91172295e7dc"
+  },
+  {
+    "file": "assets/living-library-desk.jpg",
+    "public": "022431c050e40b33070037ca495b28f06bfadb15e205fedc5e4c4268551e242d",
+    "development": "022431c050e40b33070037ca495b28f06bfadb15e205fedc5e4c4268551e242d",
+    "git": "022431c050e40b33070037ca495b28f06bfadb15e205fedc5e4c4268551e242d",
+    "inventory": "022431c050e40b33070037ca495b28f06bfadb15e205fedc5e4c4268551e242d"
+  },
+  {
+    "file": "assets/ui/LICENSE",
+    "public": "1e7290b35280a048667bbf0ebabac1c7fd52a75300e8b2946ac165715997f2bc",
+    "development": "1e7290b35280a048667bbf0ebabac1c7fd52a75300e8b2946ac165715997f2bc",
+    "git": "1e7290b35280a048667bbf0ebabac1c7fd52a75300e8b2946ac165715997f2bc",
+    "inventory": "1e7290b35280a048667bbf0ebabac1c7fd52a75300e8b2946ac165715997f2bc"
+  },
+  {
+    "file": "assets/ui/book-open.svg",
+    "public": "510affae1044e8637c7a85972bd192df3c762f69a38c8c7dd2097387d7fe91d2",
+    "development": "510affae1044e8637c7a85972bd192df3c762f69a38c8c7dd2097387d7fe91d2",
+    "git": "510affae1044e8637c7a85972bd192df3c762f69a38c8c7dd2097387d7fe91d2",
+    "inventory": "510affae1044e8637c7a85972bd192df3c762f69a38c8c7dd2097387d7fe91d2"
+  },
+  {
+    "file": "assets/ui/circle-help.svg",
+    "public": "e2522d899494d7fbd9d1da86175ba3f17a1516a5e8a9aac90517f497884c8b29",
+    "development": "e2522d899494d7fbd9d1da86175ba3f17a1516a5e8a9aac90517f497884c8b29",
+    "git": "e2522d899494d7fbd9d1da86175ba3f17a1516a5e8a9aac90517f497884c8b29",
+    "inventory": "e2522d899494d7fbd9d1da86175ba3f17a1516a5e8a9aac90517f497884c8b29"
+  },
+  {
+    "file": "assets/ui/headphones.svg",
+    "public": "d6d7afb9a29cf52cf10569f3a073e03ce0cac56a1704d7e67cde7c487f6476a4",
+    "development": "d6d7afb9a29cf52cf10569f3a073e03ce0cac56a1704d7e67cde7c487f6476a4",
+    "git": "d6d7afb9a29cf52cf10569f3a073e03ce0cac56a1704d7e67cde7c487f6476a4",
+    "inventory": "d6d7afb9a29cf52cf10569f3a073e03ce0cac56a1704d7e67cde7c487f6476a4"
+  },
+  {
+    "file": "assets/ui/house.svg",
+    "public": "2c13f570d9b9727c9b6c23400c95acfa9737e91884ed926332edb18fd47a2a76",
+    "development": "2c13f570d9b9727c9b6c23400c95acfa9737e91884ed926332edb18fd47a2a76",
+    "git": "2c13f570d9b9727c9b6c23400c95acfa9737e91884ed926332edb18fd47a2a76",
+    "inventory": "2c13f570d9b9727c9b6c23400c95acfa9737e91884ed926332edb18fd47a2a76"
+  },
+  {
+    "file": "assets/ui/layers.svg",
+    "public": "e0471ac93c7e2d383864a837ac4e15f325c5ceff710440634dfe08f762cf2858",
+    "development": "e0471ac93c7e2d383864a837ac4e15f325c5ceff710440634dfe08f762cf2858",
+    "git": "e0471ac93c7e2d383864a837ac4e15f325c5ceff710440634dfe08f762cf2858",
+    "inventory": "e0471ac93c7e2d383864a837ac4e15f325c5ceff710440634dfe08f762cf2858"
+  },
+  {
+    "file": "assets/ui/plus.svg",
+    "public": "b29207ee8f5cc0e829c0bab2e5b223fc88687599c6bd40b94ba35f52327615d6",
+    "development": "b29207ee8f5cc0e829c0bab2e5b223fc88687599c6bd40b94ba35f52327615d6",
+    "git": "b29207ee8f5cc0e829c0bab2e5b223fc88687599c6bd40b94ba35f52327615d6",
+    "inventory": "b29207ee8f5cc0e829c0bab2e5b223fc88687599c6bd40b94ba35f52327615d6"
+  },
+  {
+    "file": "assets/ui/settings.svg",
+    "public": "ceea1a72d04b112291222ba9ad0779a12d47d816079fe4174900c724f360b55c",
+    "development": "ceea1a72d04b112291222ba9ad0779a12d47d816079fe4174900c724f360b55c",
+    "git": "ceea1a72d04b112291222ba9ad0779a12d47d816079fe4174900c724f360b55c",
+    "inventory": "ceea1a72d04b112291222ba9ad0779a12d47d816079fe4174900c724f360b55c"
+  },
+  {
+    "file": "assets/ui/skip-forward.svg",
+    "public": "912bd268a4e17527e35f199b5aee2aa00ab20c3cf014f1bc0c0b46ed991032e4",
+    "development": "912bd268a4e17527e35f199b5aee2aa00ab20c3cf014f1bc0c0b46ed991032e4",
+    "git": "912bd268a4e17527e35f199b5aee2aa00ab20c3cf014f1bc0c0b46ed991032e4",
+    "inventory": "912bd268a4e17527e35f199b5aee2aa00ab20c3cf014f1bc0c0b46ed991032e4"
+  },
+  {
+    "file": "bulk-format.js",
+    "public": "b27008563368e6f23c8a5592d2fbdf83d02e3dfac28e820a72bc9cdb6b386834",
+    "development": "b27008563368e6f23c8a5592d2fbdf83d02e3dfac28e820a72bc9cdb6b386834",
+    "git": "b27008563368e6f23c8a5592d2fbdf83d02e3dfac28e820a72bc9cdb6b386834",
+    "inventory": "b27008563368e6f23c8a5592d2fbdf83d02e3dfac28e820a72bc9cdb6b386834"
+  },
+  {
+    "file": "config-rc19-fdg1.js",
+    "public": "b4f867a67dd6d8194004ed90e468ab4a1e2cbed4fa4ef7bcd6ba39382d2d00b1",
+    "development": "b4f867a67dd6d8194004ed90e468ab4a1e2cbed4fa4ef7bcd6ba39382d2d00b1",
+    "git": "b4f867a67dd6d8194004ed90e468ab4a1e2cbed4fa4ef7bcd6ba39382d2d00b1",
+    "inventory": "b4f867a67dd6d8194004ed90e468ab4a1e2cbed4fa4ef7bcd6ba39382d2d00b1"
+  },
+  {
+    "file": "default-playlist-rc19-fdg1.js",
+    "public": "f64664d4c9705417712115d50384e4a87274a33cb9b4233da6edb1870c3de0ed",
+    "development": "f64664d4c9705417712115d50384e4a87274a33cb9b4233da6edb1870c3de0ed",
+    "git": "f64664d4c9705417712115d50384e4a87274a33cb9b4233da6edb1870c3de0ed",
+    "inventory": "f64664d4c9705417712115d50384e4a87274a33cb9b4233da6edb1870c3de0ed"
+  },
+  {
+    "file": "example-fields-rc19-fdg1.js",
+    "public": "e6b2c418cadda9c5254fd157701b51a01f86eff6d999c294cf47c0136e05cb9f",
+    "development": "e6b2c418cadda9c5254fd157701b51a01f86eff6d999c294cf47c0136e05cb9f",
+    "git": "e6b2c418cadda9c5254fd157701b51a01f86eff6d999c294cf47c0136e05cb9f",
+    "inventory": "e6b2c418cadda9c5254fd157701b51a01f86eff6d999c294cf47c0136e05cb9f"
+  },
+  {
+    "file": "favicon.ico",
+    "public": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b",
+    "development": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b",
+    "git": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b",
+    "inventory": "91f6b597dfcf4c718fdfaf64af8565e96a3d64221343ef33a43ffda66457108b"
+  },
+  {
+    "file": "favicon.png",
+    "public": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7",
+    "development": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7",
+    "git": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7",
+    "inventory": "7c188a22833253159afad31512ccc0c1ab4a04dff3d5b0f1accae387b96370b7"
+  },
+  {
+    "file": "icon-192.png",
+    "public": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0",
+    "development": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0",
+    "git": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0",
+    "inventory": "07201ffe27884d1d1a5fb2106fce3e342668077937e6ee93a685967c69042bb0"
+  },
+  {
+    "file": "icon-512.png",
+    "public": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347",
+    "development": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347",
+    "git": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347",
+    "inventory": "3cabb245dc26bd549e831bec5a0c3b67b6ccd1d746dc10bbb3f28f8d8d863347"
+  },
+  {
+    "file": "index.html",
+    "public": "eda9571799ae099f81387398c8ff726e2cbe5946e56734c493429c370cfc0944",
+    "development": "eda9571799ae099f81387398c8ff726e2cbe5946e56734c493429c370cfc0944",
+    "git": "eda9571799ae099f81387398c8ff726e2cbe5946e56734c493429c370cfc0944",
+    "inventory": "eda9571799ae099f81387398c8ff726e2cbe5946e56734c493429c370cfc0944"
+  },
+  {
+    "file": "languages.js",
+    "public": "7434d8fc90dacfcb6226d821c479d5c14e0c591f991fef2f3ffddcdd101a3730",
+    "development": "7434d8fc90dacfcb6226d821c479d5c14e0c591f991fef2f3ffddcdd101a3730",
+    "git": "7434d8fc90dacfcb6226d821c479d5c14e0c591f991fef2f3ffddcdd101a3730",
+    "inventory": "7434d8fc90dacfcb6226d821c479d5c14e0c591f991fef2f3ffddcdd101a3730"
+  },
+  {
+    "file": "learning-engine-rc19-fdg1.js",
+    "public": "772824b873202b624ac03c32ff64d91dbad8b7982501d17224fc91e2380b9cc2",
+    "development": "772824b873202b624ac03c32ff64d91dbad8b7982501d17224fc91e2380b9cc2",
+    "git": "772824b873202b624ac03c32ff64d91dbad8b7982501d17224fc91e2380b9cc2",
+    "inventory": "772824b873202b624ac03c32ff64d91dbad8b7982501d17224fc91e2380b9cc2"
+  },
+  {
+    "file": "locales/ar.json",
+    "public": "f1201d60188e6ac0f7405b257038e6c817da8d190e5699d85431702974db3e70",
+    "development": "f1201d60188e6ac0f7405b257038e6c817da8d190e5699d85431702974db3e70",
+    "git": "f1201d60188e6ac0f7405b257038e6c817da8d190e5699d85431702974db3e70",
+    "inventory": "f1201d60188e6ac0f7405b257038e6c817da8d190e5699d85431702974db3e70"
+  },
+  {
+    "file": "locales/base.js",
+    "public": "99b401548623cca86d0a6fc790da0c0b55cb0e9537b8ea0366db4f7e594592fc",
+    "development": "99b401548623cca86d0a6fc790da0c0b55cb0e9537b8ea0366db4f7e594592fc",
+    "git": "99b401548623cca86d0a6fc790da0c0b55cb0e9537b8ea0366db4f7e594592fc",
+    "inventory": "99b401548623cca86d0a6fc790da0c0b55cb0e9537b8ea0366db4f7e594592fc"
+  },
+  {
+    "file": "locales/de.json",
+    "public": "1a47b97a4e18054ab46b18ef7c34169814073694d6036836b16fd16244bf4f36",
+    "development": "1a47b97a4e18054ab46b18ef7c34169814073694d6036836b16fd16244bf4f36",
+    "git": "1a47b97a4e18054ab46b18ef7c34169814073694d6036836b16fd16244bf4f36",
+    "inventory": "1a47b97a4e18054ab46b18ef7c34169814073694d6036836b16fd16244bf4f36"
+  },
+  {
+    "file": "locales/en.json",
+    "public": "47a30560b3a493fa05eea7a5106f5ceb56f5e92dcad56d717d46f600917d28da",
+    "development": "47a30560b3a493fa05eea7a5106f5ceb56f5e92dcad56d717d46f600917d28da",
+    "git": "47a30560b3a493fa05eea7a5106f5ceb56f5e92dcad56d717d46f600917d28da",
+    "inventory": "47a30560b3a493fa05eea7a5106f5ceb56f5e92dcad56d717d46f600917d28da"
+  },
+  {
+    "file": "locales/es.json",
+    "public": "976a3544f3c2bac6f1c38b2de2281c1edcf1399b34a4d2c6e3a81c117d6059c7",
+    "development": "976a3544f3c2bac6f1c38b2de2281c1edcf1399b34a4d2c6e3a81c117d6059c7",
+    "git": "976a3544f3c2bac6f1c38b2de2281c1edcf1399b34a4d2c6e3a81c117d6059c7",
+    "inventory": "976a3544f3c2bac6f1c38b2de2281c1edcf1399b34a4d2c6e3a81c117d6059c7"
+  },
+  {
+    "file": "locales/fr.json",
+    "public": "af31666aae3411757f4215242f1366d1c67962dda5e097d03b516a7eeda95891",
+    "development": "af31666aae3411757f4215242f1366d1c67962dda5e097d03b516a7eeda95891",
+    "git": "af31666aae3411757f4215242f1366d1c67962dda5e097d03b516a7eeda95891",
+    "inventory": "af31666aae3411757f4215242f1366d1c67962dda5e097d03b516a7eeda95891"
+  },
+  {
+    "file": "locales/hi.json",
+    "public": "a4093da24df7a441abc174f097404ad54a5a619273c8c47e39789fa3cfcad08e",
+    "development": "a4093da24df7a441abc174f097404ad54a5a619273c8c47e39789fa3cfcad08e",
+    "git": "a4093da24df7a441abc174f097404ad54a5a619273c8c47e39789fa3cfcad08e",
+    "inventory": "a4093da24df7a441abc174f097404ad54a5a619273c8c47e39789fa3cfcad08e"
+  },
+  {
+    "file": "locales/id.json",
+    "public": "a49511fe6c0731542ad67a934d8cb0d128a2b52bcedd90ba4d93ad52a2fcf546",
+    "development": "a49511fe6c0731542ad67a934d8cb0d128a2b52bcedd90ba4d93ad52a2fcf546",
+    "git": "a49511fe6c0731542ad67a934d8cb0d128a2b52bcedd90ba4d93ad52a2fcf546",
+    "inventory": "a49511fe6c0731542ad67a934d8cb0d128a2b52bcedd90ba4d93ad52a2fcf546"
+  },
+  {
+    "file": "locales/it.json",
+    "public": "161f68ebb833dfe11f71600b2cac6a17a91e2c052e2bc0dabd2e9b3fa1b5a19b",
+    "development": "161f68ebb833dfe11f71600b2cac6a17a91e2c052e2bc0dabd2e9b3fa1b5a19b",
+    "git": "161f68ebb833dfe11f71600b2cac6a17a91e2c052e2bc0dabd2e9b3fa1b5a19b",
+    "inventory": "161f68ebb833dfe11f71600b2cac6a17a91e2c052e2bc0dabd2e9b3fa1b5a19b"
+  },
+  {
+    "file": "locales/ja.json",
+    "public": "244ec87a1bdeadc608a79b55529eed477ba19e98095c1cf45e1f6b66f0838383",
+    "development": "244ec87a1bdeadc608a79b55529eed477ba19e98095c1cf45e1f6b66f0838383",
+    "git": "244ec87a1bdeadc608a79b55529eed477ba19e98095c1cf45e1f6b66f0838383",
+    "inventory": "244ec87a1bdeadc608a79b55529eed477ba19e98095c1cf45e1f6b66f0838383"
+  },
+  {
+    "file": "locales/ko.json",
+    "public": "d2b919d7997106f64fce1dc1208aeb2390e8d27f865d8729e1d7286efa2546a2",
+    "development": "d2b919d7997106f64fce1dc1208aeb2390e8d27f865d8729e1d7286efa2546a2",
+    "git": "d2b919d7997106f64fce1dc1208aeb2390e8d27f865d8729e1d7286efa2546a2",
+    "inventory": "d2b919d7997106f64fce1dc1208aeb2390e8d27f865d8729e1d7286efa2546a2"
+  },
+  {
+    "file": "locales/pt.json",
+    "public": "cf38f1e71fee75dd4d16a2a481c4f5b5c24c5d28f77370f21d430a31e09aec5b",
+    "development": "cf38f1e71fee75dd4d16a2a481c4f5b5c24c5d28f77370f21d430a31e09aec5b",
+    "git": "cf38f1e71fee75dd4d16a2a481c4f5b5c24c5d28f77370f21d430a31e09aec5b",
+    "inventory": "cf38f1e71fee75dd4d16a2a481c4f5b5c24c5d28f77370f21d430a31e09aec5b"
+  },
+  {
+    "file": "locales/ru.json",
+    "public": "020560e3cdcd20789f80cc046e8f09a962e1dcfcb98074f0e01842420d158b9a",
+    "development": "020560e3cdcd20789f80cc046e8f09a962e1dcfcb98074f0e01842420d158b9a",
+    "git": "020560e3cdcd20789f80cc046e8f09a962e1dcfcb98074f0e01842420d158b9a",
+    "inventory": "020560e3cdcd20789f80cc046e8f09a962e1dcfcb98074f0e01842420d158b9a"
+  },
+  {
+    "file": "locales/tr.json",
+    "public": "4f92c93ffac0260ee5295c668ba51d6297b7b99388bfdccd3e0bc5fd5f50fcb4",
+    "development": "4f92c93ffac0260ee5295c668ba51d6297b7b99388bfdccd3e0bc5fd5f50fcb4",
+    "git": "4f92c93ffac0260ee5295c668ba51d6297b7b99388bfdccd3e0bc5fd5f50fcb4",
+    "inventory": "4f92c93ffac0260ee5295c668ba51d6297b7b99388bfdccd3e0bc5fd5f50fcb4"
+  },
+  {
+    "file": "locales/vi.json",
+    "public": "a1396a53a429b7581f255729bd769e2c80361eab415b16be9eeb00b054b220b0",
+    "development": "a1396a53a429b7581f255729bd769e2c80361eab415b16be9eeb00b054b220b0",
+    "git": "a1396a53a429b7581f255729bd769e2c80361eab415b16be9eeb00b054b220b0",
+    "inventory": "a1396a53a429b7581f255729bd769e2c80361eab415b16be9eeb00b054b220b0"
+  },
+  {
+    "file": "locales/zh-Hans.json",
+    "public": "ba0d66b13bfe48d6c7229f8970ef0838ae101a15df937acc6f3d6c2d1e1f64f2",
+    "development": "ba0d66b13bfe48d6c7229f8970ef0838ae101a15df937acc6f3d6c2d1e1f64f2",
+    "git": "ba0d66b13bfe48d6c7229f8970ef0838ae101a15df937acc6f3d6c2d1e1f64f2",
+    "inventory": "ba0d66b13bfe48d6c7229f8970ef0838ae101a15df937acc6f3d6c2d1e1f64f2"
+  },
+  {
+    "file": "locales/zh-Hant.json",
+    "public": "a4fa37464fb910d61e9efed1774941a92604cdc10e13cfa26a471ee235179eea",
+    "development": "a4fa37464fb910d61e9efed1774941a92604cdc10e13cfa26a471ee235179eea",
+    "git": "a4fa37464fb910d61e9efed1774941a92604cdc10e13cfa26a471ee235179eea",
+    "inventory": "a4fa37464fb910d61e9efed1774941a92604cdc10e13cfa26a471ee235179eea"
+  },
+  {
+    "file": "manifest-rc19-fdg1.json",
+    "public": "33d1595467315501666834600afa830cb286b79b9462523b1c2e931bc4599207",
+    "development": "33d1595467315501666834600afa830cb286b79b9462523b1c2e931bc4599207",
+    "git": "33d1595467315501666834600afa830cb286b79b9462523b1c2e931bc4599207",
+    "inventory": "33d1595467315501666834600afa830cb286b79b9462523b1c2e931bc4599207"
+  },
+  {
+    "file": "release.json",
+    "public": "c4a781499416b84c1eb8e1a04c1b03ae1dae4871f891d50672248cac6c3904a0",
+    "development": "c4a781499416b84c1eb8e1a04c1b03ae1dae4871f891d50672248cac6c3904a0",
+    "git": "c4a781499416b84c1eb8e1a04c1b03ae1dae4871f891d50672248cac6c3904a0",
+    "inventory": "c4a781499416b84c1eb8e1a04c1b03ae1dae4871f891d50672248cac6c3904a0"
+  },
+  {
+    "file": "style-rc19-fdg1.css",
+    "public": "da1986ff923eb3dbfeb6982761217a4b79df809fa909d4de903a11f5bbd5b5fa",
+    "development": "da1986ff923eb3dbfeb6982761217a4b79df809fa909d4de903a11f5bbd5b5fa",
+    "git": "da1986ff923eb3dbfeb6982761217a4b79df809fa909d4de903a11f5bbd5b5fa",
+    "inventory": "da1986ff923eb3dbfeb6982761217a4b79df809fa909d4de903a11f5bbd5b5fa"
+  },
+  {
+    "file": "sw.js",
+    "public": "113612e17c98cbe9a7f006327be6d9d2545cb97686c6313b9e9762cb75d0a85e",
+    "development": "113612e17c98cbe9a7f006327be6d9d2545cb97686c6313b9e9762cb75d0a85e",
+    "git": "113612e17c98cbe9a7f006327be6d9d2545cb97686c6313b9e9762cb75d0a85e",
+    "inventory": "113612e17c98cbe9a7f006327be6d9d2545cb97686c6313b9e9762cb75d0a85e"
+  },
+  {
+    "file": "tn-learning-flow-rc19-fdg1.js",
+    "public": "83def28af0ff226039c11ff07dfdb0e24e110e4914e692718fa78d90ee338ece",
+    "development": "83def28af0ff226039c11ff07dfdb0e24e110e4914e692718fa78d90ee338ece",
+    "git": "83def28af0ff226039c11ff07dfdb0e24e110e4914e692718fa78d90ee338ece",
+    "inventory": "83def28af0ff226039c11ff07dfdb0e24e110e4914e692718fa78d90ee338ece"
+  },
+  {
+    "file": "tn-library-management-rc19-fdg1.js",
+    "public": "6be7918f65cee2adb6715473cd3bbf56c66ed4bebda34c943f29641e27d599a0",
+    "development": "6be7918f65cee2adb6715473cd3bbf56c66ed4bebda34c943f29641e27d599a0",
+    "git": "6be7918f65cee2adb6715473cd3bbf56c66ed4bebda34c943f29641e27d599a0",
+    "inventory": "6be7918f65cee2adb6715473cd3bbf56c66ed4bebda34c943f29641e27d599a0"
+  },
+  {
+    "file": "tn-supabase-sync-rc19-fdg1.js",
+    "public": "0324d1f39cb7d92f076a0ce5f2f5a664be25e3d4508b13768743d004c8e49964",
+    "development": "0324d1f39cb7d92f076a0ce5f2f5a664be25e3d4508b13768743d004c8e49964",
+    "git": "0324d1f39cb7d92f076a0ce5f2f5a664be25e3d4508b13768743d004c8e49964",
+    "inventory": "0324d1f39cb7d92f076a0ce5f2f5a664be25e3d4508b13768743d004c8e49964"
+  },
+  {
+    "file": "ui/forest-desk-glass-rc19-fdg1.css",
+    "public": "e0f5f81e3c9799919371abcb6585f2a5acf82927cf8e596ea367ab1a8a50b308",
+    "development": "e0f5f81e3c9799919371abcb6585f2a5acf82927cf8e596ea367ab1a8a50b308",
+    "git": "e0f5f81e3c9799919371abcb6585f2a5acf82927cf8e596ea367ab1a8a50b308",
+    "inventory": "e0f5f81e3c9799919371abcb6585f2a5acf82927cf8e596ea367ab1a8a50b308"
+  },
+  {
+    "file": "ui/i18n.js",
+    "public": "b2c028c69d30da78aa4cd410935b9fd6afcea9439085bc463099cd8b0ce32bfd",
+    "development": "b2c028c69d30da78aa4cd410935b9fd6afcea9439085bc463099cd8b0ce32bfd",
+    "git": "b2c028c69d30da78aa4cd410935b9fd6afcea9439085bc463099cd8b0ce32bfd",
+    "inventory": "b2c028c69d30da78aa4cd410935b9fd6afcea9439085bc463099cd8b0ce32bfd"
+  },
+  {
+    "file": "ui/learning-presentation-rc19-fdg1.js",
+    "public": "954cc5ea3d17e32f034807a5cdeefffd75d314a9ea5d5005c558cba81f74ea30",
+    "development": "954cc5ea3d17e32f034807a5cdeefffd75d314a9ea5d5005c558cba81f74ea30",
+    "git": "954cc5ea3d17e32f034807a5cdeefffd75d314a9ea5d5005c558cba81f74ea30",
+    "inventory": "954cc5ea3d17e32f034807a5cdeefffd75d314a9ea5d5005c558cba81f74ea30"
+  },
+  {
+    "file": "ui/listen-reading.js",
+    "public": "c685554ed95be25293bf30e7bb71dd522f89e08fba57d09fab882daa396a562e",
+    "development": "c685554ed95be25293bf30e7bb71dd522f89e08fba57d09fab882daa396a562e",
+    "git": "c685554ed95be25293bf30e7bb71dd522f89e08fba57d09fab882daa396a562e",
+    "inventory": "c685554ed95be25293bf30e7bb71dd522f89e08fba57d09fab882daa396a562e"
+  },
+  {
+    "file": "ui/living-library.css",
+    "public": "02c11391b55b1730d517cee8c6109d2b919545f1734b6162b174c81643a8b06d",
+    "development": "02c11391b55b1730d517cee8c6109d2b919545f1734b6162b174c81643a8b06d",
+    "git": "02c11391b55b1730d517cee8c6109d2b919545f1734b6162b174c81643a8b06d",
+    "inventory": "02c11391b55b1730d517cee8c6109d2b919545f1734b6162b174c81643a8b06d"
+  },
+  {
+    "file": "ui/living-library.js",
+    "public": "b402ca39f739610289e1127fe4791e06076ad276230b78f9bee793fa09cdd891",
+    "development": "b402ca39f739610289e1127fe4791e06076ad276230b78f9bee793fa09cdd891",
+    "git": "b402ca39f739610289e1127fe4791e06076ad276230b78f9bee793fa09cdd891",
+    "inventory": "b402ca39f739610289e1127fe4791e06076ad276230b78f9bee793fa09cdd891"
+  },
+  {
+    "file": "ui/runtime-rc19-fdg1.js",
+    "public": "88f3e97491770dcf670d4e6bb46e5805541f1aeb37fd8d069a0d5320c283bbf3",
+    "development": "88f3e97491770dcf670d4e6bb46e5805541f1aeb37fd8d069a0d5320c283bbf3",
+    "git": "88f3e97491770dcf670d4e6bb46e5805541f1aeb37fd8d069a0d5320c283bbf3",
+    "inventory": "88f3e97491770dcf670d4e6bb46e5805541f1aeb37fd8d069a0d5320c283bbf3"
+  },
+  {
+    "file": "ui/study-continuity.js",
+    "public": "b156af2f840fd3f75b477897878d5ac4749700794c3274bd7e9642f376f551b8",
+    "development": "b156af2f840fd3f75b477897878d5ac4749700794c3274bd7e9642f376f551b8",
+    "git": "b156af2f840fd3f75b477897878d5ac4749700794c3274bd7e9642f376f551b8",
+    "inventory": "b156af2f840fd3f75b477897878d5ac4749700794c3274bd7e9642f376f551b8"
+  },
+  {
+    "file": "vendor/supabase-2.115.0.js",
+    "public": "f387e5935730a6d9599a281986a176eafce5ebbe7514446222d21aa029e31dd5",
+    "development": "f387e5935730a6d9599a281986a176eafce5ebbe7514446222d21aa029e31dd5",
+    "git": "f387e5935730a6d9599a281986a176eafce5ebbe7514446222d21aa029e31dd5",
+    "inventory": "f387e5935730a6d9599a281986a176eafce5ebbe7514446222d21aa029e31dd5"
+  },
+  {
+    "file": "vendor/supabase-LICENSE.txt",
+    "public": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936",
+    "development": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936",
+    "git": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936",
+    "inventory": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+  }
+]

@@ -1,0 +1,188 @@
+[
+  {
+    "file": "FDG10_UPDATE_GUIDE.md",
+    "action": "Keep historical report unchanged",
+    "git_sha256": "055e7adf131970d0675e29057dc8e34a0b6c2784bf4a63bd7116290fcfbb1ffd",
+    "dev_sha256": "60c902b628d1cb5521e022af196f6bd2b4c3a2670669e2704f1d2dfc3da12ce1"
+  },
+  {
+    "file": "RC19_ACCOUNT_ISOLATION_QA_REPORT.md",
+    "action": "Keep historical report unchanged",
+    "git_sha256": "0c2794e776c2fbacfb53247422d2c041a424adc285d992103ba6ff66da3e557f",
+    "dev_sha256": "7e38d2c645beab6d876e527ee9f6d176f3ee5a3c39df36bd278b36fa348d645c"
+  },
+  {
+    "file": "README.md",
+    "action": "Replace development instructions with verified single-repository workflow",
+    "git_sha256": "3c58a7430d4e0d5bf34f3668669590a697a4d45790694ce45d8805959ea83152",
+    "dev_sha256": "771788e4306dba6c73e50deafd82cba300ced4e1693b0f391858790578a020e4"
+  },
+  {
+    "file": "RELEASE_REPORT.md",
+    "action": "Keep historical report unchanged",
+    "git_sha256": "ab0f9780bb62f0c12ac5e5c540559a0c8549fe6e3be9d0e1dd35f786ed1003c4",
+    "dev_sha256": "192a14b6571c0a6d346b76d527bca1abba62cd48cd289bd81d8bd821bea6e600"
+  },
+  {
+    "file": "SUPABASE_SCHEMA_CURRENT.sql",
+    "action": "Keep historical file unchanged; archive reviewed development schema separately, never execute",
+    "git_sha256": "3a702c48cafba59a414068a87577da6931b5f1b23054da14ac99bebf5da82454",
+    "dev_sha256": "3f5e043c4c8ad588efc18ecf9a6eb3ed73ded2ab656b99b4ee6bff83fcb0b09b"
+  },
+  {
+    "file": "TANGONEST_RC19_PRODUCTION_MIGRATION.sql",
+    "action": "Keep historical file unchanged; archive reviewed development schema separately, never execute",
+    "git_sha256": "3a702c48cafba59a414068a87577da6931b5f1b23054da14ac99bebf5da82454",
+    "dev_sha256": "3f5e043c4c8ad588efc18ecf9a6eb3ed73ded2ab656b99b4ee6bff83fcb0b09b"
+  },
+  {
+    "file": "app.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "7f3354d011ab5780c200dfde6c48d6c7211871f71ebfcde1546c825c561f1747",
+    "dev_sha256": "8b1a1362e80391f84efbcb11c3f31d4002b9192253292a51ad448ff8c9cdf718"
+  },
+  {
+    "file": "config.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "475d97ab834538fa439c9d3a79c6402f058fa9eab58c5a9d017fa0fe611bfa11",
+    "dev_sha256": "b4f867a67dd6d8194004ed90e468ab4a1e2cbed4fa4ef7bcd6ba39382d2d00b1"
+  },
+  {
+    "file": "default-playlist.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "e8b7933be80159206c2424747fc63da0444c8e888907e022d0b231ba1c7e66fa",
+    "dev_sha256": "f64664d4c9705417712115d50384e4a87274a33cb9b4233da6edb1870c3de0ed"
+  },
+  {
+    "file": "manifest.json",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "fb50a06bbcaafe739ff807dbf7045704ec34a70cfb8e8a3410cabe9e8e48e8d3",
+    "dev_sha256": "33d1595467315501666834600afa830cb286b79b9462523b1c2e931bc4599207"
+  },
+  {
+    "file": "package-lock.json",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "9de9e02eeda1dfe73e05a0c4dab027e674d868a147557b4b0491c22c4d5555c7",
+    "dev_sha256": "4e272200b2f1da55f0e521b82c7446554e17e9430aa5cdf30488acbc30363063"
+  },
+  {
+    "file": "package.json",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "26d08601a7c4f5988effac852b4e2d85eb0a80723f98fea310f6d278ec72df47",
+    "dev_sha256": "43b8cbd7634421d5f92961b1acdbfb67f415b00af5d438018755d19b7a341535"
+  },
+  {
+    "file": "playwright.config.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "e5ce857993c413884bed65fe6aad88e63089949c8d9f1e06b29271d7bf4732cf",
+    "dev_sha256": "d5a0487432a343358f1dc815b801ce2f819a895f236dce4e67ae21a02012e98b"
+  },
+  {
+    "file": "style.css",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "da68be10218c26ae8301c7b8f385d77778c6723647faafbb2fac73d21dabd2ee",
+    "dev_sha256": "da1986ff923eb3dbfeb6982761217a4b79df809fa909d4de903a11f5bbd5b5fa"
+  },
+  {
+    "file": "tests/e2e/accessibility.spec.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "4822d3e83e89614d3800bbba39730213e34f72d3179945021c784e229cead29f",
+    "dev_sha256": "be8663f5fb89dbaa6fb71284e07d292ca3088909de0b3718fb3c2ebf902b6b11"
+  },
+  {
+    "file": "tests/e2e/app.spec.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "4688d6609b3d729eec1da6e9d142e6aa12082c88e40c6c072c701137a71fb1c8",
+    "dev_sha256": "571d364f7f10c064b0b2733de872729bdaefce5bf43694d2d63e2df659a18d65"
+  },
+  {
+    "file": "tests/e2e/fixtures.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "4e19c09eaac219156313df5526621fb24986e264c25eff324873999eeb70b304",
+    "dev_sha256": "bd6f913337f286af941618293bc61bc710b13115a4e62672713dd625510b7b7d"
+  },
+  {
+    "file": "tests/e2e/mobile.spec.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "47bb4092dd6aa099ed2b548670afbc0beb1219934b820694c329c2ff86999c3f",
+    "dev_sha256": "472d7ccef00093b79a04eda38a95e73f6915b290cefc1c924a59b2cfa94fbd45"
+  },
+  {
+    "file": "tests/e2e/pwa-harness.html",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "e15708303da8518a82edcf1dc78066aa6f708ccb0ad7cc39689e0fbc3252bdca",
+    "dev_sha256": "57635611519c1e2aaeb7395dcd215e2d939c1f5c99c68681c6171f994ceb5d58"
+  },
+  {
+    "file": "tests/e2e/responsive-matrix.spec.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "0c1b699ad1d67067261b6c6d6472448ec7da1c7afbfba0e4639a863e3a9fdde7",
+    "dev_sha256": "be2745842c01450b3a3e580e225c4df768458d06c5e1d82ebda752982a4967d1"
+  },
+  {
+    "file": "tests/e2e/visual.spec.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "b8f8636eb4997b88c11e2a131b628b1deb79c8cc26f30a368f95a8b586bf397e",
+    "dev_sha256": "ed5097f8d1c332c9345816d79da2710150a4c96ea0297eb1fad0e05ca0755ebf"
+  },
+  {
+    "file": "tests/static/learning-contracts.test.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "13f7532ae61d2d170ba2ba05554df1db50e1371ea113d719d45df70bd067d9a9",
+    "dev_sha256": "95537772106128a548cc7364ffb301d1a8ab299639e5fb196e24372804652cca"
+  },
+  {
+    "file": "tests/static/release-contracts.test.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "07c56d0bb453d4dc186b0f47013a07f3abc6482d0d032a685d09938695af8bfe",
+    "dev_sha256": "279d26e2bf98738b68920663e541bb157f59b102be2349a41041f87074f732d2"
+  },
+  {
+    "file": "tests/static/ui-contracts.test.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "531468dde3f7d78d83b364b41d6f9736802264101fb65a28cf493c4b62012a7b",
+    "dev_sha256": "f9aa931a823f224a129e95f19684e41103b69263d9a85e2671876a348b2d4356"
+  },
+  {
+    "file": "tests/unit/learning-presentation.test.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "314a36ecf18325a771715236729f366e1dd35bac37a738c0fbacfece9373862f",
+    "dev_sha256": "d44b79a539042b5925b7f6d6e96eeee40a1342c714b32c09461087d95622cec0"
+  },
+  {
+    "file": "tests/unit/sync-regression.test.js",
+    "action": "Adopt FDG16 QA tooling; review tests against active paths",
+    "git_sha256": "3216a813d6cf4e59c23dc750a6459fd127eaa0456b7621c637d62d1f7dfe697e",
+    "dev_sha256": "13c3bc617541acb233bf6bef9272f958b3ffe01ddfc04308f6b8bd8b70b508bf"
+  },
+  {
+    "file": "tn-library-management.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "66dc220849f028a0cbade32de39c1e9a634225d37cc8799b9dff28f629416e64",
+    "dev_sha256": "6be7918f65cee2adb6715473cd3bbf56c66ed4bebda34c943f29641e27d599a0"
+  },
+  {
+    "file": "tn-supabase-sync.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "45989cf15e6543f51fa9d118a5df1d687c622fb8a26119c2dffac96c06b7201e",
+    "dev_sha256": "0324d1f39cb7d92f076a0ce5f2f5a664be25e3d4508b13768743d004c8e49964"
+  },
+  {
+    "file": "ui/forest-desk-glass.css",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "03b179b1f9d7b059e6ee11f9b54ad3a2d4f5c71624e8921374c67f2eaaae35cd",
+    "dev_sha256": "e0f5f81e3c9799919371abcb6585f2a5acf82927cf8e596ea367ab1a8a50b308"
+  },
+  {
+    "file": "ui/learning-presentation.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "629a4095f1c72aad02ba6f080ae98d2e7badbee59958e22a23949ca427b13b4a",
+    "dev_sha256": "954cc5ea3d17e32f034807a5cdeefffd75d314a9ea5d5005c558cba81f74ea30"
+  },
+  {
+    "file": "ui/runtime.js",
+    "action": "Restore canonical source from verified public runtime; no runtime change",
+    "git_sha256": "285bb4899e81eb1e4b6891dcad43b7193e24f6ae1a90a53b26e113bcd947dbac",
+    "dev_sha256": "88f3e97491770dcf670d4e6bb46e5805541f1aeb37fd8d069a0d5320c283bbf3"
+  }
+]

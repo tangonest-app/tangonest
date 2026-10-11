@@ -1,0 +1,27 @@
+name: TangoNest QA
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run build
+      - run: git diff --exit-code -- index.html sw.js config.js config-rc19-fdg1.js style.css style-rc19-fdg1.css app-rc19-fdg1.js default-playlist-rc19-fdg1.js learning-engine-rc19-fdg1.js tn-supabase-sync-rc19-fdg1.js tn-library-management-rc19-fdg1.js tn-learning-flow-rc19-fdg1.js manifest.json manifest-rc19-fdg1.json ui/
+      - run: node tests/performance/library-benchmark.test.js
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e

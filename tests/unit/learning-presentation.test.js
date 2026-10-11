@@ -50,4 +50,15 @@ const feedback=view.rating(due,"good",now);
 assert.equal(feedback.label,"Good progress");
 assert.equal(typeof feedback.review,"string");
 
+const japanese=require("../../locales/ja.json");
+globalThis.TNI18n={locale:"ja",t:(key,params={})=>{
+  assert.ok(japanese[key],`Japanese learning message exists: ${key}`);
+  return japanese[key].replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??""));
+}};
+assert.equal(view.accuracy(mastered).label,"正答率 100%");
+assert.equal(view.lastStudied(base,now),"まだ学習していません");
+assert.equal(view.lastStudied({...due,lastAnsweredAt:new Date(2026,7,23,12).toISOString()},now),"昨日");
+assert.equal(view.rating(due,"good",now).label,"順調に進んでいます");
+delete globalThis.TNI18n;
+
 console.log("LEARNING_PRESENTATION_TEST_PASS");

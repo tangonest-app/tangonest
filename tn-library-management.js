@@ -17,9 +17,12 @@
   let searchRenderTimer = null;
   let filterPanelOpen = false;
   let renderingLibrary = false;
+  let shelfView=localStorage.getItem("tangonest_shelf_view_v1")==="shelf";
   const filterValues={query:"",language:"all",letter:"all",playlist:"all",pos:"all",favorite:"all",learning:"all",sort:"newest"};
   const returnFocus = {rename:null,delete:null,detail:null};
   const selectedWordIds=new Set();
+  let detailWordId="",detailScroll=0;
+  const detailWide=matchMedia("(min-width: 1180px)");
   window.__tnLibraryManagementActive = true;
 
   function isDefaultList(list){
@@ -90,7 +93,7 @@
 
   function playlistLanguagePair(listId){
     const words = wordsForList(listId);
-    if(!words.length)return "No words yet";
+    if(!words.length)return window.TNI18n.t("ui.no_words");
     const first = words[0];
     return `${languageLabel(first.frontLang)} -> ${languageLabel(first.backLang)}`;
   }
@@ -103,21 +106,17 @@
   }
 
   function friendlyDate(value){
-    if(!value)return "Recently updated";
+    if(!value)return window.TNI18n.t("library.recentlyUpdated");
     const date = new Date(value);
-    if(Number.isNaN(date.getTime()))return "Recently updated";
+    if(Number.isNaN(date.getTime()))return window.TNI18n.t("library.recentlyUpdated");
     return date.toLocaleDateString(undefined,{month:"short",day:"numeric"});
   }
 
   function languageLabel(code){
+    if(window.TNI18n?.studyName)return window.TNI18n.studyName(code);
     const shared=window.TangoNestLanguages;
     if(shared?.label)return shared.label(code);
-    const names = {
-      "en-US":"English","en-GB":"English","ja-JP":"Japanese","ko-KR":"Korean",
-      "zh-CN":"Chinese","zh-TW":"Chinese","fr-FR":"French","es-ES":"Spanish",
-      "de-DE":"German","it-IT":"Italian","pt-BR":"Portuguese"
-    };
-    return names[code] || code || "Unknown";
+    return code || "";
   }
 
   function firstLatinLetter(word){
@@ -170,15 +169,15 @@
       <div class="tn-library-shell">
         <div class="tn-library-top">
           <div>
-            <span class="tn-library-kicker">Library</span>
-            <h3>Your collection</h3>
+            <span class="tn-library-kicker">${window.TNI18n.mark("navigation.library",{})}</span>
+            <h3>${window.TNI18n.mark("ui.your_collection",{})}</h3>
           </div>
-          <div class="tn-library-tabs" role="tablist" aria-label="Library views">
-            <button type="button" data-library-view="words" ${tab("words")}>All</button>
-            <button type="button" data-library-view="playlists" ${tab("playlists")}>Playlists</button>
-            <button type="button" data-library-view="due" ${tab("due")}>Due</button>
-            <button type="button" data-library-view="weak" ${tab("weak")}>Weak</button>
-            <button type="button" data-library-view="mastered" ${tab("mastered")}>Mastered</button>
+          <div class="tn-library-tabs" role="tablist" aria-label="Library views" data-i18n-aria-label="ui.library_views">
+            <button type="button" data-library-view="words" ${tab("words")}>${window.TNI18n.mark("ui.all",{})}</button>
+            <button type="button" data-library-view="playlists" ${tab("playlists")}>${window.TNI18n.mark("ui.playlists",{})}</button>
+            <button type="button" data-library-view="due" ${tab("due")}>${window.TNI18n.mark("ui.due",{})}</button>
+            <button type="button" data-library-view="weak" ${tab("weak")}>${window.TNI18n.mark("ui.weak",{})}</button>
+            <button type="button" data-library-view="mastered" ${tab("mastered")}>${window.TNI18n.mark("ui.mastered",{})}</button>
           </div>
         </div>
         ${content}
@@ -201,25 +200,25 @@
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(letter => ({value:letter,label:letter}));
     return `
       <div class="tn-library-tools">
-        <label class="tn-library-search-label" for="tnLibrarySearch">Search your collection</label>
-        <input id="tnLibrarySearch" type="search" placeholder="Word, meaning, tag, or playlist" value="${esc(state.query)}">
+        <label class="tn-library-search-label" for="tnLibrarySearch">${window.TNI18n.mark("ui.search_your_collection",{})}</label>
+        <input id="tnLibrarySearch" type="search" placeholder="Word, meaning, tag, or playlist" value="${esc(state.query)}" data-i18n-placeholder="ui.word_meaning_tag_or_playlist">
         <details class="tn-library-filter-panel" ${filtersOpen?"open":""}>
-          <summary>Filters and sort${isFilterActive(state)?" · Active":""}</summary>
+          <summary>${window.TNI18n.mark("ui.filters_and_sortvalue",{p2:isFilterActive(state)?" · Active":""})}</summary>
           <div class="tn-library-filter-row">
-            <select id="tnFilterLanguage" aria-label="Filter by language">${options([{value:"all",label:"All languages"},...languages.map(value => ({value,label:languageLabel(value)}))],state.language)}</select>
-            <select id="tnFilterLetter" aria-label="Filter by first letter">${options([{value:"all",label:"All letters"},...letters],state.letter)}</select>
-            <select id="tnFilterPlaylist" aria-label="Filter by playlist">${options([{value:"all",label:"All playlists"},...data.lists.map(list => ({value:list.id,label:list.name || "Untitled Playlist"}))],state.playlist)}</select>
-            <select id="tnFilterPos" aria-label="Filter by part of speech">${options([{value:"all",label:"All POS"},...pos.map(value => ({value,label:value}))],state.pos)}</select>
-            <select id="tnFilterFavorite" aria-label="Filter saved words">${options([{value:"all",label:"All favorites"},{value:"saved",label:"Saved only"}],state.favorite)}</select>
-            <select id="tnFilterLearning" aria-label="Filter by learning state">${options([{value:"all",label:"All learning states"},{value:"due",label:"Due today"},{value:"weak",label:"Needs practice"},{value:"new",label:"New"},{value:"strong",label:"Strong"},{value:"mastered",label:"Mastered"}],state.learning)}</select>
-            <select id="tnSortWords" aria-label="Sort words">${options([{value:"newest",label:"Newest added"},{value:"oldest",label:"Oldest added"},{value:"front",label:"Front A-Z"},{value:"back",label:"Back A-Z"},{value:"review",label:"Next review"}],state.sort)}</select>
-            <button type="button" id="tnClearFilters" class="${isFilterActive(state) ? "is-active" : ""}">Reset</button>
+            <select id="tnFilterLanguage" aria-label="Filter by language" data-i18n-aria-label="ui.filter_by_language">${options([{value:"all",label:window.TNI18n.t("ui.all_languages",{})},...languages.map(value => ({value,label:languageLabel(value)}))],state.language)}</select>
+            <select id="tnFilterLetter" aria-label="Filter by first letter" data-i18n-aria-label="ui.filter_by_first_letter">${options([{value:"all",label:window.TNI18n.t("ui.all_letters",{})},...letters],state.letter)}</select>
+            <select id="tnFilterPlaylist" aria-label="Filter by playlist" data-i18n-aria-label="ui.filter_by_playlist">${options([{value:"all",label:window.TNI18n.t("ui.all_playlists",{})},...data.lists.map(list => ({value:list.id,label:list.name || "Untitled Playlist"}))],state.playlist)}</select>
+            <select id="tnFilterPos" aria-label="Filter by part of speech" data-i18n-aria-label="ui.filter_by_part_of_speech">${options([{value:"all",label:window.TNI18n.t("ui.all_pos",{})},...pos.map(value => ({value,label:value}))],state.pos)}</select>
+            <select id="tnFilterFavorite" aria-label="Filter saved words" data-i18n-aria-label="ui.filter_saved_words">${options([{value:"all",label:window.TNI18n.t("ui.all_favorites",{})},{value:"saved",label:window.TNI18n.t("ui.saved_only_2",{})}],state.favorite)}</select>
+            <select id="tnFilterLearning" aria-label="Filter by learning state" data-i18n-aria-label="ui.filter_by_learning_state">${options([{value:"all",label:window.TNI18n.t("ui.all_learning_states",{})},{value:"due",label:window.TNI18n.t("ui.due_today",{})},{value:"weak",label:window.TNI18n.t("ui.needs_practice",{})},{value:"new",label:window.TNI18n.t("ui.new",{})},{value:"strong",label:window.TNI18n.t("ui.strong",{})},{value:"mastered",label:window.TNI18n.t("ui.mastered",{})}],state.learning)}</select>
+            <select id="tnSortWords" aria-label="Sort words" data-i18n-aria-label="ui.sort_words">${options([{value:"newest",label:window.TNI18n.t("ui.newest_added",{})},{value:"oldest",label:window.TNI18n.t("ui.oldest_added",{})},{value:"front",label:window.TNI18n.t("ui.front_a_z",{})},{value:"back",label:window.TNI18n.t("ui.back_a_z",{})},{value:"review",label:window.TNI18n.t("ui.next_review_2",{})}],state.sort)}</select>
+            <button type="button" id="tnClearFilters" class="${isFilterActive(state) ? "is-active" : ""}">${window.TNI18n.mark("ui.reset",{})}</button>
           </div>
           <div class="tn-library-secondary-tools">
-            <select id="tnAudioSide" aria-label="Word row audio"><option value="front" ${audioSide==="front"?"selected":""}>Play front</option><option value="back" ${audioSide==="back"?"selected":""}>Play back</option></select>
-            <button type="button" data-select-visible>Select visible</button>
-            <button type="button" data-delete-selected ${selectedWordIds.size?"":"disabled"}>Delete selected${selectedWordIds.size?` (${selectedWordIds.size})`:""}</button>
-            <span>Use Up / Down to arrange a playlist.</span>
+            <select id="tnAudioSide" aria-label="Word row audio" data-i18n-aria-label="ui.word_row_audio"><option value="front" ${audioSide==="front"?"selected":""} data-i18n="ui.play_front_2">Play front</option><option value="back" ${audioSide==="back"?"selected":""} data-i18n="ui.play_back_2">Play back</option></select>
+            <button type="button" data-select-visible>${window.TNI18n.mark("ui.select_visible",{})}</button>
+            <button type="button" data-delete-selected ${selectedWordIds.size?"":"disabled"}>${window.TNI18n.mark("ui.delete_selectedvalue",{p14:selectedWordIds.size?` (${selectedWordIds.size})`:""})}</button>
+            <span>${window.TNI18n.mark("ui.use_up_down_to_arrange_a_playlist",{})}</span>
           </div>
         </details>
       </div>
@@ -246,32 +245,32 @@
     const hiddenCount = Math.max(0,allWords.length - words.length);
     const body = allWords.length ? `
       <div class="tn82-word-list">
-        <div class="tn-word-list-head" aria-hidden="true"><span></span><span>Word</span><span>Meaning</span><span>POS</span><span></span></div>
+        <div class="tn-word-list-head" aria-hidden="true"><span></span><span>${window.TNI18n.mark("ui.word_2",{})}</span><span>${window.TNI18n.mark("ui.meaning_2",{})}</span><span>${window.TNI18n.mark("ui.pos",{})}</span><span></span></div>
         ${words.map(word => {
           return `
           <article class="tn82-word-card tn-word-row tn-word-list-row" data-word-id="${esc(word.id)}">
-            <input type="checkbox" class="tn-word-select" data-select-word="${esc(word.id)}" ${selectedWordIds.has(word.id)?"checked":""} aria-label="Select ${esc(word.front)}">
-            <button type="button" class="tn82-word-main tn-word-list-main" data-open-word="${esc(word.id)}" aria-label="Open details for ${esc(word.front)}">
-              <span class="tn82-front">${esc(word.front)}</span>
-              <span class="tn82-back">${esc(word.back)}</span>
+            <input type="checkbox" class="tn-word-select" data-select-word="${esc(word.id)}" ${selectedWordIds.has(word.id)?"checked":""} aria-label="${esc(word.front)}">
+            <button type="button" class="tn82-word-main tn-word-list-main" data-open-word="${esc(word.id)}" aria-label="${esc(window.TNI18n.t('ui.word_details'))}: ${esc(word.front)}">
+              <span class="tn82-front" dir="auto" data-user-content>${esc(word.front)}</span>
+              <span class="tn82-back" dir="auto" data-user-content>${esc(word.back)}</span>
               <span class="tn-word-list-pos">${word.pos ? esc(word.pos) : "-"}</span>
               <span class="tn-word-list-chevron" aria-hidden="true">›</span>
             </button>
           </article>
         `;}).join("")}
       </div>
-      ${hiddenCount ? `<div class="tn82-library-summary tn-load-more-row"><span>${hiddenCount} more word${hiddenCount === 1 ? "" : "s"} hidden for speed.</span><div class="tn-load-actions"><button type="button" class="tn-load-more-btn" data-load-more>Load 100 more</button><button type="button" class="tn-load-all-btn" data-load-all>Load all ${allWords.length}</button></div></div>` : ""}
+      ${hiddenCount ? `<div class="tn82-library-summary tn-load-more-row"><span>${window.TNI18n.mark("ui.value_more_wordvalue_hidden_for_speed",{p0:hiddenCount,p1:hiddenCount === 1 ? "" : "s"})}</span><div class="tn-load-actions"><button type="button" class="tn-load-more-btn" data-load-more>${window.TNI18n.mark("ui.load_100_more",{})}</button><button type="button" class="tn-load-all-btn" data-load-all>${window.TNI18n.mark("ui.load_all_value",{p2:allWords.length})}</button></div></div>` : ""}
     ` : `
       <div class="tn-library-empty">
-        <h3>${isFilterActive() ? "No words found" : mode === "due" ? "You’re all caught up" : mode === "weak" ? "No weak words" : mode === "mastered" ? "No mastered words yet" : "No words yet"}</h3>
-        <p>${isFilterActive() ? "Try changing your search or reset the filters." : mode === "due" ? "Nothing needs review today. Nice work." : mode === "weak" ? "Words that need more practice will appear here." : mode === "mastered" ? "Words appear here after several stable reviews." : "Add your first word to start building your vocabulary."}</p>
-        <button type="button" data-go-create>Add word</button>
+        <h3>${window.TNI18n.mark(isFilterActive() ? "ui.no_words_in_this_session" : mode === "due" ? "ui.you_are_all_caught_up" : mode === "weak" ? "ui.no_weak_words_right_now" : mode === "mastered" ? "ui.no_words" : "ui.add_your_first_words")}</h3>
+        ${!isFilterActive()&&mode!=="due"&&mode!=="weak"&&mode!=="mastered" ? `<p>${window.TNI18n.mark("ui.your_memory_path_begins_with_one_word")}</p>` : ""}
+        <button type="button" data-go-create>${window.TNI18n.mark("ui.add_word_2",{})}</button>
       </div>
     `;
-    const title = mode === "due" ? "Due Today" : mode === "weak" ? "Needs Practice" : mode === "mastered" ? "Mastered" : "All Words";
+    const title = mode === "due" ? window.TNI18n.t("learning.dueToday") : mode === "weak" ? window.TNI18n.t("learning.needsPractice") : mode === "mastered" ? window.TNI18n.t("learning.mastered") : window.TNI18n.t("ui.all_words");
     return libraryShell(`
       ${wordsTools()}
-      <div class="tn82-library-summary">${title}: ${allWords.length} word${allWords.length === 1 ? "" : "s"} found${hiddenCount ? ` · ${words.length} rendered` : ""}</div>
+      <div class="tn82-library-summary">${window.TNI18n.mark("ui.value_value_wordvalue_foundvalue",{p1:title,p2:allWords.length,p3:allWords.length === 1 ? "" : "s",p4:hiddenCount ? ` · ${words.length} / ${allWords.length}` : ""})}</div>
       ${body}
     `);
   }
@@ -279,7 +278,7 @@
   function playlistsView(){
     const data = ensureData();
     const cards = data.lists.length ? `
-      <div class="tn-library-playlist-grid">
+      <div class="tn-library-playlist-grid" data-shelf="${shelfView}">
         ${data.lists.map(list => {
           const progress = playlistProgress(list.id);
           return `
@@ -287,17 +286,17 @@
             <button type="button" class="tn-playlist-open" data-open-playlist="${esc(list.id)}">
               <span class="tn-playlist-art">${esc(String(list.name || "N").slice(0,2).toUpperCase())}</span>
               <span class="tn-playlist-copy">
-                <strong>${esc(list.name || "Untitled Playlist")}</strong>
-                <em>${progress.total} word${progress.total === 1 ? "" : "s"} · ${esc(playlistLanguagePair(list.id))}</em>
-                <small>${progress.learned} mastered · ${progress.hard} weak · ${esc(friendlyDate(list.updatedAt || list.createdAt))}</small>
+                <strong dir="auto" data-user-content>${esc(list.name || "Untitled Playlist")}</strong>
+                <em>${window.TNI18n.mark("ui.value_wordvalue_value",{p4:progress.total,p5:progress.total === 1 ? "" : "s",p6:esc(playlistLanguagePair(list.id))})}</em>
+                <small>${window.TNI18n.mark("ui.value_mastered_value_weak_value",{p7:progress.learned,p8:progress.hard,p9:esc(friendlyDate(list.updatedAt || list.createdAt))})}</small>
               </span>
             </button>
             <div class="tn-playlist-actions">
-              <button type="button" data-playlist-mode="quiz" data-playlist-id="${esc(list.id)}" aria-label="Quiz ${esc(list.name)}">Quiz</button>
-              <button type="button" data-playlist-mode="cards" data-playlist-id="${esc(list.id)}" aria-label="Study ${esc(list.name)} with cards">Cards</button>
-              <button type="button" data-playlist-mode="listen" data-playlist-id="${esc(list.id)}" aria-label="Listen to ${esc(list.name)}">Listen</button>
-              <button type="button" data-rename-playlist="${esc(list.id)}" aria-label="Rename ${esc(list.name)}">Rename</button>
-              <button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">Delete</button>
+              <button type="button" data-playlist-mode="quiz" data-playlist-id="${esc(list.id)}" aria-label="Quiz ${esc(list.name)}">${window.TNI18n.mark("navigation.quiz",{})}</button>
+              <button type="button" data-playlist-mode="cards" data-playlist-id="${esc(list.id)}" aria-label="Study ${esc(list.name)} with cards">${window.TNI18n.mark("navigation.cards",{})}</button>
+              <button type="button" data-playlist-mode="listen" data-playlist-id="${esc(list.id)}" aria-label="Listen to ${esc(list.name)}">${window.TNI18n.mark("navigation.listen",{})}</button>
+              <button type="button" data-rename-playlist="${esc(list.id)}" aria-label="Rename ${esc(list.name)}">${window.TNI18n.mark("ui.rename",{})}</button>
+              <button type="button" class="tn-playlist-delete-btn" data-delete-playlist="${esc(list.id)}" aria-label="Delete ${esc(list.name)}">${window.TNI18n.mark("common.delete",{})}</button>
               <button type="button" class="tn-playlist-menu-btn" data-menu-playlist="${esc(list.id)}" aria-label="More actions for ${esc(list.name)}">...</button>
             </div>
           </article>
@@ -305,15 +304,16 @@
       </div>
     ` : `
       <div class="tn-library-empty">
-        <h3>No playlists yet</h3>
-        <p>Create a playlist, then collect words into it.</p>
-        <button type="button" data-go-create>Create playlist</button>
+        <h3>${window.TNI18n.mark("ui.no_playlists_yet",{})}</h3>
+        <p>${window.TNI18n.mark("ui.create_a_playlist_then_collect_words_into_it",{})}</p>
+        <button type="button" data-go-create>${window.TNI18n.mark("ui.create_playlist",{})}</button>
       </div>
     `;
     return libraryShell(`
       <div class="tn-library-playlists-head">
-        <h3>Playlists</h3>
-        <div><span>${data.lists.length} list${data.lists.length === 1 ? "" : "s"}</span><button type="button" data-go-create>New playlist</button></div>
+        <h3>${window.TNI18n.mark("ui.playlists",{})}</h3>
+        <div class="tn-shelf-controls" role="group" aria-label="Playlist display" data-i18n-aria-label="ui.playlist_display"><button type="button" data-playlist-display="list" aria-pressed="${!shelfView}">${window.TNI18n.mark("ui.list_view",{})}</button><button type="button" data-playlist-display="shelf" aria-pressed="${shelfView}">${window.TNI18n.mark("ui.shelf_view",{})}</button></div>
+        <div><span>${window.TNI18n.mark("ui.value_listvalue",{p2:data.lists.length,p3:data.lists.length === 1 ? "" : "s"})}</span><button type="button" data-go-create>${window.TNI18n.mark("ui.new_playlist",{})}</button></div>
       </div>
       ${cards}
     `);
@@ -322,6 +322,10 @@
   function renderLibrary(){
     const mount = $("tn82LibraryMount");
     if(!mount||renderingLibrary)return;
+    const focused=mount.contains(document.activeElement)?document.activeElement:null;
+    const focusId=focused?.id,wordId=focused?.dataset.openWord;
+    const previousIndex=wordId?[...mount.querySelectorAll("[data-open-word]")].indexOf(focused):-1;
+    const selection=focused?.tagName==="INPUT"?[focused.selectionStart,focused.selectionEnd]:null;
     renderingLibrary=true;
     try{
       const data=ensureData();
@@ -332,6 +336,13 @@
       mount.innerHTML = activeView === "playlists" ? playlistsView() : wordsView(activeView);
       bindLibraryUi();
       updateHeaderCounts();
+      if($("tnWordDetailPanel")?.classList.contains("show")&&returnFocus.detail?.wordId){
+        if(validIds.has(returnFocus.detail.wordId))renderWordDetail(returnFocus.detail.wordId);
+        else hideWordDetail();
+      }
+      const rows=[...mount.querySelectorAll("[data-open-word]")];
+      const next=focusId?$(focusId):wordId?rows.find(row=>row.dataset.openWord===wordId)||rows[Math.max(0,Math.min(previousIndex,rows.length-1))]:null;
+      if(next){next.focus({preventScroll:true});if(selection)try{next.setSelectionRange(...selection)}catch(error){}}
     }finally{renderingLibrary=false}
   }
 
@@ -375,6 +386,7 @@
     renderLimit = WORD_RENDER_LIMIT;
     localStorage.setItem("tangonest_library_view_v1",activeView);
     renderLibrary();
+    window.TangoNestMotion?.enter($("tn82LibraryMount"));
   }
 
   function openPlaylist(listId){
@@ -383,6 +395,7 @@
     filterValues.playlist=listId;
     localStorage.setItem("tangonest_library_view_v1",activeView);
     renderLibrary();
+    window.TangoNestMotion?.enter($("tn82LibraryMount"));
   }
 
   function normalizePage(page){
@@ -406,6 +419,11 @@
   function stableNavigate(page){
     page = normalizePage(page);
     if(!["home","create","library","cards","quiz","listen","settings"].includes(page))page = "home";
+    window.tnStudyContinuity?.capture();
+    if(page!=="quiz")window.clearQuizTimers?.();
+    if(page!=="cards")window.stopFlashAuto?.();
+    if(page!=="listen")window.stopAudio?.();
+    hideWordDetail(false);
     localStorage.setItem("tangonest_last_page_v2",page);
 
     const ids = {
@@ -444,6 +462,7 @@
     document.title=`${labels[1]} · TangoNest`;
     try{window.tnUpdateShellContext?.(page)}catch(error){}
     stabilizeHeader();
+    window.tnStudyContinuity?.enter(page);
     if(page==="create"&&window.matchMedia?.("(min-width: 901px)").matches){
       const focusFront=()=>{
         try{$("front")?.focus({preventScroll:true})}catch(error){}
@@ -537,21 +556,21 @@
     }
     const data = ensureData();
     const word = wordById(id);
-    if(!word)return toast("Word not found");
-    if(!confirm(`Delete "${word.front}"?`))return;
+    if(!word)return toast(window.TNI18n.t("ui.word_not_found",{}));
+    if(!confirm(window.TNI18n.t("ui.delete_value",{p0:word.front})))return;
     data.words = data.words.filter(item => item.id !== id);
     persist();
     hideWordDetail();
     renderLibrary();
     try{ if(typeof renderHome === "function")renderHome(); }catch(e){}
     cloudDeleteWord(id);
-    toast("Word deleted");
+    toast(window.TNI18n.t("ui.word_deleted",{}));
   }
 
   function renderWordDetail(id,trigger=null){
     const word = wordById(id);
     if(!word)return;
-    const learning=presentation()?.state(word)||{label:"Learning",tone:"learning"};
+    const learning=presentation()?.state(word)||{label:window.TNI18n.t("ui.learning",{}),tone:"learning"};
     const nextReview=presentation()?.review(word)?.label||"Review not scheduled";
     const accuracy=presentation()?.accuracy(word)?.label||"Not studied yet";
     const lastStudied=presentation()?.lastStudied(word)||"Not studied yet";
@@ -560,53 +579,82 @@
       panel = document.createElement("div");
       panel.id = "tnWordDetailPanel";
       panel.className = "tn-word-detail-panel";
-      document.body.appendChild(panel);
+      $("pageWords").appendChild(panel);
     }
-    returnFocus.detail={element:trigger||document.activeElement,wordId:id};
+    const focusedAction=panel.classList.contains("show")&&panel.contains(document.activeElement)
+      ? document.activeElement.getAttributeNames().find(name=>name.startsWith("data-")) : null;
+    const focusNew=!!trigger||!panel.classList.contains("show");
+    if(!panel.classList.contains("show")){returnFocus.detail={element:trigger||document.activeElement,wordId:id};detailScroll=scrollY}
+    else if(trigger)returnFocus.detail={element:trigger,wordId:id};
+    const opening=!detailWordId;
+    detailWordId=id;
+    if(new URL(location.href).searchParams.get("word")!==id){
+      const url=new URL(location.href);url.searchParams.set("word",id);
+      history[opening?"pushState":"replaceState"]({...history.state,tnWord:id},"",url);
+    }
     panel.innerHTML = `
       <div class="tn-word-detail-card" role="dialog" aria-modal="true" aria-labelledby="tnWordDetailTitle">
-        <button type="button" class="tn-detail-close" data-close-word-detail>Close</button>
+        <button type="button" class="tn-detail-close" data-close-word-detail>${window.TNI18n.mark("common.close",{})}</button>
         <div class="tn-detail-kicker">${esc(languageLabel(word.frontLang))} -> ${esc(languageLabel(word.backLang))}</div>
-        <h2 id="tnWordDetailTitle">${esc(word.front)}</h2>
-        <p class="tn-detail-meaning">${esc(word.back)}</p>
+        <h2 id="tnWordDetailTitle" dir="auto" data-user-content>${esc(word.front)}</h2>
+        <p class="tn-detail-meaning" dir="auto" data-user-content>${esc(word.back)}</p>
+        ${word.pronunciation?`<p class="tn-detail-pronunciation"><span>${window.TNI18n.mark("ui.pronunciation",{})}</span> ${esc(word.pronunciation)}</p>`:""}
         <div class="tn-detail-actions">
-          <button type="button" data-detail-audio="${esc(word.id)}">${iconAudio()} Audio</button>
-          <button type="button" data-detail-fav="${esc(word.id)}">${word.saved ? "★ Saved" : "☆ Save"}</button>
-          ${typeof window.openEdit === "function" ? `<button type="button" data-detail-edit="${esc(word.id)}">Edit</button>` : ""}
-          <button type="button" data-word-move="${esc(word.id)}" data-move-direction="-1">Move up</button>
-          <button type="button" data-word-move="${esc(word.id)}" data-move-direction="1">Move down</button>
-          <button type="button" class="danger" data-detail-delete="${esc(word.id)}">Delete</button>
+          <button type="button" data-detail-audio="${esc(word.id)}">${window.TNI18n.mark("ui.value_audio",{p6:iconAudio()})}</button>
+          <button type="button" data-detail-fav="${esc(word.id)}">${word.saved ? window.TNI18n.t("ui.saved") : window.TNI18n.t("ui.save")}</button>
+          ${typeof window.openEdit === "function" ? `<button type="button" data-detail-edit="${esc(word.id)}">${window.TNI18n.mark("ui.edit",{})}</button>` : ""}
+          <button type="button" data-word-move="${esc(word.id)}" data-move-direction="-1">${window.TNI18n.mark("ui.move_up",{})}</button>
+          <button type="button" data-word-move="${esc(word.id)}" data-move-direction="1">${window.TNI18n.mark("ui.move_down",{})}</button>
+          <button type="button" class="danger" data-detail-delete="${esc(word.id)}">${window.TNI18n.mark("common.delete",{})}</button>
         </div>
         <div class="tn-detail-grid">
-          <div><span>Playlist</span><strong>${esc(listName(word.listId))}</strong></div>
-          <div><span>Front language</span><strong>${esc(languageLabel(word.frontLang))}</strong></div>
-          <div><span>Back language</span><strong>${esc(languageLabel(word.backLang))}</strong></div>
-          <div><span>POS</span><strong>${esc(word.pos || "-")}</strong></div>
-          <div><span>Gender</span><strong>${esc(word.gender || "-")}</strong></div>
-          <div><span>Learning</span><strong class="tn-learning-badge ${esc(learning.tone)}">${esc(learning.label)}</strong></div>
-          <div><span>Accuracy</span><strong>${esc(accuracy)}</strong></div>
-          <div><span>Last studied</span><strong>${esc(lastStudied)}</strong></div>
-          <div><span>Next review</span><strong>${esc(nextReview)}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.playlist",{})}</span><strong>${esc(listName(word.listId))}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.front_language",{})}</span><strong>${esc(languageLabel(word.frontLang))}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.back_language",{})}</span><strong>${esc(languageLabel(word.backLang))}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.pos",{})}</span><strong>${esc(word.pos || "-")}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.gender",{})}</span><strong>${esc(word.gender || "-")}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.learning",{})}</span><strong class="tn-learning-badge ${esc(learning.tone)}">${esc(learning.label)}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.accuracy",{})}</span><strong>${esc(accuracy)}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.last_studied_2",{})}</span><strong>${esc(lastStudied)}</strong></div>
+          <div><span>${window.TNI18n.mark("ui.next_review_2",{})}</span><strong>${esc(nextReview)}</strong></div>
         </div>
-        ${word.memo ? `<section class="tn-detail-example"><span>Example</span><p>${esc(word.memo)}</p><button type="button" class="tn-example-audio" data-example-audio="${esc(word.id)}">${iconAudio()} Example audio</button></section>` : ""}
+        ${word.memo ? `<section class="tn-detail-example"><span>${window.TNI18n.mark("ui.example",{})}</span><p>${esc(word.memo)}</p><button type="button" class="tn-example-audio" data-example-audio="${esc(word.id)}">${window.TNI18n.mark("ui.value_example_audio",{p2:iconAudio()})}</button></section>` : ""}
       </div>
     `;
     panel.classList.add("show");
-    setTimeout(()=>panel.querySelector("[data-close-word-detail]")?.focus({preventScroll:true}),0);
+    updateDetailLayout();
+    if(focusedAction)panel.querySelector(`[${focusedAction}]`)?.focus({preventScroll:true});
+    else if(focusNew)setTimeout(()=>panel.querySelector("[data-close-word-detail]")?.focus({preventScroll:true}),0);
   }
 
-  function hideWordDetail(){
+  function updateDetailLayout(){
+    const panel=$("tnWordDetailPanel");if(!panel)return;
+    $("pageWords").classList.toggle("has-word-detail",panel.classList.contains("show"));
+    const dialog=panel.querySelector("[role='dialog']");
+    dialog?.setAttribute("aria-modal",String(!detailWide.matches));
+    document.querySelectorAll("[data-open-word]").forEach(button=>button.setAttribute("aria-current",String(button.dataset.openWord===detailWordId)));
+  }
+  detailWide.addEventListener("change",updateDetailLayout);
+  window.addEventListener("popstate",()=>{
+    const id=new URL(location.href).searchParams.get("word");
+    if(id&&wordById(id))renderWordDetail(id);else hideWordDetail(false);
+  });
+  function hideWordDetail(back=true){
+    const wasOpen=!!detailWordId;
     $("tnWordDetailPanel")?.classList.remove("show");
     const target=returnFocus.detail?.element?.isConnected&&returnFocus.detail.element.matches?.("[data-open-word]")
       ? returnFocus.detail.element
       : [...document.querySelectorAll("[data-open-word]")].find(element=>element.dataset.openWord===returnFocus.detail?.wordId);
-    target?.focus({preventScroll:true});
+    const nearby=target||document.querySelector("[data-open-word],#tnLibrarySearch");
+    if(wasOpen){nearby?.focus({preventScroll:true});window.scrollTo(0,detailScroll)}
     returnFocus.detail=null;
+    detailWordId="";updateDetailLayout();
+    if(back&&wasOpen&&history.state?.tnWord)history.back();
   }
 
   function renamePlaylist(listId,trigger=null){
     const list=ensureData().lists.find(item=>item.id===listId);
-    if(!list)return toast("Playlist not found");
+    if(!list)return toast(window.TNI18n.t("ui.playlist_not_found",{}));
     pendingRenameId=listId;
     returnFocus.rename={element:trigger||document.activeElement,listId};
     let modal=$("tnPlaylistRenameModal");
@@ -618,12 +666,12 @@
     }
     modal.innerHTML=`
       <div class="tn-rename-dialog" role="dialog" aria-modal="true" aria-labelledby="tnRenameTitle">
-        <h2 id="tnRenameTitle">Rename playlist</h2>
-        <label for="tnRenamePlaylistInput">Playlist name</label>
+        <h2 id="tnRenameTitle">${window.TNI18n.mark("ui.rename_playlist",{})}</h2>
+        <label for="tnRenamePlaylistInput">${window.TNI18n.mark("ui.playlist_name",{})}</label>
         <input id="tnRenamePlaylistInput" value="${esc(list.name||"")}" maxlength="80" autocomplete="off">
         <div class="tn-rename-actions">
-          <button type="button" data-cancel-rename>Cancel</button>
-          <button type="button" data-confirm-rename>Save name</button>
+          <button type="button" data-cancel-rename>${window.TNI18n.mark("common.cancel",{})}</button>
+          <button type="button" data-confirm-rename>${window.TNI18n.mark("ui.save_name",{})}</button>
         </div>
       </div>`;
     modal.classList.add("show");
@@ -642,7 +690,7 @@
 
   async function confirmRename(){
     const clean=String($("tnRenamePlaylistInput")?.value||"").trim();
-    if(!clean)return toast("Playlist name is required");
+    if(!clean)return toast(window.TNI18n.t("ui.playlist_name_is_required",{}));
     const listId=pendingRenameId;
     if(!listId)return;
     let renamed=true;
@@ -665,7 +713,7 @@
     menu.className = "tn-context-menu";
     menu.style.left = Math.min(x,window.innerWidth - 210) + "px";
     menu.style.top = Math.min(y,window.innerHeight - 82) + "px";
-    menu.innerHTML = `<button type="button" data-context-delete>Delete playlist</button>`;
+    menu.innerHTML = `<button type="button" data-context-delete>${window.TNI18n.mark("ui.delete_playlist",{})}</button>`;
     document.body.appendChild(menu);
   }
 
@@ -678,7 +726,7 @@
     pendingDeleteId = listId;
     returnFocus.delete={element:trigger||document.activeElement,listId};
     const list = ensureData().lists.find(item => item.id === listId);
-    if(!list)return toast("Playlist not found");
+    if(!list)return toast(window.TNI18n.t("ui.playlist_not_found",{}));
     let modal = $("tnPlaylistDeleteModal");
     if(!modal){
       modal = document.createElement("div");
@@ -688,12 +736,12 @@
     }
     modal.innerHTML = `
       <div class="tn-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="tnDeleteTitle">
-        <h2 id="tnDeleteTitle">Delete playlist?</h2>
-        <p>The playlist will be deleted. Words inside it will remain in your Library.</p>
+        <h2 id="tnDeleteTitle">${window.TNI18n.mark("ui.delete_playlist_2",{})}</h2>
+        <p>${window.TNI18n.mark("ui.the_playlist_will_be_deleted_words_inside_it_will_remain_in_your_library",{})}</p>
         <strong>${esc(list.name || "Untitled Playlist")}</strong>
         <div class="tn-delete-actions">
-          <button type="button" data-cancel-delete>Cancel</button>
-          <button type="button" data-confirm-delete>Delete playlist</button>
+          <button type="button" data-cancel-delete>${window.TNI18n.mark("common.cancel",{})}</button>
+          <button type="button" data-confirm-delete>${window.TNI18n.mark("ui.delete_playlist",{})}</button>
         </div>
       </div>
     `;
@@ -734,7 +782,7 @@
     }
     const data = ensureData();
     const list = data.lists.find(item => item.id === listId);
-    if(!list)return toast("Playlist not found");
+    if(!list)return toast(window.TNI18n.t("ui.playlist_not_found",{}));
     data.words.forEach(word => {
       if(word.listId === listId)word.listId = "";
     });
@@ -746,7 +794,7 @@
     try{ if(typeof renderHome === "function")renderHome(); }catch(e){}
     syncPlaylistDeletion(listId);
     hideDeleteModal();
-    toast("Playlist deleted");
+    toast(window.TNI18n.t("ui.playlist_deleted",{}));
   }
 
   function renderSelectsSafe(){
@@ -759,7 +807,7 @@
       const unfiled=["addList","bulkList","editList"].includes(id);
       const allWords=["studyList","quizList","audioList"].includes(id);
       const availableLists=data.lists;
-      const virtual=unfiled?'<option value="">No playlist</option>':allWords?'<option value="all">All words</option>':"";
+      const virtual=unfiled?`<option value="" data-i18n="ui.no_playlist">No playlist</option>`:allWords?`<option value="all" data-i18n="ui.all_words">All words</option>`:"";
       el.innerHTML = virtual+availableLists.map(list => `<option value="${esc(list.id)}">${esc(list.name || "Untitled Playlist")}</option>`).join("");
       const canRestore=[...el.options].some(option=>option.value===current) && (current!=="" || !unfiled || hasRendered);
       if(canRestore)el.value = current;
@@ -819,15 +867,6 @@
           renderLimit = WORD_RENDER_LIMIT;
           const update=()=>{
             renderLibrary();
-            if(!shouldRefocus)return;
-            requestAnimationFrame(() => {
-              const next = $("tnLibrarySearch");
-              if(next){
-                try{next.focus({preventScroll:true})}catch(e){next.focus()}
-                const len = next.value.length;
-                try{ next.setSelectionRange(len,len); }catch(e){}
-              }
-            });
           };
           if(shouldRefocus){
             clearTimeout(searchRenderTimer);
@@ -850,7 +889,7 @@
     selected.checked?selectedWordIds.add(id):selectedWordIds.delete(id);
     try{window.toggleSelected?.(id,selected.checked)}catch(e){}
     const button=$("tn82LibraryMount")?.querySelector("[data-delete-selected]");
-    if(button){button.disabled=!selectedWordIds.size;button.textContent=`Delete selected${selectedWordIds.size?` (${selectedWordIds.size})`:""}`}
+    if(button){button.disabled=!selectedWordIds.size;window.TNI18n.bindText(button,()=>(window.TNI18n.t("ui.delete_selectedvalue_2",{p0:selectedWordIds.size?` (${selectedWordIds.size})`:""})))}
   },true);
 
   document.addEventListener("click",event => {
@@ -877,6 +916,15 @@
       event.preventDefault();
       renderLimit = Number.MAX_SAFE_INTEGER;
       renderLibrary();
+      return;
+    }
+    const display=event.target?.closest?.("[data-playlist-display]");
+    if(display){
+      shelfView=display.dataset.playlistDisplay==="shelf";
+      try{localStorage.setItem("tangonest_shelf_view_v1",shelfView?"shelf":"list")}catch(error){}
+      renderLibrary();
+      $("tn82LibraryMount")?.querySelector(`[data-playlist-display="${shelfView?"shelf":"list"}"]`)?.focus({preventScroll:true});
+      window.TangoNestMotion?.enter($("tn82LibraryMount"));
       return;
     }
     const view = event.target?.closest?.("[data-library-view]");
@@ -1031,7 +1079,7 @@
       confirmRename();
     }
     if(event.key === "Tab"){
-      const dialog=document.querySelector(".tn-rename-modal.show [role='dialog'],.tn-delete-modal.show [role='dialog'],.tn-word-detail-panel.show [role='dialog'],.modal-backdrop.show [role='dialog']");
+      const dialog=document.querySelector(".tn-rename-modal.show [role='dialog'],.tn-delete-modal.show [role='dialog'],.tn-word-detail-panel.show [role='dialog'][aria-modal='true'],.modal-backdrop.show [role='dialog']");
       if(!dialog)return;
       const focusable=[...dialog.querySelectorAll("button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]")];
       if(!focusable.length)return;

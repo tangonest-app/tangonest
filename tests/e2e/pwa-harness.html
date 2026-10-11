@@ -19,7 +19,8 @@
           await wait(1200);
           const registration=await frame.contentWindow.navigator.serviceWorker.getRegistration("../../");
           const cacheNames=await frame.contentWindow.caches.keys();
-          const shellName=cacheNames.find(name=>name==="tangonest-shell-v1.0.0-rc.11");
+          const release=await (await fetch("../../release.json")).json();
+          const shellName=cacheNames.find(name=>name===`tangonest-shell-v${release.version}`);
           const requests=shellName?await (await frame.contentWindow.caches.open(shellName)).keys():[];
           const urls=requests.map(request=>request.url);
           const origin=new URL("../../",location.href).origin;

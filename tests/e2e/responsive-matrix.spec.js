@@ -45,7 +45,7 @@ async function layoutAudit(page,label){
     const brand=document.querySelector(".app-sidebar .brand");
     const mark=brand?.querySelector(".brand-mark");
     const title=brand?.querySelector("h1");
-    const brandOffset=brand&&visible(brand)&&mark&&title
+    const brandOffset=brand&&visible(brand)&&mark&&title&&visible(title)
       ? Math.abs(mark.getBoundingClientRect().top-title.getBoundingClientRect().top)
       : 0;
     return {viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,overflow,brandOffset};

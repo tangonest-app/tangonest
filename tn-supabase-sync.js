@@ -80,9 +80,6 @@
   let defaultPlaylistPromise = null;
   let defaultPlaylistUserId = "";
   let defaultPlaylistVerifiedUserId = "";
-  let accountCleanStartPromise = null;
-  let accountCleanStartUserId = "";
-  let accountCleanStartGeneration = -1;
   let bulkImportInFlight = false;
   let exampleRepairUserId = "";
   let authGeneration = 0;
@@ -303,46 +300,6 @@
     return false;
   }
 
-  async function applyAccountCleanStartOnce(){
-    const account=await requireAccountContext();
-    const userId=account.userId;
-    const localMarker=ACCOUNT_CLEAN_START_PREFIX+userId;
-    try{
-      if(localStorage.getItem(localMarker)==="complete")return {applied:false,localComplete:true};
-    }catch(e){}
-    if(accountCleanStartPromise&&accountCleanStartUserId===userId&&accountCleanStartGeneration===account.generation)return accountCleanStartPromise;
-
-    accountCleanStartUserId=userId;
-    accountCleanStartGeneration=account.generation;
-    const task=(async()=>{
-      if(typeof client.rpc!=="function")throw new Error("Account clean-start RPC is unavailable. Run SUPABASE_SCHEMA_CURRENT.sql once.");
-      const result=await client.rpc("tn_apply_account_isolation_reset_v2");
-      if(result.error){
-        const missing=/function|schema cache|not found|404/i.test(result.error.message||"");
-        if(missing)throw new Error("TangoNest database setup is out of date. Run SUPABASE_SCHEMA_CURRENT.sql once, then log in again.");
-        throw result.error;
-      }
-      assertActiveRequest(userId,account.generation);
-
-      clearUserCache({discardPendingUserId:userId,purgeScopedUserId:userId});
-      try{localStorage.setItem(localMarker,"complete");}catch(e){}
-      resetDefaultPlaylistGuard();
-      adoptDb(emptyData("account-isolation-reset-v2"));
-      writeCache(getDb());
-      renderAll();
-      return result.data||{applied:false};
-    })();
-    accountCleanStartPromise=task;
-    try{return await task;}
-    finally{
-      if(accountCleanStartPromise===task){
-        accountCleanStartPromise=null;
-        accountCleanStartUserId="";
-        accountCleanStartGeneration=-1;
-      }
-    }
-  }
-
   function adoptAccountCache(userId,reason){
     window.tnSetActiveUserScope?.(userId);
     const scoped=readAccountCache(userId) || emptyData(reason || "account-cache-empty");
@@ -496,9 +453,13 @@
   }
 
   function renderAll(){
-    try{ if(typeof window.render === "function")window.render(); }catch(error){ console.warn(error); }
-    try{ if(typeof window.tnLibraryRender === "function")window.tnLibraryRender(); }catch(error){ console.warn(error); }
-    try{ if(typeof window.renderMistakeNotebook === "function")window.renderMistakeNotebook(); }catch(e){}
+    try{
+      if(typeof window.render === "function")window.render();
+      else{
+        window.tnLibraryRender?.();
+        window.renderMistakeNotebook?.();
+      }
+    }catch(error){console.warn(error);}
     updateCloudUi(lastSyncState);
   }
 
@@ -508,7 +469,7 @@
     }catch(e){}
     const box = $("toast");
     if(box){
-      box.textContent = message;
+      window.TNI18n.bindUI(box,message);
       box.classList.add("show");
       setTimeout(() => box.classList.remove("show"),1600);
     }else{
@@ -519,13 +480,13 @@
   function userError(error,fallback){
     const raw=String(error?.message || error || "");
     const normalized=raw.toLowerCase();
-    if(/invalid login credentials|invalid password/.test(normalized))return "Email or password is incorrect.";
-    if(/user_already_exists|already registered|already exists/.test(normalized))return "An account already exists for this email. Use Login instead.";
-    if(/email not confirmed/.test(normalized))return "Confirm your email, then try logging in again.";
-    if(/invalid email|validate email/.test(normalized))return "Enter a valid email address.";
-    if(/weak_password|password.*(?:weak|short)|at least .*characters/.test(normalized))return "Use a password with at least 6 characters.";
-    if(/rate limit|too many requests|over_email_send_rate_limit/.test(normalized))return "Too many attempts. Wait a few minutes, then try again.";
-    if(/jwt|refresh token|session.*expired|not authenticated/.test(normalized))return "Your session has expired. Please log in again.";
+    if(/invalid login credentials|invalid password/.test(normalized))return window.TNI18n.t("ui.email_or_password_is_incorrect",{});
+    if(/user_already_exists|already registered|already exists/.test(normalized))return window.TNI18n.t("ui.an_account_already_exists_for_this_email_use_login_instead",{});
+    if(/email not confirmed/.test(normalized))return window.TNI18n.t("ui.confirm_your_email_then_try_logging_in_again",{});
+    if(/invalid email|validate email/.test(normalized))return window.TNI18n.t("ui.enter_a_valid_email_address",{});
+    if(/weak_password|password.*(?:weak|short)|at least .*characters/.test(normalized))return window.TNI18n.t("ui.use_a_password_with_at_least_6_characters",{});
+    if(/rate limit|too many requests|over_email_send_rate_limit/.test(normalized))return window.TNI18n.t("ui.too_many_attempts_wait_a_few_minutes_then_try_again",{});
+    if(/jwt|refresh token|session.*expired|not authenticated/.test(normalized))return window.TNI18n.t("ui.your_session_has_expired_please_log_in_again",{});
     if(/failed to fetch|network|offline|cloud unavailable|load failed/.test(normalized))return fallback;
     return fallback;
   }
@@ -533,18 +494,18 @@
   function dataErrorMessage(error){
     const raw=String(error?.message || error || "").toLowerCase();
     if(/permission denied|does not exist|schema cache|pgrst|column .* not found/.test(raw)){
-      return "You are signed in, but cloud vocabulary is unavailable because the database setup is incomplete.";
+      return window.TNI18n.t("ui.you_are_signed_in_but_cloud_vocabulary_is_unavailable_because_the_database_setup_is_incomplete",{});
     }
     if(/failed to fetch|network|offline|load failed|timeout/.test(raw)){
-      return "You are signed in. Cloud vocabulary is temporarily unavailable, and your local data remains safe.";
+      return window.TNI18n.t("ui.you_are_signed_in_cloud_vocabulary_is_temporarily_unavailable_and_your_local_data_remains_safe",{});
     }
-    return "You are signed in, but cloud vocabulary could not be loaded. Try Sync now again later.";
+    return window.TNI18n.t("ui.you_are_signed_in_but_cloud_vocabulary_could_not_be_loaded_try_sync_now_again_later",{});
   }
 
   function authMessage(message,type="info"){
     const box = $("authMessage");
     if(box){
-      box.textContent = message;
+      window.TNI18n.bindUI(box,message);
       box.className = "auth-message " + type;
     }
   }
@@ -558,9 +519,9 @@
     const loginButton=$("loginButton");
     const signupButton=$("signupButton");
     const updateButton=$("updatePasswordButton");
-    if(loginButton)loginButton.textContent=value&&action==="login" ? "Logging in..." : "Login";
-    if(signupButton)signupButton.textContent=value&&action==="signup" ? "Creating..." : "Create account";
-    if(updateButton)updateButton.textContent=value&&action==="recovery" ? "Updating..." : "Update password";
+    if(loginButton)window.TNI18n.bindText(loginButton,()=>(value&&action==="login" ? window.TNI18n.t("ui.logging_in",{}) : window.TNI18n.t("auth.login",{})));
+    if(signupButton)window.TNI18n.bindText(signupButton,()=>(value&&action==="signup" ? window.TNI18n.t("ui.creating",{}) : window.TNI18n.t("auth.signup",{})));
+    if(updateButton)window.TNI18n.bindText(updateButton,()=>(value&&action==="recovery" ? window.TNI18n.t("ui.updating",{}) : window.TNI18n.t("ui.update_password",{})));
   }
 
   function setPasswordRecoveryMode(value){
@@ -577,7 +538,7 @@
     if(password){
       password.value="";
       password.autocomplete=passwordRecoveryMode ? "new-password" : "current-password";
-      password.placeholder=passwordRecoveryMode ? "New password" : "At least 6 characters";
+      password.placeholder=passwordRecoveryMode ? window.TNI18n.t("ui.new_password",{}) : window.TNI18n.t("ui.at_least_6_characters",{});
     }
   }
 
@@ -646,6 +607,10 @@
   }
 
   function savedPage(){
+    try{
+      const page=normalizePage(new URLSearchParams(location.search).get("page")||"");
+      if(["home","create","library","cards","quiz","listen","settings"].includes(page)&&new URLSearchParams(location.search).has("page"))return page;
+    }catch(error){}
     try{return normalizePage(localStorage.getItem(PAGE_KEY) || "home");}catch(e){return "home";}
   }
 
@@ -656,6 +621,7 @@
     else if(typeof window.appShow === "function")window.appShow(legacyPage(normalized));
   }
 
+  window.addEventListener("tn:locale",()=>updateCloudUi());
   function updateCloudUi(state){
     lastSyncState = state || lastSyncState || "Offline";
     const email = currentUser?.email || "";
@@ -665,11 +631,11 @@
     const failed=/error/i.test(lastSyncState);
     const pillText = currentUser ? (working ? "Syncing" : failed ? "Needs attention" : synced ? "Synced" : "Offline") : "Offline";
     const set = (id,text) => { const el=$(id); if(el&&el.textContent!==String(text))el.textContent=text; };
-    set("tn80HeaderCloud",currentUser ? pillText : "Login");
-    set("tn80StatusPill",pillText);
-    set("tn80Account",email || "Not logged in");
-    set("tn80Connection",currentUser ? (pendingCount ? `Needs attention · ${pendingCount} pending` : pillText) : "Not logged in");
-    set("tn80Device",currentUser ? "This browser" : "-");
+    set("tn80HeaderCloud",window.TNI18n.uiText(currentUser ? pillText : "Login"));
+    set("tn80StatusPill",window.TNI18n.uiText(pillText));
+    set("tn80Account",email || window.TNI18n.t("ui.not_logged_in"));
+    set("tn80Connection",currentUser ? (pendingCount ? window.TNI18n.t("sync.pendingCount",{count:pendingCount}) : window.TNI18n.uiText(pillText)) : window.TNI18n.t("ui.not_logged_in"));
+    set("tn80Device",currentUser ? window.TNI18n.t("sync.thisBrowser") : "-");
     set("tn80CloudUpdated",lastSyncAt || "-");
     set("tn80UserId",currentUser?.id || "-");
     set("tn80RealtimeStatus",currentUser ? realtimeStatus : "-");
@@ -687,19 +653,19 @@
     const app=document.querySelector?.(".app");
     if(app)app.setAttribute("aria-busy",working?"true":"false");
     const check = $("tn80CheckCloudBtn");
-    if(check){check.textContent = "Sync now"; check.onclick = () => syncNow();}
+    if(check){window.TNI18n.bindText(check,()=>(window.TNI18n.t("ui.sync_now",{}))); check.onclick = () => syncNow();}
     const load = $("tn80LoadCloudBtn");
-    if(load){load.textContent = "Load latest"; load.onclick = () => syncNow();}
+    if(load){window.TNI18n.bindText(load,()=>(window.TNI18n.t("ui.load_latest",{}))); load.onclick = () => syncNow();}
     const logoutButton = $("tn80LogoutBtn");
     if(logoutButton)logoutButton.onclick = logout;
     const guest = $("guestButton");
     if(guest){
       guest.style.display = "none";
       guest.disabled = true;
-      guest.textContent = "Login required for sync";
+      window.TNI18n.bindText(guest,()=>(window.TNI18n.t("ui.login_required_for_sync",{})));
     }
     const pill = $("authModeLabel");
-    if(pill)pill.textContent = currentUser ? "Signed in" : "Login required";
+    if(pill)window.TNI18n.bindText(pill,()=>(currentUser ? window.TNI18n.t("ui.signed_in",{}) : window.TNI18n.t("ui.login_required",{})));
   }
 
   function toLocalPlaylist(row){
@@ -948,8 +914,9 @@
         await flushPendingMutations();
         assertActiveRequest(loadUserId,loadGeneration);
         if(readPending().length){
+          lastCloudFetchOk=false;
           updateCloudUi("Pending");
-          if(!options.silent)toast("Pending learning changes will retry before cloud reload.");
+          if(!options.silent)toast(window.TNI18n.t("ui.pending_learning_changes_will_retry_before_cloud_reload",{}));
           return getDb();
         }
       }
@@ -1160,9 +1127,6 @@
     activeCloudLoadUserId="";
     sessionLoadPromise=null;
     sessionLoadUserId="";
-    accountCleanStartPromise=null;
-    accountCleanStartUserId="";
-    accountCleanStartGeneration=-1;
     flushingPending=false;
     loading=false;
     cloudCounts={words:null,lists:null,userId:""};
@@ -1209,15 +1173,13 @@
     const task=(async() => {
       let initializationError=null;
       try{
-        await applyAccountCleanStartOnce();
         assertActiveRequest(incomingUser.id,boundaryGeneration);
         await loadCloud({silent:mode!=="login",force:true,allowPartial:false});
       }catch(error){
         if(error?.staleAccountRequest)return;
         initializationError=error;
-        const empty=emptyData("account-load-failed-safe-empty");
-        empty.meta.userId=incomingUser.id;
-        adoptDb(empty);
+        // adoptAccountCache already selected this user's cache. A data failure
+        // must not erase that cache or the valid authentication session.
         updateCloudUi("Error");
         renderAll();
         toast(dataErrorMessage(error));
@@ -1237,7 +1199,7 @@
         initializedUserId=incomingUser.id;
         if(initializationError){
           setStartupState("SYNC_ERROR");
-          authMessage("Signed in. Cloud vocabulary needs attention.","error");
+          authMessage(window.TNI18n.t("ui.signed_in_cloud_vocabulary_needs_attention",{}),"error");
         }
       }
     })();
@@ -1255,9 +1217,9 @@
     if(authInFlight)return;
     const email = safeText($("authEmail")?.value).toLowerCase();
     const password = $("authPassword")?.value || "";
-    if(!email || !password)return authMessage("Email and password are required.","error");
+    if(!email || !password)return authMessage(window.TNI18n.t("ui.email_and_password_are_required",{}),"error");
     setBusy(true,"login");
-    authMessage("Logging in...");
+    authMessage(window.TNI18n.t("ui.logging_in",{}));
     try{
       const authClient=getClient();
       if(!authClient)throw new Error("Authentication service is unavailable.");
@@ -1265,9 +1227,9 @@
       if(result.error)throw result.error;
       if(!result.data?.session?.user)throw new Error("Login completed without a valid session.");
       await afterSession(result.data.session,"login");
-      authMessage("Logged in.","success");
+      authMessage(window.TNI18n.t("ui.logged_in",{}),"success");
     }catch(error){
-      const message=userError(error,"Couldn't log in. Check your email and password.");
+      const message=userError(error,window.TNI18n.t("ui.couldn_t_log_in_check_your_email_and_password",{}));
       showAuth(message);
       authMessage(message,"error");
     }finally{
@@ -1279,10 +1241,10 @@
     if(authInFlight)return;
     const email = safeText($("authEmail")?.value).toLowerCase();
     const password = $("authPassword")?.value || "";
-    if(!email || !password)return authMessage("Email and password are required.","error");
-    if(password.length < 6)return authMessage("Password must be at least 6 characters.","error");
+    if(!email || !password)return authMessage(window.TNI18n.t("ui.email_and_password_are_required",{}),"error");
+    if(password.length < 6)return authMessage(window.TNI18n.t("ui.password_must_be_at_least_6_characters",{}),"error");
     setBusy(true,"signup");
-    authMessage("Creating account...");
+    authMessage(window.TNI18n.t("ui.creating_account",{}));
     try{
       const authClient=getClient();
       if(!authClient)throw new Error("Authentication service is unavailable.");
@@ -1290,14 +1252,14 @@
       if(result.error)throw result.error;
       const session = result.data.session || null;
       if(!session){
-        showAuth("Account created. Check your email to confirm your account, then login.");
-        authMessage("Check your email to confirm your account, then login.","success");
+        showAuth(window.TNI18n.t("ui.account_created_check_your_email_to_confirm_your_account_then_login",{}));
+        authMessage(window.TNI18n.t("ui.check_your_email_to_confirm_your_account_then_login",{}),"success");
         return;
       }
       await afterSession(session,"login");
-      authMessage("Account created.","success");
+      authMessage(window.TNI18n.t("ui.account_created",{}),"success");
     }catch(error){
-      const message=userError(error,"Couldn't create the account. Please try again.");
+      const message=userError(error,window.TNI18n.t("ui.couldn_t_create_the_account_please_try_again",{}));
       showAuth(message);
       authMessage(message,"error");
     }finally{
@@ -1308,18 +1270,18 @@
   async function forgotPassword(){
     if(authInFlight)return;
     const email=safeText($("authEmail")?.value).toLowerCase();
-    if(!email)return authMessage("Enter your email address first.","error");
+    if(!email)return authMessage(window.TNI18n.t("ui.enter_your_email_address_first",{}),"error");
     setBusy(true,"reset");
-    authMessage("Sending password reset email...");
+    authMessage(window.TNI18n.t("ui.sending_password_reset_email",{}));
     try{
       const authClient=getClient();
       if(!authClient)throw new Error("Authentication service is unavailable.");
       const redirectTo=new URL(".",window.location.href).href;
       const result=await authClient.auth.resetPasswordForEmail(email,{redirectTo});
       if(result.error)throw result.error;
-      authMessage("Password reset email sent. Check your inbox.","success");
+      authMessage(window.TNI18n.t("ui.password_reset_email_sent_check_your_inbox",{}),"success");
     }catch(error){
-      authMessage(userError(error,"Couldn't send the reset email. Check your connection and try again."),"error");
+      authMessage(userError(error,window.TNI18n.t("ui.couldn_t_send_the_reset_email_check_your_connection_and_try_again",{})),"error");
     }finally{
       setBusy(false);
     }
@@ -1328,19 +1290,19 @@
   async function updateRecoveredPassword(){
     if(authInFlight)return;
     const password=$("authPassword")?.value || "";
-    if(password.length<6)return authMessage("Password must be at least 6 characters.","error");
+    if(password.length<6)return authMessage(window.TNI18n.t("ui.password_must_be_at_least_6_characters",{}),"error");
     setBusy(true,"recovery");
-    authMessage("Updating password...");
+    authMessage(window.TNI18n.t("ui.updating_password",{}));
     try{
       const authClient=getClient();
       if(!authClient)throw new Error("Authentication service is unavailable.");
       const result=await authClient.auth.updateUser({password});
       if(result.error)throw result.error;
       setPasswordRecoveryMode(false);
-      authMessage("Password updated. You are logged in.","success");
+      authMessage(window.TNI18n.t("ui.password_updated_you_are_logged_in",{}),"success");
       if(currentSession?.user)await afterSession(currentSession,"login");
     }catch(error){
-      authMessage(userError(error,"Couldn't update the password. Request a new reset email and try again."),"error");
+      authMessage(userError(error,window.TNI18n.t("ui.couldn_t_update_the_password_request_a_new_reset_email_and_try_again",{})),"error");
     }finally{
       setBusy(false);
     }
@@ -1350,7 +1312,7 @@
     if(currentUser && readPending().length){
       try{ await flushPendingMutations(); }catch(error){ console.warn(error); }
       if(readPending().length){
-        toast("Learning changes are still pending. Reconnect and sync before logging out.");
+        toast(window.TNI18n.t("ui.learning_changes_are_still_pending_reconnect_and_sync_before_logging_out",{}));
         return;
       }
     }
@@ -1363,9 +1325,9 @@
     try{
       await flushPendingMutations();
       await loadCloud({force:true});
-      toast("Synced");
+      toast(window.TNI18n.t("ui.synced",{}));
     }catch(error){
-      toast(userError(error,"Couldn't sync your changes. We'll try again automatically."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_sync_your_changes_we_ll_try_again_automatically",{})));
     }
   }
 
@@ -1374,7 +1336,7 @@
       const account=await requireAccountContext();
       const input = $("newList");
       name = safeText(name || input?.value);
-      if(!name)return toast("Playlist name is required");
+      if(!name)return toast(window.TNI18n.t("ui.playlist_name_is_required",{}));
       const result = await client.from("tn_playlists")
         .insert({user_id:account.userId,name})
         .select("*")
@@ -1383,10 +1345,10 @@
       assertActiveRequest(account.userId,account.generation);
       if(input)input.value = "";
       await loadCloud({force:true,silent:true});
-      toast("Playlist created");
+      toast(window.TNI18n.t("ui.playlist_created",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't create the playlist. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_create_the_playlist_please_try_again",{})));
     }
   }
 
@@ -1395,26 +1357,26 @@
       const data=getDb();
       id = id || $("renameListSelect")?.value;
       name = safeText(name || $("renameListInput")?.value);
-      if(!id || !name){toast("Playlist name is required");return false}
+      if(!id || !name){toast(window.TNI18n.t("ui.playlist_name_is_required",{}));return false}
       const list=data.lists?.find(item=>item.id===id);
-      if(!list){toast("Playlist not found");return false}
-      if(data.lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast("A playlist with this name already exists.");return false}
+      if(!list){toast(window.TNI18n.t("ui.playlist_not_found",{}));return false}
+      if(data.lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast(window.TNI18n.t("ui.a_playlist_with_this_name_already_exists",{}));return false}
       list.name=name;
       list.updatedAt=nowIso();
       window.tnWriteData?.(data);
       if($("renameListInput"))$("renameListInput").value="";
       renderAll();
-      toast("Playlist renamed");
+      toast(window.TNI18n.t("ui.playlist_renamed",{}));
       return true;
     }
     try{
       const account=await requireAccountContext();
       id = id || $("renameListSelect")?.value;
       name = safeText(name || $("renameListInput")?.value);
-      if(!id || !name){toast("Playlist name is required");return false}
+      if(!id || !name){toast(window.TNI18n.t("ui.playlist_name_is_required",{}));return false}
       const list=getDb().lists?.find(item=>item.id===id);
-      if(!list){toast("Playlist not found");return false}
-      if(getDb().lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast("A playlist with this name already exists.");return false}
+      if(!list){toast(window.TNI18n.t("ui.playlist_not_found",{}));return false}
+      if(getDb().lists.some(item=>item.id!==id&&safeText(item.name).toLowerCase()===name.toLowerCase())){toast(window.TNI18n.t("ui.a_playlist_with_this_name_already_exists",{}));return false}
       const result = await client.from("tn_playlists")
         .update({name,updated_at:nowIso()})
         .eq("id",id)
@@ -1425,11 +1387,11 @@
       assertActiveRequest(account.userId,account.generation);
       if($("renameListInput"))$("renameListInput").value = "";
       await loadCloud({force:true,silent:true});
-      toast("Playlist renamed");
+      toast(window.TNI18n.t("ui.playlist_renamed",{}));
       return true;
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't rename the playlist. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_rename_the_playlist_please_try_again",{})));
       return false;
     }
   }
@@ -1441,14 +1403,14 @@
       if(!id)return;
       const db = getDb();
       const list = db.lists.find(item => item.id === id);
-      if(!list)return toast("Playlist not found");
-      if(!options.confirmed&&!confirm(`Delete "${list.name}"? Its words will remain in All Words as unfiled words.`))return;
+      if(!list)return toast(window.TNI18n.t("ui.playlist_not_found",{}));
+      if(!options.confirmed&&!confirm(window.TNI18n.t("ui.delete_value_its_words_will_remain_in_all_words_as_unfiled_words",{p0:list.name})))return;
       if(typeof client.rpc === "function"){
         const rpcResult = await client.rpc("tn_delete_playlist",{p_playlist_id:id});
         assertActiveRequest(account.userId,account.generation);
         if(!rpcResult.error){
           await loadCloud({force:true,silent:true});
-          toast("Playlist deleted");
+          toast(window.TNI18n.t("ui.playlist_deleted",{}));
           return;
         }
         if(!/function|schema cache|not found|404/i.test(rpcResult.error.message || ""))throw rpcResult.error;
@@ -1456,10 +1418,10 @@
       const fallbackResult = await deletePlaylistFallback(id,db,account);
       if(fallbackResult.error)throw fallbackResult.error;
       await loadCloud({force:true,silent:true});
-      toast("Playlist deleted");
+      toast(window.TNI18n.t("ui.playlist_deleted",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't delete the playlist. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_delete_the_playlist_please_try_again",{})));
     }
   }
 
@@ -1541,7 +1503,7 @@
       rememberPlaylist(playlist);
       const front = safeText($("front")?.value);
       const back = safeText($("back")?.value);
-      if(!front || !back)return toast("Front and Back are required");
+      if(!front || !back)return toast(window.TNI18n.t("ui.front_and_back_are_required",{}));
       const position = getDb().words.filter(word => word.listId === playlist).length;
       const at=nowIso();
       const row = {
@@ -1573,18 +1535,18 @@
         adoptLocalWord(localWord);
         queueWordMutation(localWord,account);
         clearForm();
-        toast("Word saved offline. It will sync automatically.");
+        toast(window.TNI18n.t("ui.word_saved_offline_it_will_sync_automatically",{}));
         focusFrontSoon();
         return false;
       }
       clearForm();
       await loadCloud({force:true,silent:true});
-      toast("1 word added");
+      toast(window.TNI18n.t("ui.1_word_added",{}));
       focusFrontSoon();
       return false;
     }catch(error){
       if(error?.staleAccountRequest)return false;
-      toast(userError(error,"Couldn't add the word. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_add_the_word_please_try_again",{})));
       return false;
     }
   }
@@ -1632,7 +1594,7 @@
       if(!id)return;
       const front = safeText($("editFront")?.value);
       const back = safeText($("editBack")?.value);
-      if(!front || !back)return toast("Front and Back are required");
+      if(!front || !back)return toast(window.TNI18n.t("ui.front_and_back_are_required",{}));
       const patch={
         front,
         back,
@@ -1661,17 +1623,17 @@
       const saved=await upsertWordRemote(localUpdate,account);
       if(typeof window.closeEdit === "function")window.closeEdit();
       await loadCloud({force:true,silent:true});
-      toast(saved?.applied === false ? "A newer cloud edit was kept." : "Word updated");
+      toast(saved?.applied === false ? window.TNI18n.t("ui.a_newer_cloud_edit_was_kept",{}) : window.TNI18n.t("ui.word_updated",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
       if(localUpdate && isRetryableSyncError(error)){
         adoptLocalWord(localUpdate);
         queueWordMutation(localUpdate,account);
         if(typeof window.closeEdit === "function")window.closeEdit();
-        toast("Edit saved offline. It will sync automatically.");
+        toast(window.TNI18n.t("ui.edit_saved_offline_it_will_sync_automatically",{}));
         return;
       }
-      toast(userError(error,"Couldn't save the word. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_save_the_word_please_try_again",{})));
     }
   }
 
@@ -1679,14 +1641,14 @@
     try{
       const account=await requireAccountContext();
       const word = getDb().words.find(item => item.id === id);
-      if(!word)return toast("Word not found");
+      if(!word)return toast(window.TNI18n.t("ui.word_not_found",{}));
       if(readPending().some(item => item.id === id || item.event?.wordId === id)){
         await flushPendingMutations();
         if(readPending().some(item => item.id === id || item.event?.wordId === id)){
-          return toast("This word still has unsynced changes. Reconnect and try again.");
+          return toast(window.TNI18n.t("ui.this_word_still_has_unsynced_changes_reconnect_and_try_again",{}));
         }
       }
-      if(!confirm(`Delete "${word.front}"?`))return;
+      if(!confirm(window.TNI18n.t("ui.delete_value",{p0:word.front})))return;
       const result = await client.from("tn_words")
         .delete()
         .eq("id",id)
@@ -1694,10 +1656,10 @@
       if(result.error)throw result.error;
       assertActiveRequest(account.userId,account.generation);
       await loadCloud({force:true,silent:true});
-      toast("Word deleted");
+      toast(window.TNI18n.t("ui.word_deleted",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't delete the word. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_delete_the_word_please_try_again",{})));
     }
   }
 
@@ -1705,14 +1667,14 @@
     try{
       const account=await requireAccountContext();
       const word = getDb().words.find(item => item.id === id);
-      if(!word)return toast("Word not found");
+      if(!word)return toast(window.TNI18n.t("ui.word_not_found",{}));
       const timestamp=nowIso();
       const next={...word,saved:!word.saved,updatedAt:timestamp,contentUpdatedAt:timestamp};
       try{
         const saved=await upsertWordRemote(next,account);
         if(saved?.applied === false){
           await loadCloud({force:true,silent:true});
-          toast("A newer cloud change was kept.");
+          toast(window.TNI18n.t("ui.a_newer_cloud_change_was_kept",{}));
           return;
         }
       }catch(error){
@@ -1720,14 +1682,14 @@
         assertActiveRequest(account.userId,account.generation);
         adoptLocalWord(next);
         queueWordMutation(next,account);
-        toast("Saved offline. It will sync automatically.");
+        toast(window.TNI18n.t("ui.saved_offline_it_will_sync_automatically",{}));
         return;
       }
       await loadCloud({force:true,silent:true});
-      toast(word.saved ? "Removed from saved" : "Saved");
+      toast(word.saved ? window.TNI18n.t("ui.removed_from_saved",{}) : window.TNI18n.t("ui.saved",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't update the saved word. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_update_the_saved_word_please_try_again",{})));
     }
   }
 
@@ -1745,14 +1707,14 @@
     try{
       const account=await requireAccountContext();
       const ids = selectedWordIdsFromDom();
-      if(!ids.length)return toast("Select words first");
+      if(!ids.length)return toast(window.TNI18n.t("ui.select_words_first",{}));
       if(readPending().some(item => ids.includes(item.id) || ids.includes(item.event?.wordId))){
         await flushPendingMutations();
         if(readPending().some(item => ids.includes(item.id) || ids.includes(item.event?.wordId))){
-          return toast("Some selected words still have unsynced changes. Reconnect and try again.");
+          return toast(window.TNI18n.t("ui.some_selected_words_still_have_unsynced_changes_reconnect_and_try_again",{}));
         }
       }
-      if(!confirm(`${ids.length} words will be deleted.`))return;
+      if(!confirm(window.TNI18n.t("ui.value_words_will_be_deleted",{p0:ids.length})))return;
       const result = await client.from("tn_words")
         .delete()
         .eq("user_id",account.userId)
@@ -1760,10 +1722,10 @@
       if(result.error)throw result.error;
       assertActiveRequest(account.userId,account.generation);
       await loadCloud({force:true,silent:true});
-      toast("Selected words deleted");
+      toast(window.TNI18n.t("ui.selected_words_deleted",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't delete the selected words. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_delete_the_selected_words_please_try_again",{})));
     }
   }
 
@@ -1787,50 +1749,99 @@
   function restoreBulkUndo(){
     const info=readBulkUndo();
     if(info)window.showBulkUndo?.(info);
+    showBulkRecovery();
+  }
+  function readBulkJob(userId=currentUser?.id){
+    try{const job=JSON.parse(localStorage.getItem(accountStorageKey(userId,"bulk-import"))||"null");return job?.userId===userId&&Array.isArray(job.payload)?job:null}catch(error){return null}
+  }
+  function storeBulkJob(job){
+    // Persist identifiers before sending a batch, so a lost response is
+    // recoverable by looking up those same identifiers after a reload.
+    localStorage.setItem(accountStorageKey(job.userId,"bulk-import"),JSON.stringify(job));
+  }
+  function showBulkRecovery(){
+    const panel=$("bulkRecovery"),job=readBulkJob();
+    if(!panel)return;
+    panel.hidden=!job;
+    if(!job){panel.innerHTML="";return;}
+    panel.innerHTML=`<div><strong>${window.TNI18n.mark("ui.unfinished_import",{})}</strong><small></small></div><button type="button" data-resume-bulk>${window.TNI18n.mark("ui.resume_import",{})}</button><button type="button" data-close-bulk-recovery>${window.TNI18n.mark("ui.keep_saved_words_and_close",{})}</button>`;
+    window.TNI18n.bindText(panel.querySelector("small"),()=>(window.TNI18n.t("ui.value_of_value_words_confirmed_in_value_saved_rows_will_not_be_repeated",{p0:job.confirmed.length,p1:job.payload.length,p2:job.target.playlistName})));
+    panel.querySelector("[data-close-bulk-recovery]").onclick=()=>{
+      if(bulkImportInFlight)return;
+      localStorage.removeItem(accountStorageKey(currentUser.id,"bulk-import"));
+      showBulkRecovery();
+      toast(window.TNI18n.t("ui.saved_words_were_kept_remaining_rows_were_not_imported",{}));
+    };
+    panel.querySelector("[data-resume-bulk]").onclick=()=>{
+      if(bulkImportInFlight)return;
+      if($("bulkText"))$("bulkText").value=job.text;
+      if($("bulkFormat"))$("bulkFormat").value=job.format;
+      for(const [id,value] of [["bulkList",job.target.playlistId],["bulkFrontLang",job.target.frontLang],["bulkBackLang",job.target.backLang]]){
+        if($(id)){$(id).value=value;$(id).dispatchEvent(new Event("change",{bubbles:true}));}
+      }
+      window.updateBulkAssistant?.();
+      window.updateBulkDestinationSummary?.();
+      window.updateBulkActionDock?.();
+      bulkImport(job.mode);
+    };
   }
   async function undoLastBulkImport(){
+    if(bulkImportInFlight)return toast(window.TNI18n.t("ui.wait_for_the_current_import_to_stop_before_undoing_it",{}));
     try{
       const account=await requireAccountContext();
       const info=readBulkUndo(account.userId);
-      if(!info)return toast("There is no Bulk Add to undo");
+      if(!info)return toast(window.TNI18n.t("ui.there_is_no_bulk_add_to_undo",{}));
       const ids=[...new Set(info.ids.filter(isUuid))];
-      if(!ids.length){clearCloudBulkUndo(account.userId);return toast("There is no Bulk Add to undo")}
+      if(!ids.length){clearCloudBulkUndo(account.userId);return toast(window.TNI18n.t("ui.there_is_no_bulk_add_to_undo",{}))}
       for(let start=0;start<ids.length;start+=100){
         const result=await client.from("tn_words").delete().eq("user_id",account.userId).in("id",ids.slice(start,start+100));
         if(result.error)throw result.error;
         assertActiveRequest(account.userId,account.generation);
       }
       clearCloudBulkUndo(account.userId);
+      const job=readBulkJob(account.userId);
+      if(job&&job.confirmed.some(id=>ids.includes(id))){
+        localStorage.removeItem(accountStorageKey(account.userId,"bulk-import"));
+        showBulkRecovery();
+      }
       await loadCloud({force:true,silent:true});
-      toast(`${ids.length} imported words removed`);
+      toast(window.TNI18n.t("ui.value_imported_words_removed",{p0:ids.length}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't undo the last Bulk Add. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_undo_the_last_bulk_add_please_try_again",{})));
     }
   }
 
   async function bulkImport(mode){
-    if(bulkImportInFlight)return toast("Bulk Add is already running");
+    if(bulkImportInFlight)return toast(window.TNI18n.t("ui.bulk_add_is_already_running",{}));
+    bulkImportInFlight=true;
     let account=null;
     let insertedIds=[];
     let targetInfo=null;
     let progressStarted=false;
     let progressTotal=0;
+    let job=null;
     try{
       account=await requireAccountContext();
       if(mode === "replace"){
-        return toast("Cloud Replace is disabled for bulk safety. Use Skip or Add Both, or edit a word directly.");
+        return toast(window.TNI18n.t("ui.cloud_replace_is_disabled_for_bulk_safety_use_skip_or_add_both_or_edit_a_word_directly",{}));
       }
-      if(typeof window.bulkRows !== "function")return toast("Bulk parser is not ready");
+      if(typeof window.bulkRows !== "function")return toast(window.TNI18n.t("ui.bulk_parser_is_not_ready",{}));
+      if(window.bulkParseStats?.().invalid){window.previewBulk?.();return toast(window.TNI18n.t("ui.fix_the_highlighted_rows_before_importing",{}));}
       let rows = window.bulkRows();
-      if(!rows.length)return toast("No readable words");
+      const previousJob=readBulkJob(account.userId);
+      const sourceText=$("bulkText")?.value||"";
+      const sameJob=previousJob&&previousJob.text===sourceText&&previousJob.target.playlistId===selectedPlaylistId("bulkList")&&previousJob.target.frontLang===$("bulkFrontLang")?.value&&previousJob.target.backLang===$("bulkBackLang")?.value&&previousJob.format===($("bulkFormat")?.value||"complete");
+      if(previousJob&&!sameJob){showBulkRecovery();return toast(window.TNI18n.t("ui.resume_the_unfinished_import_before_starting_another_one",{}));}
+      if(sameJob){mode=previousJob.mode;}
+      if(!rows.length)return toast(window.TNI18n.t("ui.no_readable_words",{}));
       const hasFrontDup = rows.some(row => row.frontDuplicate);
-      if(hasFrontDup && !mode){
-        try{ if(typeof window.previewBulk === "function")window.previewBulk(); }catch(e){}
-        return toast("Duplicate words need confirmation");
+      if(hasFrontDup && !mode && !sameJob){
+        try{ if(typeof window.previewBulk === "function")window.previewBulk(true); }catch(e){}
+        return toast(window.TNI18n.t("ui.duplicate_words_need_confirmation",{}));
       }
-      if(mode === "skip" || !mode)rows = rows.filter(row => !row.duplicate);
-      if(mode === "addBoth"){
+      if(!sameJob&&(mode === "skip" || !mode))rows = rows.filter(row => !row.duplicate);
+      if(!sameJob&&mode === "addBoth"){
         const seen = new Set();
         rows = rows.filter(row => {
           const key = [row.front,row.back,row.pos].map(value => String(value || "").trim().toLowerCase()).join("||");
@@ -1839,9 +1850,8 @@
           return true;
         });
       }
-      if(!rows.length)return toast("No new words to add");
+      if(!rows.length)return toast(window.TNI18n.t("ui.no_new_words_to_add",{}));
       if(typeof window.requestBulkDestinationConfirmation==="function"&&!window.requestBulkDestinationConfirmation(rows,mode))return;
-      bulkImportInFlight=true;
       progressStarted=true;
       progressTotal=rows.length;
       window.tnBulkProgress?.start?.(rows.length);
@@ -1850,35 +1860,9 @@
       const frontLang = safeLang($("bulkFrontLang")?.value,"en-US");
       const backLang = safeLang($("bulkBackLang")?.value,"ja-JP");
       targetInfo={playlistId:playlist,playlistName:getDb().lists.find(list=>list.id===playlist)?.name||"No playlist",frontLang,backLang};
-      if(mode === "replace"){
-        for(const row of rows){
-          const existing = getDb().words.find(word =>
-            word.listId === playlist &&
-            String(word.front || "").trim().toLowerCase() === String(row.front || "").trim().toLowerCase()
-          );
-          if(existing){
-            await updateWordRemote(existing.id,{
-              front:row.front,
-              back:row.back,
-              front_lang:frontLang,
-              back_lang:backLang,
-              playlist_id:playlist || null,
-              pos:safeText(row.pos) || null,
-              gender:safeText(row.gender) || null,
-              memo:safeText(row.memo) || null,
-              pronunciation:safeText(row.pronunciation) || null
-            },account);
-          }else{
-            await client.from("tn_words").insert(wordRowFromLocal({
-              front:row.front,back:row.back,frontLang,backLang,listId:playlist,
-              memo:row.memo,pronunciation:row.pronunciation,pos:row.pos,gender:row.gender,tags:"",status:"new",level:1,nextReview:today()
-            },playlist,account.userId));
-            assertActiveRequest(account.userId,account.generation);
-          }
-        }
-      }else if(rows.length){
+      if(rows.length){
         const existingCount = getDb().words.filter(word => word.listId === playlist).length;
-        const payload = rows.map((row,index) => wordRowFromLocal({
+        const payload = sameJob?previousJob.payload:rows.map((row,index) => ({...wordRowFromLocal({
           front:row.front,
           back:row.back,
           frontLang,
@@ -1893,48 +1877,76 @@
           level:1,
           nextReview:today(),
           position:existingCount + index
-        },playlist,account.userId));
+        },playlist,account.userId),id:newId()}));
+        job=sameJob?previousJob:{userId:account.userId,text:sourceText,format:$("bulkFormat")?.value||"complete",mode:mode||"skip",target:targetInfo,payload,confirmed:[]};
+        storeBulkJob(job);
+        progressTotal=payload.length;
+        insertedIds=[...job.confirmed];
         let insertedCount=0;
         clearTimeout(loadTimer);
         loadTimer=null;
         for(let start=0;start<payload.length;start+=BULK_INSERT_SIZE){
-          const chunk=payload.slice(start,start+BULK_INSERT_SIZE);
+          assertActiveRequest(account.userId,account.generation);
+          if(window.tnBulkProgress?.cancelled?.())throw new Error("Import stopped after the current batch.");
+          let chunk=payload.slice(start,start+BULK_INSERT_SIZE);
+          if(sameJob){
+            const present=await client.from("tn_words").select("id").eq("user_id",account.userId).in("id",chunk.map(row=>row.id));
+            assertActiveRequest(account.userId,account.generation);
+            if(present.error||!Array.isArray(present.data))throw present.error||new Error("Could not verify saved import rows.");
+            const ids=new Set(present.data.map(row=>row.id));
+            insertedIds=[...new Set([...insertedIds,...ids])];
+            chunk=chunk.filter(row=>!ids.has(row.id));
+            insertedCount+=ids.size;
+          }
           window.tnBulkProgress?.update?.(start,payload.length,`Saving batch ${Math.floor(start/BULK_INSERT_SIZE)+1} of ${Math.ceil(payload.length/BULK_INSERT_SIZE)}`);
-          const result=await client.from("tn_words").insert(chunk).select("id");
+          const result=chunk.length?await client.from("tn_words").insert(chunk).select("id"):{data:[],error:null};
           if(result.error){
             throw new Error(`Bulk Add stopped at row ${start+1}: ${result.error.message||result.error}`);
           }
           assertActiveRequest(account.userId,account.generation);
-          if(Array.isArray(result.data)&&result.data.length!==chunk.length){
-            throw new Error(`Bulk Add saved ${result.data.length} of ${chunk.length} rows in batch ${Math.floor(start/BULK_INSERT_SIZE)+1}.`);
-          }
           if(Array.isArray(result.data))insertedIds.push(...result.data.map(row=>row.id).filter(Boolean));
-          insertedCount+=Array.isArray(result.data)?result.data.length:chunk.length;
+          insertedIds=[...new Set(insertedIds)];
+          job.confirmed=insertedIds;
+          storeBulkJob(job);
+          if(insertedIds.length)storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,...targetInfo,createdAt:nowIso()});
+          if(!Array.isArray(result.data)||result.data.length!==chunk.length||result.data.some(row=>!chunk.some(item=>item.id===row.id))){
+            throw new Error("The server did not confirm every row. Resume to verify the saved batch.");
+          }
+          insertedCount+=result.data.length;
           window.tnBulkProgress?.update?.(insertedCount,payload.length,`Saved batch ${Math.floor(start/BULK_INSERT_SIZE)+1} of ${Math.ceil(payload.length/BULK_INSERT_SIZE)}`);
         }
         if(insertedCount!==payload.length)throw new Error(`Bulk Add saved ${insertedCount} of ${payload.length} rows.`);
       }
-      if($("bulkText"))$("bulkText").value = "";
-      try{ if(typeof window.clearBulkPreview === "function")window.clearBulkPreview(); }catch(e){}
       clearTimeout(loadTimer);
       loadTimer=null;
       await loadCloud({force:true,silent:true});
+      assertActiveRequest(account.userId,account.generation);
+      if(!lastCloudFetchOk)throw new Error("Words were sent, but the library could not be refreshed. Resume to verify.");
+      const refreshedIds=new Set(getDb().words.map(word=>word.id));
+      if(job?.payload.some(row=>!refreshedIds.has(row.id)))throw new Error("Some saved rows are not visible yet. Resume to verify before completing the import.");
+      localStorage.removeItem(accountStorageKey(account.userId,"bulk-import"));
+      showBulkRecovery();
+      if($("bulkText"))$("bulkText").value = "";
+      try{window.clearBulkPreview?.()}catch(e){}
       if(insertedIds.length)storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo.playlistId,playlistName:targetInfo.playlistName,createdAt:nowIso()});
-      window.tnBulkProgress?.finish?.(rows.length);
-      toast(`${rows.length} added`);
+      window.tnBulkProgress?.finish?.(progressTotal);
+      toast(window.TNI18n.t("ui.value_added",{p0:progressTotal}));
     }catch(error){
       if(error?.staleAccountRequest){if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Account changed · import stopped safely");return}
       if(account&&insertedIds.length&&activeRequest(account.userId,account.generation)){
         storeBulkUndo({userId:account.userId,ids:insertedIds,count:insertedIds.length,playlistId:targetInfo?.playlistId||"",playlistName:targetInfo?.playlistName||"the selected playlist",createdAt:nowIso()});
         try{await loadCloud({force:true,silent:true})}catch(loadError){}
         if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Import paused · undo is available");
-        toast(`Bulk Add stopped after ${insertedIds.length} words. Undo is available below.`);
+        showBulkRecovery();
+        toast(window.TNI18n.t("ui.import_paused_value_words_confirmed_resume_to_check_the_rest_or_undo_the_confirmed_words",{p0:insertedIds.length}));
         return;
       }
       if(progressStarted)window.tnBulkProgress?.fail?.(insertedIds.length,progressTotal,"Import could not be completed");
-      toast(userError(error,"Couldn't add these words. Check the entries and try again."));
+      showBulkRecovery();
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_add_these_words_check_the_entries_and_try_again",{})));
     }finally{
-      if(progressStarted)bulkImportInFlight=false;
+      bulkImportInFlight=false;
+      window.updateBulkActionDock?.();
     }
   }
 
@@ -2045,37 +2057,37 @@
       const account=await requireAccountContext();
       if(readPending().length){
         await flushPendingMutations();
-        if(readPending().length)return toast("Sync pending learning changes before importing a backup.");
+        if(readPending().length)return toast(window.TNI18n.t("ui.sync_pending_learning_changes_before_importing_a_backup",{}));
       }
       const payload = parseImportText();
-      if(!confirm(`Import ${payload.words.length} words into this Supabase account? Current cloud vocabulary will be replaced.`))return;
+      if(!confirm(window.TNI18n.t("ui.import_value_words_into_this_supabase_account_current_cloud_vocabulary_will_be_replaced",{p0:payload.words.length})))return;
       const typed = prompt('Type IMPORT to replace this account vocabulary.');
-      if(typed !== "IMPORT")return toast("Import cancelled");
+      if(typed !== "IMPORT")return toast(window.TNI18n.t("ui.import_cancelled",{}));
       updateCloudUi("Importing");
       const result = await client.rpc("tn_import_snapshot",{p_data:payload});
       if(result.error)throw result.error;
       assertActiveRequest(account.userId,account.generation);
       await loadCloud({force:true,silent:true,skipPendingFlush:true});
-      toast(`Imported ${result.data?.words ?? payload.words.length} words`);
+      toast(window.TNI18n.t("ui.imported_value_words",{p0:result.data?.words ?? payload.words.length}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't import this backup. Check the file and try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_import_this_backup_check_the_file_and_try_again",{})));
     }
   }
 
   async function clearLocalCacheOnly(){
     if(currentUser && readPending().length){
       try{ await flushPendingMutations(); }catch(error){ console.warn(error); }
-      if(readPending().length)return toast("Local cache cannot be cleared while learning changes are pending.");
+      if(readPending().length)return toast(window.TNI18n.t("ui.local_cache_cannot_be_cleared_while_learning_changes_are_pending",{}));
     }
-    if(!confirm("Clear only this browser cache? Cloud data will be loaded again after sync."))return;
+    if(!confirm(window.TNI18n.t("ui.clear_only_this_browser_cache_cloud_data_will_be_loaded_again_after_sync",{})))return;
     clearUserCache({purgeScopedUserId:currentUser?.id || ""});
     adoptDb(emptyData("clear-local-cache"));
     renderAll();
     if(currentUser){
       try{ await loadCloud({force:true,silent:true,skipPendingFlush:true}); }catch(e){ updateCloudUi("Error"); }
     }
-    toast("Local cache cleared");
+    toast(window.TNI18n.t("ui.local_cache_cleared",{}));
   }
 
   async function deleteAllAccountData(){
@@ -2083,21 +2095,21 @@
       const account=await requireAccountContext();
       if(readPending().length){
         await flushPendingMutations();
-        if(readPending().length)return toast("Sync pending changes before deleting account vocabulary.");
+        if(readPending().length)return toast(window.TNI18n.t("ui.sync_pending_changes_before_deleting_account_vocabulary",{}));
       }
-      if(!confirm("Delete all TangoNest cloud words and playlists for this account? This cannot be undone."))return;
+      if(!confirm(window.TNI18n.t("ui.delete_all_tangonest_cloud_words_and_playlists_for_this_account_this_cannot_be_undone",{})))return;
       const typed = prompt("Type DELETE CLOUD DATA to permanently delete this account's TangoNest data.");
-      if(typed !== "DELETE CLOUD DATA")return toast("Cancelled");
+      if(typed !== "DELETE CLOUD DATA")return toast(window.TNI18n.t("ui.cancelled",{}));
       updateCloudUi("Deleting");
       const result = await client.rpc("tn_delete_all_account_data");
       if(result.error)throw result.error;
       assertActiveRequest(account.userId,account.generation);
       clearUserCache({discardPendingUserId:account.userId,purgeScopedUserId:account.userId});
       await loadCloud({force:true,silent:true,skipPendingFlush:true});
-      toast("Account vocabulary data deleted");
+      toast(window.TNI18n.t("ui.account_vocabulary_data_deleted",{}));
     }catch(error){
       if(error?.staleAccountRequest)return;
-      toast(userError(error,"Couldn't delete the account vocabulary. Please try again."));
+      toast(userError(error,window.TNI18n.t("ui.couldn_t_delete_the_account_vocabulary_please_try_again",{})));
     }
   }
 
@@ -2213,9 +2225,12 @@
       if(!password)return;
       const visible=password.type==="text";
       password.type=visible ? "password" : "text";
-      toggleBtn.textContent=visible ? "Show" : "Hide";
+      window.TNI18n.bindText(toggleBtn,()=>(visible ? window.TNI18n.t("ui.show",{}) : window.TNI18n.t("ui.hide",{})));
       toggleBtn.setAttribute("aria-pressed",visible ? "false" : "true");
-      toggleBtn.setAttribute("aria-label",visible ? "Show password" : "Hide password");
+      const labelKey=visible?"ui.show_password":"ui.hide";
+      toggleBtn.setAttribute("data-i18n-aria-label",labelKey);
+      toggleBtn.setAttribute("aria-label",window.TNI18n.t(labelKey));
+      toggleBtn.setAttribute("aria-controls","authPassword");
       password.focus({preventScroll:true});
     };
     ["authEmail","authPassword"].forEach(id => {
@@ -2262,13 +2277,13 @@
         if(event==="PASSWORD_RECOVERY" && session?.user){
           currentSession=session;
           currentUser=session.user;
-          showAuth("Enter a new password for your account.");
+          showAuth(window.TNI18n.t("ui.enter_a_new_password_for_your_account",{}));
           setPasswordRecoveryMode(true);
           $("authPassword")?.focus({preventScroll:true});
           return;
         }
         if(!session?.user){
-          if(!currentUser && event==="INITIAL_SESSION")showAuth("Login or create an account to sync your vocabulary.");
+          if(!currentUser && event==="INITIAL_SESSION")showAuth(window.TNI18n.t("ui.login_or_create_an_account_to_sync_your_vocabulary",{}));
           return;
         }
         const sameUser=currentUser?.id===session.user.id;
@@ -2344,12 +2359,12 @@
         const data=getDb();
         const input=$("newList");
         const name=safeText(input?.value);
-        if(!name)return toast("Playlist name is required");
+        if(!name)return toast(window.TNI18n.t("ui.playlist_name_is_required",{}));
         data.lists.push({id:`qa-list-${Date.now()}`,name,createdAt:nowIso(),updatedAt:nowIso()});
         window.tnWriteData?.(data);
         if(input)input.value="";
         renderAll();
-        toast("Playlist created");
+        toast(window.TNI18n.t("ui.playlist_created",{}));
       };
       const qaRenamePlaylist = renamePlaylist;
       window.tnRenamePlaylist = qaRenamePlaylist;
@@ -2359,7 +2374,7 @@
         const data=getDb();
         const front=safeText($("front")?.value);
         const back=safeText($("back")?.value);
-        if(!front||!back)return toast("Front and Back are required");
+        if(!front||!back)return toast(window.TNI18n.t("ui.front_and_back_are_required",{}));
         const playlist=selectedPlaylistId("addList");
         data.words.push({
           id:`qa-added-${Date.now()}`,
@@ -2383,7 +2398,7 @@
         clearForm();
         renderAll();
         focusFrontSoon();
-        toast("1 word added");
+        toast(window.TNI18n.t("ui.1_word_added",{}));
         return false;
       };
       window.tnRegisterWordCritical=qaAddWord;
@@ -2405,7 +2420,8 @@
     wrapLocalWordMutations();
     client = getClient();
     if(!client){
-      showAuth("Online sync is taking longer than expected. Check your connection and reload.");
+      if(bootRetryCount===0)showAuth(window.TNI18n.t("ui.online_sync_is_taking_longer_than_expected_check_your_connection_and_reload",{}));
+      else setStartupState("UNAUTHENTICATED");
       if(bootRetryCount < 8){
         bootRetryCount++;
         booted = false;
@@ -2423,15 +2439,15 @@
       const result = await client.auth.getSession();
       if(result.error)throw result.error;
       if(result.data.session)await afterSession(result.data.session,"restore");
-      else showAuth("Login or create an account to sync your vocabulary.");
+      else showAuth(window.TNI18n.t("ui.login_or_create_an_account_to_sync_your_vocabulary",{}));
     }catch(error){
       console.warn("Session restore failed",error);
       if(currentSession?.user){
         showApp();
         updateCloudUi("Error");
-        toast("Your session is still active. Online sync will retry automatically.");
+        toast(window.TNI18n.t("ui.your_session_is_still_active_online_sync_will_retry_automatically",{}));
       }else{
-        showAuth(userError(error,"Online login is temporarily unavailable. Check your connection and try again."));
+        showAuth(userError(error,window.TNI18n.t("ui.online_login_is_temporarily_unavailable_check_your_connection_and_try_again",{})));
       }
     }
   }

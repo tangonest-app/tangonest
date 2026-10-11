@@ -60,7 +60,7 @@ function buildData(wordCount=6,listCount=1){
 
 async function installTestState(page,{wordCount=6,listCount=1,pageName="home"}={}){
   const data=buildData(wordCount,listCount);
-  await page.route("https://cdn.jsdelivr.net/**",route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={};"}));
+  await page.route("**/vendor/supabase-*.js",route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={};"}));
   await page.addInitScript(({data,dataKey,shadowKey,pageKey,pageName})=>{
     const serialized=JSON.stringify(data);
     if(!localStorage.getItem(dataKey))localStorage.setItem(dataKey,serialized);
@@ -86,6 +86,7 @@ async function navigateToPage(page,name){
     const button=page.locator(`#${id}`);
     if(await button.isVisible()){
       await button.click();
+      if(name==='quiz'&&await page.locator('#quizAdvanced').isVisible())await page.locator('#quizAdvanced').evaluate(node=>{node.open=true});
       return;
     }
   }

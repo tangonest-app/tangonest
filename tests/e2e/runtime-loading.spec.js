@@ -1,0 +1,24 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {test,expect,openTestApp,navigateToPage}=require('./fixtures');
+const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
+test('the browser executes the generated app that matches the editable source',async({page})=>{
+  const loaded=[];
+  page.on('response',response=>{if(new URL(response.url()).pathname.endsWith('/app-rc19-fdg1.js'))loaded.push(response)});
+  await openTestApp(page);
+  expect(loaded).toHaveLength(1);
+  const source=fs.readFileSync(path.resolve(__dirname,'../../app.js'));
+  expect(hash(await loaded[0].body())).toBe(hash(source));
+  expect(await page.evaluate(()=>[...document.scripts].map(s=>new URL(s.src||location.href).pathname).some(p=>p.endsWith('/app.js')))).toBe(false);
+  await navigateToPage(page,'quiz');
+  await page.locator('#quizType').selectOption('typing');
+  await page.locator('#quizAutoAdvance').selectOption('manual');
+  await page.getByRole('button',{name:'Start Quiz',exact:true}).click();
+  await expect(page.locator('#quizAnswer')).toBeFocused();
+  await page.locator('#quizAnswer').fill(await page.evaluate(()=>correctAnswer()));
+  await page.locator('#quizAnswer').press('Enter');
+  expect(await page.evaluate(()=>quiz.answered)).toBe(true);
+  await page.locator('#quizAnswer').press('Enter');
+  await expect(page.locator('#quizAnswer')).toBeFocused();
+  await expect(page.locator('#quizAnswer')).not.toHaveAttribute('readonly','');
+  expect(await page.evaluate(()=>quiz.index)).toBe(1);
+});

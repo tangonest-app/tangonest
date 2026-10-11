@@ -11,14 +11,14 @@ const html=read("index.html");
 const sync=read("tn-supabase-sync.js");
 const library=read("tn-library-management.js");
 const flow=read("tn-learning-flow.js");
-const sql=read("SUPABASE_SQL_RUN_ONCE.sql");
+const sql=read("docs/reference/fdg16-schema.sql");
 
-assert.ok(html.indexOf("learning-engine.js")<html.indexOf("app.js"),"Learning Engine loads before app.js");
+assert.ok(html.indexOf("learning-engine-rc19-fdg1.js")<html.indexOf("app-rc19-fdg1.js"),"Learning Engine loads before app.js");
 assert.equal((app.match(/function updateWordLearning\(/g)||[]).length,1,"one app learning writer remains");
 assert.equal((flow.match(/window\.updateWordLearning\s*=/g)||[]).length,0,"learning-flow does not override the writer");
 assert.ok(app.includes("calculateLearningUpdate"),"app delegates transitions to Learning Engine");
 assert.ok(html.includes("markCard('again',true)")&&html.includes("markCard('hard',true)")&&html.includes("markCard('good',true)")&&html.includes("markCard('easy',true)"),"Cards expose all four ratings");
-assert.ok(app.includes('"good",{mode:quiz.type||"quiz"}')&&app.includes('"again",{mode:quiz.type||"quiz"}'),"choice, typing, and listening quiz use the common writer");
+assert.ok(app.includes('updateWordLearning(quiz.current.id,ok?"good":"again",{mode:quiz.type||"quiz",eventId:quiz.records.at(-1).eventId})'),"all Quiz modes use the common writer with an event ID");
 assert.ok(app.includes("buildSmartSession"),"Home can build a mixed smart session");
 assert.ok(library.includes("engine()?.isDueWord")&&library.includes("engine()?.isMasteredWord"),"Library uses formal Due and Mastered rules");
 assert.ok(!html.includes("editStatus")&&!html.includes("editLevel"),"manual level/status editing cannot bypass the engine");

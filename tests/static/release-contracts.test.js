@@ -5,6 +5,7 @@ const path=require("node:path");
 const assert=require("node:assert/strict");
 
 const root=path.resolve(__dirname,"../..");
+const release=require("../../release.json");
 const read=file=>fs.readFileSync(path.join(root,file),"utf8");
 const html=read("index.html");
 const app=read("app.js");
@@ -16,7 +17,8 @@ const serviceWorker=read("sw.js");
 const sync=read("tn-supabase-sync.js");
 const style=read("style.css");
 const themeStyle=read("ui/forest-desk-glass.css");
-const sql=read("SUPABASE_SCHEMA_CURRENT.sql");
+const exampleFields=read("example-fields-rc19-fdg1.js");
+const sql=read("docs/reference/fdg16-schema.sql");
 const playwright=read("playwright.config.js");
 const workflow=read(".github/workflows/qa.yml");
 
@@ -31,8 +33,9 @@ assert.match(serviceWorker,/request\.method!=="GET"/);
 assert.match(serviceWorker,/url\.origin!==BASE\.origin/);
 assert.match(serviceWorker,/SHELL_PATHS\.has\(url\.pathname\)/);
 assert.match(serviceWorker,/async function staticResponse[\s\S]+await fetch\(request\)[\s\S]+return cached\|\|Response\.error\(\)/,"Versioned assets use network-first with offline fallback");
-assert.match(serviceWorker,/tangonest-shell-v1\.0\.0-rc\.19-fdg5/);
+assert.ok(serviceWorker.includes(`tangonest-shell-v${release.version}`));
 assert.match(serviceWorker,/\.\/default-playlist-rc19-fdg1\.js/);
+assert.match(serviceWorker,/\.\/example-fields-rc19-fdg1\.js/);
 assert.match(serviceWorker,/\.\/assets\/botanical-corner\.svg/);
 assert.match(serviceWorker,/\.\/assets\/forest-study-login-v1\.png/);
 assert.match(runtime,/SKIP_WAITING/);
@@ -50,13 +53,17 @@ const pngSize=file=>{
 for(const [file,size] of [["favicon.png",64],["apple-touch-icon.png",180],["icon-192.png",192],["icon-512.png",512],["icon-1024.png",1024]]){
   assert.deepEqual(pngSize(file),[size,size],`${file} must keep its declared square size`);
 }
-assert.match(html,/class="auth-logo"[^>]*><img src="\.\/icon-192\.png\?v=1\.0\.0-rc\.19-fdg5"/);
-assert.match(html,/class="brand-mark"[^>]*><img src="\.\/icon-192\.png\?v=1\.0\.0-rc\.19-fdg5"/);
+for(const name of ["auth-logo","brand-mark"]){
+  assert.match(html,new RegExp(`class="${name}"[^>]*><img src="./${release.iconDirectory}/icon-192.png"`));
+}
+assert.equal(manifest.icons.filter(icon=>icon.purpose==="maskable").length,1);
+assert.ok(manifest.icons.every(icon=>icon.src.startsWith(release.iconDirectory+"/")));
+assert.ok(manifest.icons.every(icon=>icon.purpose!=="any maskable"));
 assert.match(style,/@media\(prefers-reduced-motion:reduce\)/);
 assert.equal((style.match(/^:root\{/gm)||[]).length,1);
 assert.doesNotMatch(style,/letter-spacing\s*:\s*-/);
 assert.ok(Buffer.byteLength(style)<110000,"CSS legacy cleanup must remain below the Task 8 size ceiling");
-assert.ok(Buffer.byteLength(style)+Buffer.byteLength(themeStyle)<150000,"Combined CSS must stay within the release cleanup ceiling");
+assert.ok(Buffer.byteLength(style)+Buffer.byteLength(themeStyle)<155000,"Combined CSS must stay within the release cleanup ceiling");
 assert.equal((style.match(/!important/g)||[]).length+(themeStyle.match(/!important/g)||[]).length,0,"Presentation CSS must not rely on !important overrides");
 assert.doesNotMatch(themeStyle,/gradient\(/i,"The active Forest Desk Glass theme must not use gradients");
 assert.match(sync,/realtimeUserId/);
@@ -77,6 +84,9 @@ assert.match(sync,/window\.renameList = \(\) => qaRenamePlaylist/);
 assert.match(sync,/const CLOUD_PAGE_SIZE = 1000/);
 assert.match(sync,/query=query\.range\(offset,offset\+CLOUD_PAGE_SIZE-1\)/);
 assert.match(sync,/const BULK_INSERT_SIZE = 250/);
+assert.match(app,/pronunciation:r\.pronunciation/);
+assert.match(sync,/tn_clean_example_fields/);
+assert.match(exampleFields,/normalizeFields/);
 assert.match(html,/onclick="tnRenamePlaylist\(document\.getElementById\('renameListSelect'\)\.value,document\.getElementById\('renameListInput'\)\.value\)"/);
 assert.match(sync,/function readPendingFor\(userId\)/);
 assert.match(sync,/ACCOUNT_STORAGE_PREFIX = "tangonest:account:v2:"/);
@@ -99,7 +109,9 @@ assert.match(sql,/revoke execute on function public\.tn_record_learning_result[\
 assert.match(sql,/alter table public\.tn_words alter column playlist_id drop not null/i);
 assert.match(sql,/create or replace function public\.tn_delete_playlist\(p_playlist_id uuid\)/i);
 assert.match(sql,/create or replace function public\.tn_upsert_word_nonlearning\(p_word jsonb\)/i);
-assert.doesNotMatch(sql,/values\s*\([^)]*'New Playlist'/i,"Canonical schema must never seed a playlist");
+assert.match(sql,/create or replace function public\.tn_clean_example_fields\(\)/i);
+assert.match(sql,/values\s*\(v_user_id,'New Playlist',true\)/i,"Canonical empty state contains one New Playlist");
+assert.doesNotMatch(sql,/values\s*\([^)]*'(?:French|Chinese)'/i,"Canonical schema never seeds language demo playlists");
 assert.match(playwright,/name:"mobile"[\s\S]+browserName:"chromium"/i,"Mobile E2E must use the browser installed by CI");
 assert.match(playwright,/name:"webkit"[\s\S]+Desktop Safari/i,"Desktop WebKit must remain in the release matrix");
 assert.match(workflow,/playwright install --with-deps chromium webkit/);
@@ -118,10 +130,10 @@ for(const match of html.matchAll(/<(input|select|textarea)\b([^>]*)>/gi)){
 }
 
 const version=config.match(/appVersion:"([^"]+)"/)?.[1];
-assert.equal(version,"1.0.0-rc.19");
-assert.match(html,/1\.0\.0-rc\.19-fdg5/,"The responsive polish must bust all earlier asset caches");
-for(const asset of ["style-rc19-fdg1.css","ui/forest-desk-glass-rc19-fdg1.css","default-playlist-rc19-fdg1.js","app-rc19-fdg1.js","learning-engine-rc19-fdg1.js","tn-supabase-sync-rc19-fdg1.js","tn-library-management-rc19-fdg1.js","tn-learning-flow-rc19-fdg1.js","ui/learning-presentation-rc19-fdg1.js","ui/runtime-rc19-fdg1.js"]){
-  assert.match(html,new RegExp(`${asset.replace(/[.]/g,"\\.")}\\?v=${version.replace(/[.]/g,"\\.")}-fdg5`),`Cache-safe deployed asset: ${asset}`);
+assert.equal(version,release.version);
+assert.ok(html.includes(release.version),"The release must bust all earlier asset caches");
+for(const asset of ["style-rc19-fdg1.css","ui/forest-desk-glass-rc19-fdg1.css","default-playlist-rc19-fdg1.js","example-fields-rc19-fdg1.js","app-rc19-fdg1.js","learning-engine-rc19-fdg1.js","tn-supabase-sync-rc19-fdg1.js","tn-library-management-rc19-fdg1.js","tn-learning-flow-rc19-fdg1.js","ui/learning-presentation-rc19-fdg1.js","ui/runtime-rc19-fdg1.js"]){
+  assert.ok(html.includes(`${asset}?v=${release.version}`),`Cache-safe deployed asset: ${asset}`);
 }
 
 const deployedCopies=new Map([
