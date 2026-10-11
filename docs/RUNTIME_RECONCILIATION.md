@@ -1,5 +1,6 @@
 # 実行コード整合性とQuiz実装計画
 
+この資料はFDG16整備時点の調査・未実装計画の記録です。その後のFDG17実装と現在の公開手順はREADME.mdとDEVELOPMENT.mdを参照してください。
 調査日: 2026-10-11（日本時間）。対象: tangonest-app/tangonest。
 
 ## 確定した関係

@@ -15,7 +15,7 @@ const sync=read("tn-supabase-sync.js");
 
 assert.match(html,/ui\/learning-presentation-rc19-fdg1\.js/);
 assert.match(html,/Today’s Session/);
-assert.match(html,/Auto · smart \(2\.2–3\.2s\)/);
+assert.match(html,/Auto · 2 seconds/);
 assert.match(html,/Advanced sync details/);
 assert.match(html,/role="status" aria-live="polite"/);
 assert.doesNotMatch(html,/id="quizNextDelay"/);
@@ -29,7 +29,7 @@ const languages=require("../../languages.js");
 assert.ok(Object.isFrozen(languages.options));
 assert.ok(languages.registry.length>=37);
 assert.deepEqual(languages.options.slice(0,3).map(option=>option[0]),["en-US","ja-JP","ko-KR"]);
-assert.match(app,/QUIZ_NEXT_TIMING=Object.freeze\(\{correct:1200,incorrect:2500\}\)/);
+assert.match(app,/QUIZ_NEXT_TIMING=Object.freeze\(\{correct:2000,incorrect:2000\}\)/);
 assert.match(app,/window\.tnBulkProgress=\{start:beginBulkProgress/);
 assert.match(html,/id="homeMemoryPath"/);
 assert.match(app,/\.choice\[data-shortcut=/);

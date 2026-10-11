@@ -705,5 +705,15 @@
   "bulk.editRow": "Modifier la ligne {row}",
   "listen.preparing": "Préparation de l’audio",
   "audio.frontMissing": "Le texte ou la langue du recto manque. Vérifiez le mot dans Library.",
-  "quiz.autoShort": "Auto"
+  "quiz.autoShort": "Auto",
+  "quiz.continue": "Continuer le Quiz",
+  "quiz.retryMistakes": "Réessayer les erreurs",
+  "quiz.retrySkipped": "Réessayer les questions passées",
+  "quiz.skipped": "Passées",
+  "quiz.reviewAnswers": "Revoir les réponses",
+  "quiz.reviewHint": "Revoyez vos réponses, puis continuez avec les mêmes réglages et un ordre mélangé. Les questions passées ne comptent pas dans le taux de réussite.",
+  "quiz.noEligibleWords": "Aucun mot ne correspond à ces réglages. Revenez aux réglages pour modifier la sélection.",
+  "quiz.emptyReview": "Aucune réponse dans cette catégorie.",
+  "quiz.playAnswer": "Écouter la réponse",
+  "quiz.autoTiming": "Automatique · 2 secondes"
 }

@@ -26,7 +26,7 @@ test('automatic session finishes mixed answers without Next and records each onc
     await answer(page,ok);
     await expect(page.locator('.quiz-next-btn')).toHaveCount(0);
     const index=await page.evaluate(()=>quiz.index);
-    await page.clock.runFor(ok?1100:2400);
+    await page.clock.runFor(1900);
     expect(await page.evaluate(()=>quiz.index)).toBe(index);
     await page.clock.runFor(140);
     await page.clock.runFor(400);
@@ -39,13 +39,13 @@ test('automatic session finishes mixed answers without Next and records each onc
 test('speech completion and feedback duration are both required; stale callbacks cannot advance',async({page})=>{
   await setupQuiz(page);
   await page.evaluate(()=>{document.getElementById('quizAudioAfter').value='on';window.speak=()=>new Promise(resolve=>window.finishSpeech=resolve)});
-  await answer(page,true);await page.clock.runFor(1800);
+  await answer(page,true);await page.clock.runFor(2300);
   expect(await page.evaluate(()=>quiz.index)).toBe(0);
   await page.evaluate(()=>finishSpeech(true));
   expect(await page.evaluate(()=>quiz.index)).toBe(1);
   await page.clock.runFor(400);await answer(page,false);
   await page.evaluate(()=>{finishSpeech(true);finishSpeech(true)});
-  await page.clock.runFor(2100);expect(await page.evaluate(()=>quiz.index)).toBe(1);
+  await page.clock.runFor(1900);expect(await page.evaluate(()=>quiz.index)).toBe(1);
   await page.clock.runFor(500);expect(await page.evaluate(()=>quiz.index)).toBe(2);
 });
 
@@ -54,7 +54,7 @@ test('unresponsive speech times out visibly and auto progress recovers',async({p
   await page.evaluate(()=>{document.getElementById('quizAudioAfter').value='on';window.speak=()=>new Promise(()=>{})});
   await answer(page,true);await page.clock.runFor(21010);
   await expect(page.locator('#quizAdvanceStatus')).toContainText('failed');
-  await page.clock.runFor(1300);expect(await page.evaluate(()=>quiz.index)).toBe(1);
+  await page.clock.runFor(2100);expect(await page.evaluate(()=>quiz.index)).toBe(1);
 });
 
 test('pause, explanation and tab hiding require deliberate resume with fresh reading time',async({page})=>{
@@ -71,7 +71,7 @@ test('pause, explanation and tab hiding require deliberate resume with fresh rea
   await page.clock.runFor(9000);
   await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))});
   await page.clock.runFor(5000);expect(await page.evaluate(()=>quiz.index)).toBe(0);
-  await page.locator('#quizPauseAdvance').click();await page.clock.runFor(1100);
+  await page.locator('#quizPauseAdvance').click();await page.clock.runFor(1900);
   expect(await page.evaluate(()=>quiz.index)).toBe(0);
   await page.clock.runFor(150);expect(await page.evaluate(()=>quiz.index)).toBe(1);
 });
@@ -79,7 +79,7 @@ test('pause, explanation and tab hiding require deliberate resume with fresh rea
 test('old buttons and held keys cannot answer the following question',async({page})=>{
   await setupQuiz(page);
   await page.evaluate(()=>window.oldChoice=document.querySelector('.choice'));
-  await answer(page,true);await page.clock.runFor(1220);
+  await answer(page,true);await page.clock.runFor(2020);
   await page.evaluate(()=>{oldChoice.click();chooseAnswer(oldChoice,'stale')});
   await page.locator('body').dispatchEvent('keydown',{key:'1',repeat:true});
   expect(await page.evaluate(()=>({index:quiz.index,answered:quiz.answered,records:quiz.records.length}))).toEqual({index:1,answered:false,records:1});
@@ -91,7 +91,7 @@ test('early results count answered questions, never untouched words as improved'
   await expect(page.locator('#quizResultSummary')).toContainText('0 answered / 6 planned');
   await expect(page.locator('#quizResultSummary')).not.toContainText('100%');
   await page.evaluate(()=>{startQuiz();document.getElementById('quizAudioAfter').value='off'});await page.clock.runFor(400);
-  await answer(page,true);await page.clock.runFor(1650);await answer(page,false);
+  await answer(page,true);await page.clock.runFor(2400);await answer(page,false);
   await page.getByRole('button',{name:'End session',exact:true}).click();
   await expect(page.locator('#quizResultSummary')).toContainText('50%');
   await expect(page.locator('#quizResultSummary')).toContainText('2 answered / 6 planned');
@@ -109,7 +109,7 @@ test('Home resumes the next unanswered word after reload without resaving a resu
 });
 
 test('Home does not resume a completed, foreign-account or changed session',async({page})=>{
-  await setupQuiz(page,1);await answer(page,true);await page.clock.runFor(1500);
+  await setupQuiz(page,1);await answer(page,true);await page.clock.runFor(2300);
   await navigateToPage(page,'home');await expect(page.locator('.home-resume')).toBeHidden();
   await navigateToPage(page,'cards');await navigateToPage(page,'home');
   await page.evaluate(()=>{db.words=[];tnStudyContinuity.render()});

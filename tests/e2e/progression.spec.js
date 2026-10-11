@@ -26,7 +26,7 @@ for(const audio of ['off','on'])test(`Quiz completes 10 mixed answers without Ne
   await page.clock.runFor(10000);expect(await page.evaluate(()=>quiz.index)).toBe(0);
   for(let i=0;i<10;i++){
     await choose(page,i%2===0);await expect(page.locator('.quiz-next-btn')).toHaveCount(0);
-    await page.clock.runFor(i%2===0?1150:2450);expect(await page.evaluate(()=>quiz.index)).toBe(i);
+    await page.clock.runFor(1950);expect(await page.evaluate(()=>quiz.index)).toBe(i);
     await page.clock.runFor(500);
   }
   await expect(page.locator('#quizEnd')).toBeVisible();

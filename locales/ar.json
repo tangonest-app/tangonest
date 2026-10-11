@@ -705,5 +705,15 @@
   "bulk.editRow": "تعديل الصف {row}",
   "listen.preparing": "جارٍ تحضير الصوت",
   "audio.frontMissing": "نص الوجه الأمامي أو لغته مفقود. تحقق من الكلمة في Library.",
-  "quiz.autoShort": "تلقائي"
+  "quiz.autoShort": "تلقائي",
+  "quiz.continue": "متابعة Quiz",
+  "quiz.retryMistakes": "إعادة الأخطاء",
+  "quiz.retrySkipped": "إعادة الأسئلة المتخطاة",
+  "quiz.skipped": "تم التخطي",
+  "quiz.reviewAnswers": "مراجعة الإجابات",
+  "quiz.reviewHint": "راجع إجاباتك ثم تابع بالإعدادات نفسها وبترتيب عشوائي. الأسئلة المتخطاة لا تؤثر على نسبة الإجابات الصحيحة.",
+  "quiz.noEligibleWords": "لا توجد كلمات تطابق هذه الإعدادات. ارجع إلى الإعدادات لتغيير النطاق.",
+  "quiz.emptyReview": "لا توجد إجابات في هذه الفئة.",
+  "quiz.playAnswer": "تشغيل الإجابة",
+  "quiz.autoTiming": "تلقائي · ثانيتان"
 }

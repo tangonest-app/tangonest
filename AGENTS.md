@@ -8,4 +8,4 @@ This Git checkout is the canonical development source after the 2026-10-11 recon
 - Build/packaging must not write or execute SQL. Root SQL files are preserved historical artifacts. docs/reference/fdg16-schema.sql is an offline contract reference, not deployment instructions or proof of the live database schema.
 - Never reset user/browser/cloud data to update the application. Browser tests use isolated fixtures.
 - Runtime changes require a new release.json version before publication. Keep user-approved PWA activation behavior intact.
-- Publish only the package:release artifact, never the full source checkout. Pages is still configured to publish main:/; do not push/merge into main or change Pages settings as part of local preparation. Production publication requires explicit authorization.
+- Publish only the package:release artifact, never the full source checkout. Pages uses GitHub Actions and the manual pages-candidate.yml workflow on main. Production publication requires explicit authorization; local preparation alone does not authorize publishing.

@@ -705,5 +705,15 @@
   "bulk.editRow": "Modifica riga {row}",
   "listen.preparing": "Preparazione audio",
   "audio.frontMissing": "Manca il testo o la lingua del fronte. Controlla la parola in Library.",
-  "quiz.autoShort": "Automatico"
+  "quiz.autoShort": "Automatico",
+  "quiz.continue": "Continua Quiz",
+  "quiz.retryMistakes": "Riprova gli errori",
+  "quiz.retrySkipped": "Riprova le saltate",
+  "quiz.skipped": "Saltate",
+  "quiz.reviewAnswers": "Rivedi le risposte",
+  "quiz.reviewHint": "Rivedi le risposte, poi continua con le stesse impostazioni e un ordine casuale. Le domande saltate non influiscono sulla precisione.",
+  "quiz.noEligibleWords": "Nessuna parola corrisponde a queste impostazioni. Torna alle impostazioni per cambiare ambito.",
+  "quiz.emptyReview": "Nessuna risposta in questa categoria.",
+  "quiz.playAnswer": "Ascolta la risposta",
+  "quiz.autoTiming": "Automatico · 2 secondi"
 }

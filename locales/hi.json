@@ -705,5 +705,15 @@
   "bulk.editRow": "पंक्ति {row} बदलें",
   "listen.preparing": "ऑडियो तैयार हो रहा है",
   "audio.frontMissing": "सामने का पाठ या भाषा नहीं है। Library में शब्द जाँचें।",
-  "quiz.autoShort": "स्वतः"
+  "quiz.autoShort": "स्वतः",
+  "quiz.continue": "Quiz जारी रखें",
+  "quiz.retryMistakes": "गलतियाँ दोहराएँ",
+  "quiz.retrySkipped": "छोड़े गए प्रश्न दोहराएँ",
+  "quiz.skipped": "छोड़े गए",
+  "quiz.reviewAnswers": "उत्तर की समीक्षा",
+  "quiz.reviewHint": "उत्तर की समीक्षा करके उन्हीं सेटिंग के साथ नए क्रम में जारी रखें। छोड़े गए प्रश्न सटीकता में शामिल नहीं हैं।",
+  "quiz.noEligibleWords": "इन सेटिंग से मेल खाने वाले शब्द नहीं हैं। दायरा बदलने के लिए सेटिंग पर लौटें।",
+  "quiz.emptyReview": "इस श्रेणी में कोई उत्तर नहीं है।",
+  "quiz.playAnswer": "उत्तर सुनें",
+  "quiz.autoTiming": "स्वचालित · 2 सेकंड"
 }

@@ -705,5 +705,15 @@
   "bulk.editRow": "修改第{row}行",
   "listen.preparing": "正在准备音频",
   "audio.frontMissing": "缺少正面文本或语言。请在Library中检查单词。",
-  "quiz.autoShort": "自动"
+  "quiz.autoShort": "自动",
+  "quiz.continue": "按相同设置继续",
+  "quiz.retryMistakes": "重试错题",
+  "quiz.retrySkipped": "重试跳过的题目",
+  "quiz.skipped": "已跳过",
+  "quiz.reviewAnswers": "复习答案",
+  "quiz.reviewHint": "复习答案后，可按相同设置打乱题目顺序继续。跳过的题目不计入正确率。",
+  "quiz.noEligibleWords": "当前没有符合这些设置的单词。请返回设置更改范围。",
+  "quiz.emptyReview": "此类别中没有答案。",
+  "quiz.playAnswer": "播放正确答案",
+  "quiz.autoTiming": "自动 · 2秒"
 }

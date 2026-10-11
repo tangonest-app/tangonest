@@ -705,5 +705,15 @@
   "bulk.editRow": "Изменить строку {row}",
   "listen.preparing": "Подготовка аудио",
   "audio.frontMissing": "Отсутствует текст или язык лицевой стороны. Проверьте слово в Library.",
-  "quiz.autoShort": "Авто"
+  "quiz.autoShort": "Авто",
+  "quiz.continue": "Продолжить Quiz",
+  "quiz.retryMistakes": "Повторить ошибки",
+  "quiz.retrySkipped": "Повторить пропущенные",
+  "quiz.skipped": "Пропущено",
+  "quiz.reviewAnswers": "Просмотреть ответы",
+  "quiz.reviewHint": "Просмотрите ответы и продолжите с теми же настройками в новом порядке. Пропущенные вопросы не влияют на точность.",
+  "quiz.noEligibleWords": "Нет слов, соответствующих этим настройкам. Вернитесь к настройкам и измените выбор.",
+  "quiz.emptyReview": "В этой категории нет ответов.",
+  "quiz.playAnswer": "Прослушать ответ",
+  "quiz.autoTiming": "Автоматически · 2 секунды"
 }

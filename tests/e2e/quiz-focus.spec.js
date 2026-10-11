@@ -33,21 +33,21 @@ test('brand is universal while functional guidance follows six locales',async({p
   }
 });
 
-test('adaptive timing, manual advance and audio review do not double advance',async({page})=>{
+test('equal timing, manual advance and audio review do not double advance',async({page})=>{
   await openTestApp(page);
   await navigateToPage(page,'quiz');
   await page.evaluate(()=>{startQuiz();document.getElementById('quizAudioAfter').value='off';});
-  expect(await page.evaluate(()=>[nextDelay(true),nextDelay(false)])).toEqual([1200,2500]);
+  expect(await page.evaluate(()=>[nextDelay(true),nextDelay(false)])).toEqual([2000,2000]);
   await page.clock.install({time:new Date('2030-01-01T00:00:00Z')});
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.evaluate(()=>finishAnswer(true));
   await page.clock.runFor(40);
-  await page.clock.runFor(1150);
+  await page.clock.runFor(1900);
   expect(await page.evaluate(()=>quiz.index)).toBe(0);
-  await page.clock.runFor(100);
+  await page.clock.runFor(150);
   expect(await page.evaluate(()=>quiz.index)).toBe(1);
   await page.evaluate(()=>finishAnswer(false));
-  await page.clock.runFor(2400);
+  await page.clock.runFor(1900);
   expect(await page.evaluate(()=>quiz.index)).toBe(1);
   await page.evaluate(()=>nextQuizQuestion());
   await page.clock.runFor(1500);

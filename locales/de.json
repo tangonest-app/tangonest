@@ -705,5 +705,15 @@
   "bulk.editRow": "Zeile {row} bearbeiten",
   "listen.preparing": "Audio wird vorbereitet",
   "audio.frontMissing": "Text oder Sprache der Vorderseite fehlt. Prüfe das Wort in Library.",
-  "quiz.autoShort": "Automatisch"
+  "quiz.autoShort": "Automatisch",
+  "quiz.continue": "Quiz fortsetzen",
+  "quiz.retryMistakes": "Fehler wiederholen",
+  "quiz.retrySkipped": "Übersprungene wiederholen",
+  "quiz.skipped": "Übersprungen",
+  "quiz.reviewAnswers": "Antworten wiederholen",
+  "quiz.reviewHint": "Prüfe deine Antworten und fahre mit denselben Einstellungen und neuer Reihenfolge fort. Übersprungene Fragen zählen nicht zur Trefferquote.",
+  "quiz.noEligibleWords": "Keine Wörter entsprechen diesen Einstellungen. Ändere die Auswahl in den Einstellungen.",
+  "quiz.emptyReview": "Keine Antworten in dieser Kategorie.",
+  "quiz.playAnswer": "Antwort anhören",
+  "quiz.autoTiming": "Automatisch · 2 Sekunden"
 }

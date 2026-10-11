@@ -705,5 +705,15 @@
   "bulk.editRow": "Sửa dòng {row}",
   "listen.preparing": "Đang chuẩn bị âm thanh",
   "audio.frontMissing": "Thiếu văn bản hoặc ngôn ngữ mặt trước. Kiểm tra từ trong Library.",
-  "quiz.autoShort": "Tự động"
+  "quiz.autoShort": "Tự động",
+  "quiz.continue": "Tiếp tục Quiz",
+  "quiz.retryMistakes": "Làm lại câu sai",
+  "quiz.retrySkipped": "Làm lại câu đã bỏ qua",
+  "quiz.skipped": "Đã bỏ qua",
+  "quiz.reviewAnswers": "Ôn lại câu trả lời",
+  "quiz.reviewHint": "Ôn lại câu trả lời rồi tiếp tục với cùng cài đặt và thứ tự xáo trộn. Câu bỏ qua không ảnh hưởng đến độ chính xác.",
+  "quiz.noEligibleWords": "Không có từ phù hợp với cài đặt này. Quay lại cài đặt để thay đổi phạm vi.",
+  "quiz.emptyReview": "Không có câu trả lời trong mục này.",
+  "quiz.playAnswer": "Phát đáp án",
+  "quiz.autoTiming": "Tự động · 2 giây"
 }

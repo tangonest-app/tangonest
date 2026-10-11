@@ -5,6 +5,7 @@ const release=require("../release.json");
 const read=file=>fs.readFileSync(path.join(root,file),"utf8");
 const write=(file,text)=>fs.writeFileSync(path.join(root,file),text);
 const icons=release.iconDirectory;
+write("locales/base.js",`window.TangoNestInterfaceLocales=${JSON.stringify(require("../locales/registry.js"))};\nwindow.TangoNestEnglish=${JSON.stringify(JSON.parse(read("locales/en.json")))};\n`);
 write("config.js",read("config.js").replace(/appVersion:"[^"]+"/,`appVersion:"${release.version}"`));
 fs.copyFileSync(path.join(root,"config.js"),path.join(root,"config-rc19-fdg1.js"));
 write("style.css",read("style.css").replace(/\.\/assets\/icons\/fdg\d+\/icon-192\.png/g,`./${icons}/icon-192.png`));

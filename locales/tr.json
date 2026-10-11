@@ -705,5 +705,15 @@
   "bulk.editRow": "{row}. satırı düzenle",
   "listen.preparing": "Ses hazırlanıyor",
   "audio.frontMissing": "Ön yüz metni veya dili eksik. Sözcüğü Library içinde kontrol edin.",
-  "quiz.autoShort": "Otomatik"
+  "quiz.autoShort": "Otomatik",
+  "quiz.continue": "Quiz’e devam et",
+  "quiz.retryMistakes": "Yanlışları tekrar dene",
+  "quiz.retrySkipped": "Atlananları tekrar dene",
+  "quiz.skipped": "Atlandı",
+  "quiz.reviewAnswers": "Yanıtları gözden geçir",
+  "quiz.reviewHint": "Yanıtlarını gözden geçir, ardından aynı ayarlarla karışık sırada devam et. Atlanan sorular doğruluğu etkilemez.",
+  "quiz.noEligibleWords": "Bu ayarlara uyan kelime yok. Kapsamı değiştirmek için ayarlara dön.",
+  "quiz.emptyReview": "Bu kategoride yanıt yok.",
+  "quiz.playAnswer": "Yanıtı dinle",
+  "quiz.autoTiming": "Otomatik · 2 saniye"
 }

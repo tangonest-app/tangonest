@@ -705,5 +705,15 @@
   "bulk.editRow": "修改第{row}行",
   "listen.preparing": "正在準備音訊",
   "audio.frontMissing": "缺少正面文字或語言。請在Library中檢查單字。",
-  "quiz.autoShort": "自動"
+  "quiz.autoShort": "自動",
+  "quiz.continue": "按相同設定繼續",
+  "quiz.retryMistakes": "重試錯題",
+  "quiz.retrySkipped": "重試跳過的題目",
+  "quiz.skipped": "已跳過",
+  "quiz.reviewAnswers": "複習答案",
+  "quiz.reviewHint": "複習答案後，可按相同設定打亂題目順序繼續。跳過的題目不計入正確率。",
+  "quiz.noEligibleWords": "目前沒有符合這些設定的單字。請返回設定變更範圍。",
+  "quiz.emptyReview": "此類別中沒有答案。",
+  "quiz.playAnswer": "播放正確答案",
+  "quiz.autoTiming": "自動 · 2秒"
 }

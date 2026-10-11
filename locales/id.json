@@ -705,5 +705,15 @@
   "bulk.editRow": "Edit baris {row}",
   "listen.preparing": "Menyiapkan audio",
   "audio.frontMissing": "Teks atau bahasa depan tidak ada. Periksa kata di Library.",
-  "quiz.autoShort": "Otomatis"
+  "quiz.autoShort": "Otomatis",
+  "quiz.continue": "Lanjutkan Quiz",
+  "quiz.retryMistakes": "Ulangi jawaban salah",
+  "quiz.retrySkipped": "Ulangi yang dilewati",
+  "quiz.skipped": "Dilewati",
+  "quiz.reviewAnswers": "Tinjau jawaban",
+  "quiz.reviewHint": "Tinjau jawaban, lalu lanjutkan dengan pengaturan yang sama dan urutan acak. Soal yang dilewati tidak memengaruhi akurasi.",
+  "quiz.noEligibleWords": "Tidak ada kata yang cocok dengan pengaturan ini. Kembali ke pengaturan untuk mengubah cakupan.",
+  "quiz.emptyReview": "Tidak ada jawaban dalam kategori ini.",
+  "quiz.playAnswer": "Putar jawaban",
+  "quiz.autoTiming": "Otomatis · 2 detik"
 }

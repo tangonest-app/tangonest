@@ -2,6 +2,8 @@
 const fs=require("node:fs"),path=require("node:path"),assert=require("node:assert/strict");
 const root=path.resolve(__dirname,".."),pairs=require("./runtime-pairs.json");
 const read=file=>fs.readFileSync(path.join(root,file));
+const localeBundle=`window.TangoNestInterfaceLocales=${JSON.stringify(require("../locales/registry.js"))};\nwindow.TangoNestEnglish=${JSON.stringify(JSON.parse(read("locales/en.json").toString()))};\n`;
+assert.equal(read("locales/base.js").toString(),localeBundle,"English browser dictionary is stale. Run npm run build.");
 for(const [source,target] of pairs)assert.ok(read(source).equals(read(target)),`${source} differs from loaded ${target}. Run npm run build, then test the generated runtime.`);
 const html=read("index.html").toString();
 const shell=JSON.parse(read("sw.js").toString().match(/const SHELL=(\[[\s\S]*?\])\.map/)[1]);

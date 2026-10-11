@@ -38,7 +38,7 @@ test('same-spelling entries keep unique IDs and complete without a queue rewrite
   await setup(page);await navigateToPage(page,'quiz');await page.locator('#quizAudioAfter').selectOption('off');
   await page.locator('#quizOrderMode').selectOption('playlist');await page.evaluate(()=>db.words.forEach((w,i)=>w.front=i===0?'different':'same'));await page.clock.install();await page.clock.pauseAt(new Date(Date.now()+1000));
   await page.getByRole('button',{name:'Start Quiz',exact:true}).click();const ids=await page.evaluate(()=>quiz.queue.map(w=>w.id));
-  for(let i=0;i<10;i++){await answer(page);await page.clock.runFor(1800)}
+  for(let i=0;i<10;i++){await answer(page);await page.clock.runFor(2400)}
   await expect(page.locator('#quizEnd')).toBeVisible();expect(await page.evaluate(()=>quiz.records.map(r=>r.id))).toEqual(ids);
 });
 
@@ -66,7 +66,7 @@ test('wrong-answer results replay Front even for Back-to-Front questions',async(
   await setup(page);await navigateToPage(page,'quiz');await page.locator('#quizDirection').selectOption('back');await page.locator('#quizAudioAfter').selectOption('off');
   await page.evaluate(()=>db.words.forEach((w,i)=>{w.front='你好'+i;w.back='こんにちは'+i;w.frontLang='zh-CN';w.backLang='ja-JP'}));
   await page.locator('[onclick="startQuiz()"]').click();const state=await page.evaluate(()=>({front:quiz.current.front,index:quiz.currentChoices.findIndex(value=>value!==correctAnswer())}));
-  await page.locator('.choice').nth(state.index).click();await page.locator('[onclick="endQuiz()"]').click();await page.locator('#quizWrongList').getByRole('button',{name:'Play Front',exact:true}).click();
+  await page.locator('.choice').nth(state.index).click();await page.locator('[onclick="endQuiz()"]').click();await page.locator('#quizWrongList').getByRole('button',{name:'Play answer',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>audioCalls)).toEqual([{text:state.front,lang:'zh-CN',voice:'zh-CN'}]);
 });
 
@@ -124,5 +124,5 @@ test('compact setup exposes full current values and disables an inactive time li
   await setup(page);await navigateToPage(page,'quiz');await page.locator('#quizAdvanced').evaluate(node=>node.open=false);
   await expect(page.locator('#quizSettingsSummary')).toContainText('Random');await expect(page.locator('#quizSettingsSummary')).toContainText('Front only');
   await expect(page.locator('#quizTimeLimit')).toBeHidden();await page.locator('#quizAdvanced>summary').click();await expect(page.locator('#quizTimeLimit')).toBeDisabled();
-  await expect(page.locator('#quizAdvanceValue')).toHaveText('Auto (1.2s correct / 2.5s incorrect)');await page.locator('#quizHardMode').selectOption('on');await expect(page.locator('#quizTimeLimit')).toBeEnabled();
+  await expect(page.locator('#quizAdvanceValue')).toHaveText('Auto · 2 seconds');await page.locator('#quizHardMode').selectOption('on');await expect(page.locator('#quizTimeLimit')).toBeEnabled();
 });
