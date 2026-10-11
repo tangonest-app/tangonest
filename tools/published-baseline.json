@@ -1,10 +1,10 @@
 {
-  "release": "1.0.0-rc.19-fdg16",
+  "release": "1.0.0-rc.19-fdg17",
   "inventory": [
     {
       "file": "app-rc19-fdg1.js",
-      "bytes": 145504,
-      "sha256": "8b1a1362e80391f84efbcb11c3f31d4002b9192253292a51ad448ff8c9cdf718"
+      "bytes": 152148,
+      "sha256": "34ed90cdeb3ffc867cd3df1e1643430e68dc115923203763f6aed1cc1fec1697"
     },
     {
       "file": "apple-touch-icon.png",
@@ -124,7 +124,7 @@
     {
       "file": "config-rc19-fdg1.js",
       "bytes": 255,
-      "sha256": "b4f867a67dd6d8194004ed90e468ab4a1e2cbed4fa4ef7bcd6ba39382d2d00b1"
+      "sha256": "f834d5551c59cca8e7adee1b09468c6f7398e129279b655da817e0ca0462d130"
     },
     {
       "file": "default-playlist-rc19-fdg1.js",
@@ -148,8 +148,8 @@
     },
     {
       "file": "index.html",
-      "bytes": 60983,
-      "sha256": "eda9571799ae099f81387398c8ff726e2cbe5946e56734c493429c370cfc0944"
+      "bytes": 61388,
+      "sha256": "70dd9a1d3bdebcfb7e98c7ba8f32ae6e4009e3e23cd48a1ee25dbbe7bc6269b5"
     },
     {
       "file": "languages.js",
@@ -163,88 +163,88 @@
     },
     {
       "file": "locales/ar.json",
-      "bytes": 51401,
-      "sha256": "f1201d60188e6ac0f7405b257038e6c817da8d190e5699d85431702974db3e70"
+      "bytes": 52212,
+      "sha256": "47bbeff908b65e49bff01638ba981afaa8fc76c1704f0bc6d2115655712d77f6"
     },
     {
       "file": "locales/base.js",
-      "bytes": 37956,
-      "sha256": "99b401548623cca86d0a6fc790da0c0b55cb0e9537b8ea0366db4f7e594592fc"
+      "bytes": 38503,
+      "sha256": "b9194a7ddaac75715e863478ebca0b0a3ba7164343dad2c5d3c7736c2bb3ba79"
     },
     {
       "file": "locales/de.json",
-      "bytes": 44882,
-      "sha256": "1a47b97a4e18054ab46b18ef7c34169814073694d6036836b16fd16244bf4f36"
+      "bytes": 45542,
+      "sha256": "60d4d34851a846cbf9b9906e8cf7b2eb79612abae81f6d36cee2382f000d95df"
     },
     {
       "file": "locales/en.json",
-      "bytes": 40379,
-      "sha256": "47a30560b3a493fa05eea7a5106f5ceb56f5e92dcad56d717d46f600917d28da"
+      "bytes": 40966,
+      "sha256": "3b3232359d3710acd4eec0c0b5d53637c9006345cec4a3b2533a760971491169"
     },
     {
       "file": "locales/es.json",
-      "bytes": 44164,
-      "sha256": "976a3544f3c2bac6f1c38b2de2281c1edcf1399b34a4d2c6e3a81c117d6059c7"
+      "bytes": 44804,
+      "sha256": "7ce00a9595826322ab9d8924b6ba69959ad6083857e96733bc9c7c0da7eca6da"
     },
     {
       "file": "locales/fr.json",
-      "bytes": 44589,
-      "sha256": "af31666aae3411757f4215242f1366d1c67962dda5e097d03b516a7eeda95891"
+      "bytes": 45275,
+      "sha256": "841edd39aa5be63ade2aba9f6f75ab1341e81a837cd68de9eaee331842c07dcd"
     },
     {
       "file": "locales/hi.json",
-      "bytes": 64761,
-      "sha256": "a4093da24df7a441abc174f097404ad54a5a619273c8c47e39789fa3cfcad08e"
+      "bytes": 65867,
+      "sha256": "651aa6b97220bb9f303be482e3525180b5a09901a35a1cf8b17a79baa029144c"
     },
     {
       "file": "locales/id.json",
-      "bytes": 41157,
-      "sha256": "a49511fe6c0731542ad67a934d8cb0d128a2b52bcedd90ba4d93ad52a2fcf546"
+      "bytes": 41776,
+      "sha256": "23808ad7f9ad44b0b2bb286f77b390c23d944650ff8486a3cdefe1089bdccabd"
     },
     {
       "file": "locales/it.json",
-      "bytes": 43448,
-      "sha256": "161f68ebb833dfe11f71600b2cac6a17a91e2c052e2bc0dabd2e9b3fa1b5a19b"
+      "bytes": 44087,
+      "sha256": "9fbfea1694fd854d347baf4562571acde07d9fcd969e65f65e63479a45843daa"
     },
     {
       "file": "locales/ja.json",
-      "bytes": 48712,
-      "sha256": "244ec87a1bdeadc608a79b55529eed477ba19e98095c1cf45e1f6b66f0838383"
+      "bytes": 49422,
+      "sha256": "728c8637e4537f4fd30430e0140259e46e5e25791c16ce8fa14651c6441bcf53"
     },
     {
       "file": "locales/ko.json",
-      "bytes": 46428,
-      "sha256": "d2b919d7997106f64fce1dc1208aeb2390e8d27f865d8729e1d7286efa2546a2"
+      "bytes": 47111,
+      "sha256": "00fd1798f642a508a254019376c072eb3117664d327f8302caf5095381c1486a"
     },
     {
       "file": "locales/pt.json",
-      "bytes": 43760,
-      "sha256": "cf38f1e71fee75dd4d16a2a481c4f5b5c24c5d28f77370f21d430a31e09aec5b"
+      "bytes": 44389,
+      "sha256": "3ecc6aafc7cc65a9c88b151928fb7332b8a9ab7f63fafe72ba7a159f91328e32"
     },
     {
       "file": "locales/ru.json",
-      "bytes": 56692,
-      "sha256": "020560e3cdcd20789f80cc046e8f09a962e1dcfcb98074f0e01842420d158b9a"
+      "bytes": 57592,
+      "sha256": "d9a0491ed5f7eabae262729aba8df6b574648625f6cd355f7204f3cff4df9897"
     },
     {
       "file": "locales/tr.json",
-      "bytes": 42614,
-      "sha256": "4f92c93ffac0260ee5295c668ba51d6297b7b99388bfdccd3e0bc5fd5f50fcb4"
+      "bytes": 43228,
+      "sha256": "acac14812af12ae9bbbbfa7b8a960909fbd57747a4463a7367876084a4b3f860"
     },
     {
       "file": "locales/vi.json",
-      "bytes": 46040,
-      "sha256": "a1396a53a429b7581f255729bd769e2c80361eab415b16be9eeb00b054b220b0"
+      "bytes": 46747,
+      "sha256": "4214f3a60fb4c5ea35de264dd829a12f6081380bc12bf9023598c7d629480faf"
     },
     {
       "file": "locales/zh-Hans.json",
-      "bytes": 40002,
-      "sha256": "ba0d66b13bfe48d6c7229f8970ef0838ae101a15df937acc6f3d6c2d1e1f64f2"
+      "bytes": 40566,
+      "sha256": "4a447482e3029a942407bc95dad0bd90f7ea739dff01b6d148a919857b518240"
     },
     {
       "file": "locales/zh-Hant.json",
-      "bytes": 40113,
-      "sha256": "a4fa37464fb910d61e9efed1774941a92604cdc10e13cfa26a471ee235179eea"
+      "bytes": 40677,
+      "sha256": "8ae06c314f2ca6cd9a626dd692bfdbbd6be578daf2bc42599c10cd86e085d879"
     },
     {
       "file": "manifest-rc19-fdg1.json",
@@ -254,7 +254,7 @@
     {
       "file": "release.json",
       "bytes": 139,
-      "sha256": "c4a781499416b84c1eb8e1a04c1b03ae1dae4871f891d50672248cac6c3904a0"
+      "sha256": "991c76e0350a60fe54cabb7fa3da5ca96d487743b5f829f4d16d835b9917649c"
     },
     {
       "file": "style-rc19-fdg1.css",
@@ -264,7 +264,7 @@
     {
       "file": "sw.js",
       "bytes": 3783,
-      "sha256": "113612e17c98cbe9a7f006327be6d9d2545cb97686c6313b9e9762cb75d0a85e"
+      "sha256": "35688221a5111f26182cf234ac945799373622ac993575ae30c6d53641610699"
     },
     {
       "file": "tn-learning-flow-rc19-fdg1.js",
@@ -283,8 +283,8 @@
     },
     {
       "file": "ui/forest-desk-glass-rc19-fdg1.css",
-      "bytes": 68066,
-      "sha256": "e0f5f81e3c9799919371abcb6585f2a5acf82927cf8e596ea367ab1a8a50b308"
+      "bytes": 70303,
+      "sha256": "871ef3d3f9c0effa0a257acc872ed226b4f5534555675001666e86a68f3c1010"
     },
     {
       "file": "ui/i18n.js",
@@ -308,8 +308,8 @@
     },
     {
       "file": "ui/living-library.js",
-      "bytes": 4739,
-      "sha256": "b402ca39f739610289e1127fe4791e06076ad276230b78f9bee793fa09cdd891"
+      "bytes": 4807,
+      "sha256": "9df99059d051c43526bb00c61f4b1fc1a30ab9e3a7588ca5f9bb5fb6e81c8a27"
     },
     {
       "file": "ui/runtime-rc19-fdg1.js",
@@ -318,8 +318,8 @@
     },
     {
       "file": "ui/study-continuity.js",
-      "bytes": 5858,
-      "sha256": "b156af2f840fd3f75b477897878d5ac4749700794c3274bd7e9642f376f551b8"
+      "bytes": 6274,
+      "sha256": "3e96ef91bb2bea7dc35626f5aadd218a0d82ea6ab6c31649c23c8bd898a68c3e"
     },
     {
       "file": "vendor/supabase-2.115.0.js",
