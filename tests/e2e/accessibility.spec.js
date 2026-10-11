@@ -21,3 +21,18 @@ test("primary app screens have no serious axe violations",async({page})=>{
     await expectNoSeriousViolations(page,`${name} accessibility`);
   }
 });
+
+test("navigation keeps text opaque throughout the page transition",async({page})=>{
+  await openTestApp(page);
+  const frames=await page.evaluate(()=>{
+    const section=document.querySelector('.page.active');
+    TangoNestMotion.enter(section);
+    const animation=section.getAnimations()[0];
+    if(!animation)throw new Error('Expected the normal navigation transition');
+    animation.pause();
+    const duration=animation.effect.getComputedTiming().duration;
+    const samples=[0,.5,1].map(progress=>{animation.currentTime=duration*progress;return getComputedStyle(section).opacity});
+    animation.cancel();return samples;
+  });
+  expect(frames).toEqual(['1','1','1']);
+});

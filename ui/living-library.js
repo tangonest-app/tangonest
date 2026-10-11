@@ -9,7 +9,8 @@
   function enter(element,study=false){
     if(!element||reduced.matches||document.hidden||!element.animate)return;
     animations.get(element)?.cancel();
-    const animation=element.animate([{opacity:.72,transform:study?"none":"translateY(5px)"},{opacity:1,transform:"none"}],{duration:duration(study?"--motion-fast":"--motion-normal"),easing:getComputedStyle(root).getPropertyValue("--ease-enter").trim()});
+    // Preserve text contrast throughout navigation, including the first animation frame.
+    const animation=element.animate([{transform:study?"none":"translateY(5px)"},{transform:"none"}],{duration:duration(study?"--motion-fast":"--motion-normal"),easing:getComputedStyle(root).getPropertyValue("--ease-enter").trim()});
     animations.set(element,animation);
   }
   // Container-only WAAPI avoids document snapshot input blocking on large libraries.
