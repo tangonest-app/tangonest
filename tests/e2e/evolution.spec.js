@@ -24,7 +24,7 @@ test('automatic session finishes mixed answers without Next and records each onc
   expect(await page.evaluate(()=>quiz.index)).toBe(0);
   for(const ok of [true,false,true]){
     await answer(page,ok);
-    await expect(page.locator('.quiz-next-btn')).toHaveCount(0);
+    await expect(page.locator('.quiz-next-btn')).toHaveCount(1);
     const index=await page.evaluate(()=>quiz.index);
     await page.clock.runFor(1900);
     expect(await page.evaluate(()=>quiz.index)).toBe(index);
@@ -36,11 +36,11 @@ test('automatic session finishes mixed answers without Next and records each onc
   await expect(page.locator('#quizResultSummary')).toContainText('67%');
 });
 
-test('speech completion and feedback duration are both required; stale callbacks cannot advance',async({page})=>{
+test('feedback delay remains authoritative when automatic speech stalls and stale callbacks cannot advance',async({page})=>{
   await setupQuiz(page);
   await page.evaluate(()=>{document.getElementById('quizAudioAfter').value='on';window.speak=()=>new Promise(resolve=>window.finishSpeech=resolve)});
   await answer(page,true);await page.clock.runFor(2300);
-  expect(await page.evaluate(()=>quiz.index)).toBe(0);
+  expect(await page.evaluate(()=>quiz.index)).toBe(1);
   await page.evaluate(()=>finishSpeech(true));
   expect(await page.evaluate(()=>quiz.index)).toBe(1);
   await page.clock.runFor(400);await answer(page,false);
@@ -49,19 +49,17 @@ test('speech completion and feedback duration are both required; stale callbacks
   await page.clock.runFor(500);expect(await page.evaluate(()=>quiz.index)).toBe(2);
 });
 
-test('unresponsive speech times out visibly and auto progress recovers',async({page})=>{
+test('unresponsive automatic speech does not stall learning',async({page})=>{
   await setupQuiz(page);
   await page.evaluate(()=>{document.getElementById('quizAudioAfter').value='on';window.speak=()=>new Promise(()=>{})});
-  await answer(page,true);await page.clock.runFor(21010);
-  await expect(page.locator('#quizAdvanceStatus')).toContainText('failed');
-  await page.clock.runFor(2100);expect(await page.evaluate(()=>quiz.index)).toBe(1);
+  await answer(page,true);await page.clock.runFor(2400);expect(await page.evaluate(()=>quiz.index)).toBe(1);
 });
 
-test('pause, explanation and tab hiding require deliberate resume with fresh reading time',async({page})=>{
+test('pause and tab hiding require deliberate resume with fresh reading time',async({page})=>{
   await setupQuiz(page);
   await answer(page,true);
-  await page.locator('.quiz-explanation summary').click();
-  await expect(page.locator('.quiz-explanation')).toHaveAttribute('open','');
+  await expect(page.locator('.quiz-answer-example')).toBeVisible();
+  await page.locator('#quizPauseAdvance').click();
   await expect.poll(()=>page.evaluate(()=>quizFeedback.paused)).toBe(true);
   await page.clock.runFor(5000);
   expect(await page.evaluate(()=>quiz.index)).toBe(0);

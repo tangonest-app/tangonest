@@ -678,7 +678,7 @@
   "quiz.reviewMore": "Dieses Wort wird häufiger wiederholt.",
   "library.recentlyUpdated": "Kürzlich aktualisiert",
   "ui.auto_smart_2_2_3_2s": "Auto (1,2 s richtig / 2,5 s falsch)",
-  "ui.after_answer_audio": "Vorderseiten-Audio nach der Antwort",
+  "ui.after_answer_audio": "Audio der Antwort",
   "quiz.advancing": "Automatisch weiter",
   "listen.waiting": "Nächster Eintrag folgt",
   "listen.completed": "Wiedergabe abgeschlossen",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "Keine Wörter entsprechen diesen Einstellungen. Ändere die Auswahl in den Einstellungen.",
   "quiz.emptyReview": "Keine Antworten in dieser Kategorie.",
   "quiz.playAnswer": "Antwort anhören",
-  "quiz.autoTiming": "Automatisch · 2 Sekunden"
+  "quiz.autoTiming": "Automatisch · 2 Sekunden",
+  "quiz.settingsSaveFailed": "Einstellungen konnten auf diesem Gerät nicht gespeichert werden.",
+  "quiz.historySaveFailed": "Dieses Ergebnis konnte auf diesem Gerät nicht gespeichert werden.",
+  "quiz.pinyin": "Pinyin",
+  "quiz.pronunciation": "Aussprache",
+  "quiz.frontPronunciation": "Aussprache der Vorderseite",
+  "quiz.reviewAll": "Alles wiederholen",
+  "quiz.finish": "Beenden",
+  "quiz.inputHint": "Enter zum Antworten · leeres Enter zum Überspringen"
 }

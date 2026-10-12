@@ -678,7 +678,7 @@
   "quiz.reviewMore": "Kata ini akan muncul lebih sering.",
   "library.recentlyUpdated": "Baru diperbarui",
   "ui.auto_smart_2_2_3_2s": "Otomatis (benar 1,2 dtk / salah 2,5 dtk)",
-  "ui.after_answer_audio": "Audio depan setelah menjawab",
+  "ui.after_answer_audio": "Audio jawaban setelah menjawab",
   "quiz.advancing": "Melanjutkan otomatis",
   "listen.waiting": "Menunggu item berikutnya",
   "listen.completed": "Pemutaran selesai",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "Tidak ada kata yang cocok dengan pengaturan ini. Kembali ke pengaturan untuk mengubah cakupan.",
   "quiz.emptyReview": "Tidak ada jawaban dalam kategori ini.",
   "quiz.playAnswer": "Putar jawaban",
-  "quiz.autoTiming": "Otomatis · 2 detik"
+  "quiz.autoTiming": "Otomatis · 2 detik",
+  "quiz.settingsSaveFailed": "Pengaturan tidak dapat disimpan di perangkat ini.",
+  "quiz.historySaveFailed": "Hasil ini tidak dapat disimpan di perangkat ini.",
+  "quiz.pinyin": "Pinyin",
+  "quiz.pronunciation": "Pelafalan",
+  "quiz.frontPronunciation": "Pelafalan sisi depan",
+  "quiz.reviewAll": "Tinjau semua",
+  "quiz.finish": "Selesai",
+  "quiz.inputHint": "Enter untuk menjawab · Enter kosong untuk melewati"
 }

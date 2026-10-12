@@ -678,7 +678,7 @@
   "quiz.reviewMore": "這個單字會更頻繁出現。",
   "library.recentlyUpdated": "最近更新",
   "ui.auto_smart_2_2_3_2s": "自動（正確1.2秒／錯誤2.5秒）",
-  "ui.after_answer_audio": "回答後播放正面音訊",
+  "ui.after_answer_audio": "回答後播放正確答案",
   "quiz.advancing": "將自動繼續",
   "listen.waiting": "等待下一項",
   "listen.completed": "播放完成",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "目前沒有符合這些設定的單字。請返回設定變更範圍。",
   "quiz.emptyReview": "此類別中沒有答案。",
   "quiz.playAnswer": "播放正確答案",
-  "quiz.autoTiming": "自動 · 2秒"
+  "quiz.autoTiming": "自動 · 2秒",
+  "quiz.settingsSaveFailed": "無法在此裝置上儲存設定。",
+  "quiz.historySaveFailed": "無法在此裝置上儲存結果。",
+  "quiz.pinyin": "拼音",
+  "quiz.pronunciation": "發音",
+  "quiz.frontPronunciation": "正面詞語的發音",
+  "quiz.reviewAll": "複習全部",
+  "quiz.finish": "完成",
+  "quiz.inputHint": "按Enter提交 · 空白時按Enter跳過"
 }

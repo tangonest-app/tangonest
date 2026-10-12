@@ -12,7 +12,7 @@ async function setup(page,count=3){
 const start=page=>page.getByRole('button',{name:'Start Quiz',exact:true}).click();
 async function answer(page,ok){await page.locator('#quizAnswer').fill(ok?await page.evaluate(()=>correctAnswer()):'my incorrect answer');await page.locator('#quizAnswer').press('Enter');}
 async function next(page){await page.locator('#quizAnswer').press('Enter');await page.clock.runFor(400);}
-async function skip(page){await page.locator('#quizSkipButton').click();await page.clock.runFor(400);}
+async function skip(page){await page.locator('#quizSkipButton').click();await expect(page.locator('#quizResult')).toContainText('Skipped');await next(page);}
 
 test('Typing defaults to Back to Front and explicit directions persist independently by format',async({page})=>{
   await openTestApp(page);await navigateToPage(page,'quiz');
@@ -31,10 +31,9 @@ test('legacy saved Typing direction is preserved rather than replaced by the new
   await openTestApp(page);await navigateToPage(page,'quiz');await expect(page.locator('#quizDirection')).toHaveValue('front');
 });
 
-test('focus and Enter survive grading and Skip while IME, empty and repeated Enter stay harmless',async({page})=>{
+test('focus and Enter survive grading and Skip while IME and repeated Enter stay harmless',async({page})=>{
   await setup(page);await start(page);await expect(page.locator('#quizAnswer')).toBeFocused();
   await page.evaluate(()=>{window.learningCalls=[];window.tnRecordLearningResult=event=>learningCalls.push(event)});
-  await page.locator('#quizAnswer').press('Enter');expect(await page.evaluate(()=>quiz.records.length)).toBe(0);
   await page.locator('#quizAnswer').fill(await page.evaluate(()=>correctAnswer()));
   await page.locator('#quizAnswer').dispatchEvent('keydown',{key:'Enter',isComposing:true});expect(await page.evaluate(()=>quiz.answered)).toBe(false);
   await page.locator('#quizAnswer').press('Enter');
@@ -56,8 +55,8 @@ test('review keeps answer snapshots and Retry Mistakes then Continue retains the
   const snapshot=await page.evaluate(()=>quiz.records[1].answer);
   await page.evaluate(()=>{db.words.find(word=>word.id===quiz.records[1].id).front='Edited after answering';renderWrongList()});
   await expect(page.locator('.quiz-review-card')).toContainText(snapshot);
-  await page.locator('#quizRetryMistakes').click();expect(await page.evaluate(()=>quiz.total)).toBe(1);await expect(page.locator('#quizAnswer')).toBeFocused();
-  await answer(page,true);await next(page);await expect(page.locator('#quizRetryMistakes')).toBeHidden();
+  await page.locator('#quizRetryMistakes').click();expect(await page.evaluate(()=>quiz.total)).toBe(2);await expect(page.locator('#quizAnswer')).toBeFocused();
+  await answer(page,true);await next(page);await answer(page,true);await next(page);await expect(page.locator('#quizRetryMistakes')).toBeHidden();
   // Controls changed by another view must not replace the original session configuration.
   await page.evaluate(()=>{document.getElementById('quizCount').value='1';document.getElementById('quizDirection').value='front';Math.random=()=>.9999});
   await page.locator('#quizContinue').click();await expect(page.locator('#quizAnswer')).toBeFocused();
@@ -65,13 +64,13 @@ test('review keeps answer snapshots and Retry Mistakes then Continue retains the
   const {queue,...settings}=origin;expect(current.settings).toEqual(settings);expect(current.total).toBe(3);expect(current.queue).not.toEqual(queue);expect(current.direction).toBe('back');expect(new Set(current.queue).size).toBe(3);
 });
 
-test('all skipped questions have no grade or learning writes and can be retried separately',async({page})=>{
+test('all skipped questions have no grade or learning writes and are included in Retry Mistakes',async({page})=>{
   await setup(page);await start(page);const before=await page.evaluate(()=>JSON.stringify({words:db.words,mistakes:db.mistakes}));
   for(let i=0;i<3;i++)await skip(page);
-  await expect(page.locator('#quizRetryMistakes')).toBeHidden();await expect(page.locator('#quizRetrySkipped')).toBeVisible();
+  await expect(page.locator('#quizRetryMistakes')).toBeVisible();
   await expect(page.locator('#quizResultSummary')).not.toContainText('%');await expect(page.locator('#quizResultSummary')).toContainText('0 answered / 3 planned');
   expect(await page.evaluate(()=>JSON.stringify({words:db.words,mistakes:db.mistakes}))).toBe(before);
-  await page.locator('#quizRetrySkipped').click();expect(await page.evaluate(()=>quiz.total)).toBe(3);await expect(page.locator('#quizAnswer')).toBeFocused();
+  await page.locator('#quizRetryMistakes').click();expect(await page.evaluate(()=>quiz.total)).toBe(3);await expect(page.locator('#quizAnswer')).toBeFocused();
 });
 
 test('Continue shuffles even a two-word playlist, caps count and safely handles one or zero eligible words',async({page})=>{
@@ -89,7 +88,7 @@ test('saved checkpoints preserve Skip status and original settings without repla
   await page.reload();await page.locator('.home-resume').click();
   expect(await page.evaluate(()=>quiz.records.map(quizRecordStatus))).toEqual(['incorrect','skipped']);
   expect(await page.evaluate(()=>quiz.allWrong.map(word=>word.id))).toHaveLength(1);expect(await page.evaluate(()=>db.words.map(word=>word.reviewCount))).toEqual(before);
-  await page.locator('#quizEndSession').click();await expect(page.locator('#quizResultSummary')).toContainText('0%');await expect(page.locator('#quizRetrySkipped')).toBeVisible();
+  await page.locator('#quizEndSession').click();await expect(page.locator('#quizResultSummary')).toContainText('0%');await expect(page.locator('#quizRetryMistakes')).toBeVisible();
   await page.locator('#quizContinue').click();expect(await page.evaluate(()=>({total:quiz.total,direction:quiz.direction,type:quiz.type}))).toEqual({total:3,direction:'back',type:'typing'});
 });
 

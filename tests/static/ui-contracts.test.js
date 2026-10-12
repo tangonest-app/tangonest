@@ -29,7 +29,7 @@ const languages=require("../../languages.js");
 assert.ok(Object.isFrozen(languages.options));
 assert.ok(languages.registry.length>=37);
 assert.deepEqual(languages.options.slice(0,3).map(option=>option[0]),["en-US","ja-JP","ko-KR"]);
-assert.match(app,/QUIZ_NEXT_TIMING=Object.freeze\(\{correct:2000,incorrect:2000\}\)/);
+assert.match(app,/QUIZ_NEXT_TIMING=Object.freeze\(\{correct:2000,incorrect:2000,skipped:2000\}\)/);
 assert.match(app,/window\.tnBulkProgress=\{start:beginBulkProgress/);
 assert.match(html,/id="homeMemoryPath"/);
 assert.match(app,/\.choice\[data-shortcut=/);

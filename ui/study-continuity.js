@@ -14,7 +14,7 @@
     if(page==="pageQuiz"&&quiz.current&&!quiz.ended&&$("quizRun").style.display!=="none"){
       const index=quiz.index+(quiz.answered?1:0);
       if(index>=quiz.queue.length)return write(null);
-      state={mode:"quiz",listId:$("quizList").value,index,total:quiz.total,queue:quiz.queue.map(fingerprint),records:quiz.records||[],type:quiz.type,direction:quiz.direction,settings:quiz.settings,originSettings:quiz.originSettings,originQueueIds:quiz.originQueueIds,options:{quizAutoAdvance:$("quizAutoAdvance").value,quizAudioAfter:$("quizAudioAfter").value}};
+      state={mode:"quiz",sessionId:quiz.sessionId,startedAt:quiz.startedAt,listId:$("quizList").value,index,total:quiz.total,queue:quiz.queue.map(fingerprint),records:quiz.records||[],type:quiz.type,direction:quiz.direction,settings:quiz.settings,originSettings:quiz.originSettings,originQueueIds:quiz.originQueueIds,options:{quizAutoAdvance:$("quizAutoAdvance").value,quizAudioAfter:$("quizAudioAfter").value}};
     }else if(page==="pageStudy"&&current){
       state={mode:"cards",listId:$("studyList").value,word:fingerprint(current),flipped,rated:cardRated,studyMode:$("studyMode").value};
     }else if(page==="pageAudio"&&audioQueue.length&&listenRun.phase!=="completed"){
@@ -55,7 +55,7 @@
         for(const [id,value]of Object.entries(state.options))if(id!=="quizAutoAdvance")$(id).value=value;
         // Resuming never restarts a deadline or plays audio without a fresh user action.
         $("quizHardMode").value="off";$("listeningTimerMode").value="off";
-        quiz={queue:state.queue.map(value=>words.get(value)),wrong:[],allWrong:[],records:state.records,index:state.index,total:state.total,score:state.records.filter(record=>quizRecordStatus(record)==="correct").length,type:state.type,direction:state.direction,current:null,answered:false,ended:false,listeningReplayUsed:0,settings:captureQuizSettings(),originSettings:state.originSettings||state.settings||captureQuizSettings(),originQueueIds:state.originQueueIds||state.queue.map(value=>JSON.parse(value)[0]),reviewFilter:"all"};
+        quiz={sessionId:state.sessionId||uid(),startedAt:state.startedAt||state.at,queue:state.queue.map(value=>words.get(value)),wrong:[],allWrong:[],records:state.records,index:state.index,total:state.total,score:state.records.filter(record=>quizRecordStatus(record)==="correct").length,type:state.type,direction:state.direction,current:null,answered:false,ended:false,listeningReplayUsed:0,settings:captureQuizSettings(),originSettings:state.originSettings||state.settings||captureQuizSettings(),originQueueIds:state.originQueueIds||state.queue.map(value=>JSON.parse(value)[0]),reviewFilter:"all"};
         quiz.allWrong=Array.from(new Set(state.records.filter(record=>quizRecordStatus(record)==="incorrect").map(record=>record.id))).map(id=>db.words.find(word=>word.id===id)).filter(Boolean);
         $("quizSetup").style.display="none";$("quizEnd").style.display="none";$("quizRun").style.display="grid";$("pageQuiz").classList.add("quiz-focus-active");showQuizQuestion();clearTimeout(quizListeningAudioTimer);
       }else if(state.mode==="cards"){

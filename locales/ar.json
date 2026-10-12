@@ -678,7 +678,7 @@
   "quiz.reviewMore": "ستظهر هذه الكلمة أكثر.",
   "library.recentlyUpdated": "حُدّث مؤخرًا",
   "ui.auto_smart_2_2_3_2s": "تلقائي (1.2 ث للصحيح / 2.5 ث للخطأ)",
-  "ui.after_answer_audio": "صوت الوجه الأمامي بعد الإجابة",
+  "ui.after_answer_audio": "صوت الإجابة الصحيحة",
   "quiz.advancing": "الانتقال تلقائيًا",
   "listen.waiting": "انتظار العنصر التالي",
   "listen.completed": "اكتمل التشغيل",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "لا توجد كلمات تطابق هذه الإعدادات. ارجع إلى الإعدادات لتغيير النطاق.",
   "quiz.emptyReview": "لا توجد إجابات في هذه الفئة.",
   "quiz.playAnswer": "تشغيل الإجابة",
-  "quiz.autoTiming": "تلقائي · ثانيتان"
+  "quiz.autoTiming": "تلقائي · ثانيتان",
+  "quiz.settingsSaveFailed": "تعذر حفظ الإعدادات على هذا الجهاز.",
+  "quiz.historySaveFailed": "تعذر حفظ هذه النتيجة على هذا الجهاز.",
+  "quiz.pinyin": "بينيين",
+  "quiz.pronunciation": "النطق",
+  "quiz.frontPronunciation": "نطق الوجه الأمامي",
+  "quiz.reviewAll": "مراجعة الكل",
+  "quiz.finish": "إنهاء",
+  "quiz.inputHint": "Enter للإجابة · Enter في حقل فارغ للتخطي"
 }

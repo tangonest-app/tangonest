@@ -678,7 +678,7 @@
   "quiz.reviewMore": "这个单词会更频繁出现。",
   "library.recentlyUpdated": "最近更新",
   "ui.auto_smart_2_2_3_2s": "自动（正确1.2秒／错误2.5秒）",
-  "ui.after_answer_audio": "回答后播放正面音频",
+  "ui.after_answer_audio": "回答后播放正确答案",
   "quiz.advancing": "将自动继续",
   "listen.waiting": "等待下一项",
   "listen.completed": "播放完成",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "当前没有符合这些设置的单词。请返回设置更改范围。",
   "quiz.emptyReview": "此类别中没有答案。",
   "quiz.playAnswer": "播放正确答案",
-  "quiz.autoTiming": "自动 · 2秒"
+  "quiz.autoTiming": "自动 · 2秒",
+  "quiz.settingsSaveFailed": "无法在此设备上保存设置。",
+  "quiz.historySaveFailed": "无法在此设备上保存结果。",
+  "quiz.pinyin": "拼音",
+  "quiz.pronunciation": "发音",
+  "quiz.frontPronunciation": "正面词语的发音",
+  "quiz.reviewAll": "复习全部",
+  "quiz.finish": "完成",
+  "quiz.inputHint": "按Enter提交 · 空白时按Enter跳过"
 }

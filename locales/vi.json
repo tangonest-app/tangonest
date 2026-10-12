@@ -678,7 +678,7 @@
   "quiz.reviewMore": "Từ này sẽ xuất hiện thường xuyên hơn.",
   "library.recentlyUpdated": "Vừa cập nhật",
   "ui.auto_smart_2_2_3_2s": "Tự động (đúng 1,2 giây / sai 2,5 giây)",
-  "ui.after_answer_audio": "Âm thanh mặt trước sau khi trả lời",
+  "ui.after_answer_audio": "Âm thanh đáp án sau khi trả lời",
   "quiz.advancing": "Tự động chuyển tiếp",
   "listen.waiting": "Đang chờ mục tiếp theo",
   "listen.completed": "Đã phát xong",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "Không có từ phù hợp với cài đặt này. Quay lại cài đặt để thay đổi phạm vi.",
   "quiz.emptyReview": "Không có câu trả lời trong mục này.",
   "quiz.playAnswer": "Phát đáp án",
-  "quiz.autoTiming": "Tự động · 2 giây"
+  "quiz.autoTiming": "Tự động · 2 giây",
+  "quiz.settingsSaveFailed": "Không thể lưu cài đặt trên thiết bị này.",
+  "quiz.historySaveFailed": "Không thể lưu kết quả này trên thiết bị này.",
+  "quiz.pinyin": "Bính âm",
+  "quiz.pronunciation": "Phát âm",
+  "quiz.frontPronunciation": "Phát âm mặt trước",
+  "quiz.reviewAll": "Ôn lại tất cả",
+  "quiz.finish": "Kết thúc",
+  "quiz.inputHint": "Enter để trả lời · Enter khi để trống để bỏ qua"
 }

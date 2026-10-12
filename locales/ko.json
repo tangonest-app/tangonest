@@ -678,7 +678,7 @@
   "quiz.reviewMore": "이 단어가 더 자주 나옵니다.",
   "library.recentlyUpdated": "최근 업데이트",
   "ui.auto_smart_2_2_3_2s": "자동 (정답 1.2초 / 오답 2.5초)",
-  "ui.after_answer_audio": "응답 후 앞면 음성",
+  "ui.after_answer_audio": "응답 후 정답 음성",
   "quiz.advancing": "자동으로 다음으로 이동합니다",
   "listen.waiting": "다음 항목 대기 중",
   "listen.completed": "재생 완료",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "현재 설정에 맞는 단어가 없습니다. 설정으로 돌아가 범위를 변경하세요.",
   "quiz.emptyReview": "이 분류에는 답변이 없습니다.",
   "quiz.playAnswer": "정답 듣기",
-  "quiz.autoTiming": "자동 · 2초"
+  "quiz.autoTiming": "자동 · 2초",
+  "quiz.settingsSaveFailed": "이 기기에 설정을 저장하지 못했습니다.",
+  "quiz.historySaveFailed": "이 기기에 결과를 저장하지 못했습니다.",
+  "quiz.pinyin": "병음",
+  "quiz.pronunciation": "발음",
+  "quiz.frontPronunciation": "앞면 단어의 발음",
+  "quiz.reviewAll": "전체 복습",
+  "quiz.finish": "종료",
+  "quiz.inputHint": "Enter로 답변 · 빈칸에서 Enter로 건너뛰기"
 }

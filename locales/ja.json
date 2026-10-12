@@ -678,7 +678,7 @@
   "quiz.reviewMore": "この単語は今後の復習に多めに出題されます。",
   "library.recentlyUpdated": "最近更新",
   "ui.auto_smart_2_2_3_2s": "自動（正解1.2秒／不正解2.5秒）",
-  "ui.after_answer_audio": "回答後のFront音声",
+  "ui.after_answer_audio": "回答後の正答音声",
   "quiz.advancing": "自動で次へ進みます",
   "listen.waiting": "次の項目を待機中",
   "listen.completed": "再生が完了しました",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "現在、この設定に該当する単語がありません。設定に戻って範囲を変更してください。",
   "quiz.emptyReview": "この分類の回答はありません。",
   "quiz.playAnswer": "正答を再生",
-  "quiz.autoTiming": "自動・2秒"
+  "quiz.autoTiming": "自動・2秒",
+  "quiz.settingsSaveFailed": "この端末に設定を保存できませんでした。",
+  "quiz.historySaveFailed": "この端末に結果を保存できませんでした。",
+  "quiz.pinyin": "ピンイン",
+  "quiz.pronunciation": "発音",
+  "quiz.frontPronunciation": "Front側の発音",
+  "quiz.reviewAll": "すべて復習",
+  "quiz.finish": "終了",
+  "quiz.inputHint": "Enterで回答 · 空欄Enterでスキップ"
 }

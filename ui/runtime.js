@@ -10,6 +10,25 @@
   let followingHistory=false;
   const mobileBar=document.querySelector(".mobile-tabbar");
   if(mobileBar)new ResizeObserver(()=>document.documentElement.style.setProperty("--tn-mobile-nav-height",`${mobileBar.getBoundingClientRect().height}px`)).observe(mobileBar);
+  // VisualViewport reflects the usable area when iOS keeps its layout viewport tall.
+  // Use only normal user focus; never open a keyboard through synthetic gestures.
+  const viewport=window.visualViewport;
+  let keyboardBaseline=innerHeight,keyboardFrame=0;
+  function updateQuizKeyboard(){
+    cancelAnimationFrame(keyboardFrame);
+    keyboardFrame=requestAnimationFrame(()=>{
+      const input=$("quizAnswer"),focused=document.activeElement===input&&$("pageQuiz")?.classList.contains("active")&&$("quizRun")?.style.display!=="none";
+      if(!focused)keyboardBaseline=innerHeight;
+      const open=Boolean(focused&&viewport&&Math.max(keyboardBaseline,innerHeight)-viewport.height>120);
+      document.body.classList.toggle("tn-quiz-keyboard",open);
+      if(open){const rect=input.getBoundingClientRect(),top=viewport.offsetTop,bottom=top+viewport.height;if(rect.top<top+12||rect.bottom>bottom-12)input.scrollIntoView({block:"nearest",behavior:"instant"})}
+    });
+  }
+  viewport?.addEventListener("resize",updateQuizKeyboard);
+  viewport?.addEventListener("scroll",updateQuizKeyboard);
+  document.addEventListener("focusin",updateQuizKeyboard);
+  document.addEventListener("focusout",updateQuizKeyboard);
+  window.addEventListener("resize",updateQuizKeyboard);
   const pageLabels={
     home:["Forest Desk","Home"],
     create:["Collection","Add Words"],
@@ -26,6 +45,7 @@
   }
 
   function updateShellContext(page,writeHistory=true){
+    updateQuizKeyboard();
     const current=normalizePage(page);
     const labels=pageLabels[current]||pageLabels.home;
     const eyebrow=$("appPageEyebrow");

@@ -151,6 +151,8 @@ test("wrong password and existing-account signup show specific guidance",async({
 });
 
 test("core learning journey remains clickable",async({page})=>{
+  // This functional journey visits every module; timing budgets live in performance.spec.js.
+  test.setTimeout(90000);
   await openTestApp(page);
   await expect(page.locator("#pageHome")).toHaveClass(/active/);
 

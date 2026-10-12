@@ -57,11 +57,10 @@ test('equal timing, manual advance and audio review do not double advance',async
   expect(await page.evaluate(()=>quiz.index)).toBe(2);
 });
 
-test('Quiz layout stays legible without nested scrolling at nine widths and three heights',async({page})=>{
+for(const width of [1440,1280,1024,834,768,430,390,375,320])test(`Quiz layout stays legible without nested scrolling at ${width}px and three heights`,async({page})=>{
   await openTestApp(page);
   await navigateToPage(page,'quiz');
   await page.evaluate(()=>{startQuiz();document.getElementById('quizAutoAdvance').value='manual';});
-  for(const width of [1440,1280,1024,834,768,430,390,375,320]){
     for(const height of [768,800,900]){
       await page.setViewportSize({width,height});
       await page.evaluate(()=>showQuizQuestion());
@@ -81,7 +80,6 @@ test('Quiz layout stays legible without nested scrolling at nine widths and thre
       expect(metrics.nested).toEqual([]);
       if(width>=1024)expect(metrics.bottom).toBeLessThan(height);
     }
-  }
 });
 
 test('long answers wrap instead of clipping or creating feedback scrollbars',async({page})=>{

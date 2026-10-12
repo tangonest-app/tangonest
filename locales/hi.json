@@ -678,7 +678,7 @@
   "quiz.reviewMore": "यह शब्द अधिक बार आएगा।",
   "library.recentlyUpdated": "हाल में अपडेट हुआ",
   "ui.auto_smart_2_2_3_2s": "स्वचालित (सही 1.2 सेकंड / गलत 2.5 सेकंड)",
-  "ui.after_answer_audio": "उत्तर के बाद सामने का ऑडियो",
+  "ui.after_answer_audio": "उत्तर के बाद सही उत्तर की आवाज़",
   "quiz.advancing": "अपने आप आगे बढ़ रहा है",
   "listen.waiting": "अगले आइटम की प्रतीक्षा",
   "listen.completed": "प्लेबैक पूरा हुआ",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "इन सेटिंग से मेल खाने वाले शब्द नहीं हैं। दायरा बदलने के लिए सेटिंग पर लौटें।",
   "quiz.emptyReview": "इस श्रेणी में कोई उत्तर नहीं है।",
   "quiz.playAnswer": "उत्तर सुनें",
-  "quiz.autoTiming": "स्वचालित · 2 सेकंड"
+  "quiz.autoTiming": "स्वचालित · 2 सेकंड",
+  "quiz.settingsSaveFailed": "इस डिवाइस पर सेटिंग सहेजी नहीं जा सकीं।",
+  "quiz.historySaveFailed": "इस डिवाइस पर यह परिणाम सहेजा नहीं जा सका।",
+  "quiz.pinyin": "पिनयिन",
+  "quiz.pronunciation": "उच्चारण",
+  "quiz.frontPronunciation": "सामने के शब्द का उच्चारण",
+  "quiz.reviewAll": "सभी दोहराएँ",
+  "quiz.finish": "समाप्त करें",
+  "quiz.inputHint": "उत्तर के लिए Enter · खाली Enter से छोड़ें"
 }

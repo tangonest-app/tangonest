@@ -42,14 +42,14 @@ test('same-spelling entries keep unique IDs and complete without a queue rewrite
   await expect(page.locator('#quizEnd')).toBeVisible();expect(await page.evaluate(()=>quiz.records.map(r=>r.id))).toEqual(ids);
 });
 
-for(const direction of ['front','back'])test(`Front text/language stays Chinese with ${direction} direction and another app language`,async({page})=>{
+for(const direction of ['front','back'])test(`Quiz answer audio uses the answer language with ${direction} direction and another app language`,async({page})=>{
   await setup(page);await navigateToPage(page,'quiz');await page.locator('#quizDirection').selectOption(direction);
   await page.evaluate(()=>{db.words.forEach((w,i)=>{w.front='你好'+i;w.back='こんにちは'+i;w.frontLang='zh-CN';w.backLang='ja-JP'});TNI18n.setLocale('ar')});
   await page.clock.install();await page.clock.pauseAt(new Date(Date.now()+1000));await page.locator('[onclick="startQuiz()"]').click();
   await page.clock.runFor(500);expect(await page.evaluate(()=>audioCalls)).toEqual([]);
-  const front=await page.evaluate(()=>quiz.current.front);await answer(page);await page.clock.runFor(150);
-  expect(await page.evaluate(()=>audioCalls)).toEqual([{text:front,lang:'zh-CN',voice:'zh-CN'}]);
-  await page.locator('.quiz-answer-audio').click();await page.clock.runFor(200);expect(await page.evaluate(()=>audioCalls[1])).toEqual({text:front,lang:'zh-CN',voice:'zh-CN'});
+  const expected=await page.evaluate(()=>({text:correctAnswer(),lang:correctAnswerLang(),voice:correctAnswerLang()}));await answer(page);await page.clock.runFor(150);
+  expect(await page.evaluate(()=>audioCalls)).toEqual([expected]);
+  await page.locator('.quiz-answer-audio').click();await page.clock.runFor(200);expect(await page.evaluate(()=>audioCalls[1])).toEqual(expected);
 });
 
 test('Front missing metadata never falls back to Back or app language; explicit library Front language works',async({page})=>{
@@ -66,7 +66,7 @@ test('wrong-answer results replay Front even for Back-to-Front questions',async(
   await setup(page);await navigateToPage(page,'quiz');await page.locator('#quizDirection').selectOption('back');await page.locator('#quizAudioAfter').selectOption('off');
   await page.evaluate(()=>db.words.forEach((w,i)=>{w.front='你好'+i;w.back='こんにちは'+i;w.frontLang='zh-CN';w.backLang='ja-JP'}));
   await page.locator('[onclick="startQuiz()"]').click();const state=await page.evaluate(()=>({front:quiz.current.front,index:quiz.currentChoices.findIndex(value=>value!==correctAnswer())}));
-  await page.locator('.choice').nth(state.index).click();await page.locator('[onclick="endQuiz()"]').click();await page.locator('#quizWrongList').getByRole('button',{name:'Play answer',exact:true}).click();
+  await page.locator('.choice').nth(state.index).click();await page.locator('[onclick="endQuiz()"]').click();await page.locator('.quiz-review-card summary').click();await page.locator('#quizWrongList').getByRole('button',{name:'Play answer',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>audioCalls)).toEqual([{text:state.front,lang:'zh-CN',voice:'zh-CN'}]);
 });
 
@@ -122,7 +122,7 @@ test('signed-in account migrates its own order once and restores explicit choice
 
 test('compact setup exposes full current values and disables an inactive time limit',async({page})=>{
   await setup(page);await navigateToPage(page,'quiz');await page.locator('#quizAdvanced').evaluate(node=>node.open=false);
-  await expect(page.locator('#quizSettingsSummary')).toContainText('Random');await expect(page.locator('#quizSettingsSummary')).toContainText('Front only');
+  await expect(page.locator('#quizSettingsSummary')).toContainText('Random');await expect(page.locator('#quizSettingsSummary')).toContainText('After-answer audio');
   await expect(page.locator('#quizTimeLimit')).toBeHidden();await page.locator('#quizAdvanced>summary').click();await expect(page.locator('#quizTimeLimit')).toBeDisabled();
   await expect(page.locator('#quizAdvanceValue')).toHaveText('Auto · 2 seconds');await page.locator('#quizHardMode').selectOption('on');await expect(page.locator('#quizTimeLimit')).toBeEnabled();
 });

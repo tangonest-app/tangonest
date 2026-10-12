@@ -678,7 +678,7 @@
   "quiz.reviewMore": "Bu kelime daha sık görünecek.",
   "library.recentlyUpdated": "Yakın zamanda güncellendi",
   "ui.auto_smart_2_2_3_2s": "Otomatik (doğru 1,2 sn / yanlış 2,5 sn)",
-  "ui.after_answer_audio": "Yanıttan sonra ön yüz sesi",
+  "ui.after_answer_audio": "Yanıt sonrası doğru cevap sesi",
   "quiz.advancing": "Otomatik ilerliyor",
   "listen.waiting": "Sonraki öğe bekleniyor",
   "listen.completed": "Oynatma tamamlandı",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "Bu ayarlara uyan kelime yok. Kapsamı değiştirmek için ayarlara dön.",
   "quiz.emptyReview": "Bu kategoride yanıt yok.",
   "quiz.playAnswer": "Yanıtı dinle",
-  "quiz.autoTiming": "Otomatik · 2 saniye"
+  "quiz.autoTiming": "Otomatik · 2 saniye",
+  "quiz.settingsSaveFailed": "Ayarlar bu cihaza kaydedilemedi.",
+  "quiz.historySaveFailed": "Bu sonuç bu cihaza kaydedilemedi.",
+  "quiz.pinyin": "Pinyin",
+  "quiz.pronunciation": "Telaffuz",
+  "quiz.frontPronunciation": "Ön yüz telaffuzu",
+  "quiz.reviewAll": "Tümünü gözden geçir",
+  "quiz.finish": "Bitir",
+  "quiz.inputHint": "Yanıtlamak için Enter · boş Enter ile atla"
 }

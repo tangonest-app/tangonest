@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.19-fdg17",
+  "version": "1.0.0-rc.19-fdg18",
   "iconDirectory": "assets/icons/fdg16",
   "iconMaster": "icon-1024.png",
   "supabaseSdk": "2.115.0"

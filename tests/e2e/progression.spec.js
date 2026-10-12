@@ -25,7 +25,7 @@ for(const audio of ['off','on'])test(`Quiz completes 10 mixed answers without Ne
   await open(page,'quiz');await expect(page.locator('#quizAutoAdvance')).toHaveValue('auto');await startQuizRun(page,audio);
   await page.clock.runFor(10000);expect(await page.evaluate(()=>quiz.index)).toBe(0);
   for(let i=0;i<10;i++){
-    await choose(page,i%2===0);await expect(page.locator('.quiz-next-btn')).toHaveCount(0);
+    await choose(page,i%2===0);await expect(page.locator('.quiz-next-btn')).toHaveCount(1);
     await page.clock.runFor(1950);expect(await page.evaluate(()=>quiz.index)).toBe(i);
     await page.clock.runFor(500);
   }
@@ -43,10 +43,11 @@ test('Play answer temporarily holds progression but preserves an explicit pause'
   expect(await page.evaluate(()=>quiz.index)).toBe(1);await expect(page.locator('#quizPauseAdvance')).toHaveText('Resume');await page.locator('#quizPauseAdvance').click();await page.clock.runFor(2600);expect(await page.evaluate(()=>quiz.index)).toBe(2);
 });
 
-test('long answer audio is not cut off at 20 seconds and late events do not advance twice',async({page})=>{
+test('automatic answer audio cannot block the configured delay and late events cannot advance twice',async({page})=>{
   await open(page,'quiz');await page.evaluate(()=>{db.words[0].front='A long meaningful prompt. '.repeat(30);voiceHarness.hold=true});await startQuizRun(page,'on');await choose(page,true);
-  await page.clock.runFor(25000);expect(await page.evaluate(()=>({index:quiz.index,active:voiceHarness.active}))).toEqual({index:0,active:1});
-  await page.evaluate(()=>{window.oldUtterance=voiceHarness.current;voiceHarness.finish()});await page.clock.runFor(500);await page.evaluate(()=>{oldUtterance.onend();oldUtterance.onerror({error:'network'});oldUtterance.onstart()});
+  await page.evaluate(()=>{window.oldUtterance=voiceHarness.current});
+  await page.clock.runFor(2500);expect(await page.evaluate(()=>({index:quiz.index,active:voiceHarness.active}))).toEqual({index:1,active:0});
+  await page.evaluate(()=>{oldUtterance.onend();oldUtterance.onerror({error:'network'});oldUtterance.onstart()});
   expect(await page.evaluate(()=>({index:quiz.index,count:quiz.records.length}))).toEqual({index:1,count:1});
 });
 

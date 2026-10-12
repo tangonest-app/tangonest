@@ -678,7 +678,7 @@
   "quiz.reviewMore": "Это слово будет появляться чаще.",
   "library.recentlyUpdated": "Недавно обновлено",
   "ui.auto_smart_2_2_3_2s": "Авто (1,2 с верно / 2,5 с неверно)",
-  "ui.after_answer_audio": "Озвучивание лицевой стороны после ответа",
+  "ui.after_answer_audio": "Озвучка правильного ответа",
   "quiz.advancing": "Автоматический переход",
   "listen.waiting": "Ожидание следующего слова",
   "listen.completed": "Воспроизведение завершено",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "Нет слов, соответствующих этим настройкам. Вернитесь к настройкам и измените выбор.",
   "quiz.emptyReview": "В этой категории нет ответов.",
   "quiz.playAnswer": "Прослушать ответ",
-  "quiz.autoTiming": "Автоматически · 2 секунды"
+  "quiz.autoTiming": "Автоматически · 2 секунды",
+  "quiz.settingsSaveFailed": "Не удалось сохранить настройки на этом устройстве.",
+  "quiz.historySaveFailed": "Не удалось сохранить результат на этом устройстве.",
+  "quiz.pinyin": "Пиньинь",
+  "quiz.pronunciation": "Произношение",
+  "quiz.frontPronunciation": "Произношение лицевой стороны",
+  "quiz.reviewAll": "Повторить всё",
+  "quiz.finish": "Завершить",
+  "quiz.inputHint": "Enter — ответить · пустой Enter — пропустить"
 }

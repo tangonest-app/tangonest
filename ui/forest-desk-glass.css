@@ -1290,22 +1290,7 @@ input:focus,select:focus,textarea:focus,
   .tn-bulk-progress[data-state="working"] .tn-bulk-progress-mark,.quiz-auto-note i{animation:none}
   .tn-bulk-progress-track i{transition:none}
 }
-/* FDG17: readable result actions and complete, wrapping answer history. */
-#quizEnd .tn-quiz-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
-#quizEnd .tn-quiz-summary .wide{grid-column:1/-1}
-.quiz-end-actions,.quiz-review-filters{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
-.quiz-review-filters button[aria-pressed="true"]{background:#174936;color:#fffaf0;border-color:#174936}
-.quiz-review-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:20px;margin:12px 0;border:1px solid #d5c9b1;border-radius:8px;background:#fffaf0;color:#1c2c24}
-.quiz-review-copy{min-width:0;overflow-wrap:anywhere}
-.quiz-review-copy h4{margin:10px 0;font-size:20px;line-height:1.5}
-.quiz-review-copy p{display:grid;gap:4px;margin:10px 0;line-height:1.6}
-.quiz-review-copy p>span{color:#3d4c40;font-size:12px}
-.quiz-review-copy summary{cursor:pointer;color:#245d45;font-weight:650}
-.quiz-review-status{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#eee5d3;color:#3d4c40}
-.quiz-review-status.correct{background:#e8eadf;color:#245d45}
-.quiz-review-status.incorrect{background:#f4e7df;color:#733a31}
-.quiz-review-card .quiz-wrong-actions{display:flex;align-content:start;align-items:start;flex-wrap:wrap;gap:8px;max-width:240px}
-.quiz-review-card .quiz-wrong-actions button{min-height:42px;padding:8px 12px;border:1px solid #d5c9b1;border-radius:5px;background:#f8f1df;color:#174936}
+/* Readable Library and Add Words labels. */
 #pageWords .tn-library-search-label,#pageWords .tn-library-search-label>span{color:#233a2b;background:#fffaf0}
 #pageWords .tn82-library-summary,#pageWords .tn82-library-summary>span{color:#233a2b;background:#eee4cf}
 #pageWords .tn-word-list-pos{color:#233a2b;background:#e9ecdf}
@@ -1313,9 +1298,3 @@ input:focus,select:focus,textarea:focus,
 #pageAdd .grid2>.card:nth-child(2) label,#pageAdd .grid2>.card:nth-child(2) label>span{background:#f5ecd9}
 #pageAdd .tn-bulk-flow span{color:#233a2b;background:#f4ecd9}
 #pageAdd .tn-bulk-target-summary,#pageAdd .tn-bulk-target-summary>span,#pageAdd .tn-bulk-target-summary>small{color:#233a2b;background:#fbf6e9}
-@media(max-width:767px){
-  .quiz-review-card{grid-template-columns:minmax(0,1fr);padding:16px}
-  .quiz-review-card .quiz-wrong-actions{max-width:none}
-  .quiz-end-actions>.btn{flex:1 1 140px;min-height:44px}
-  #quizEnd{padding-bottom:24px}
-}

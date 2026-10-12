@@ -678,7 +678,7 @@
   "quiz.reviewMore": "Questa parola apparirà più spesso.",
   "library.recentlyUpdated": "Aggiornato di recente",
   "ui.auto_smart_2_2_3_2s": "Auto (1,2 s corretto / 2,5 s errato)",
-  "ui.after_answer_audio": "Audio del fronte dopo la risposta",
+  "ui.after_answer_audio": "Audio della risposta",
   "quiz.advancing": "Avanzamento automatico",
   "listen.waiting": "Prossimo elemento a breve",
   "listen.completed": "Riproduzione completata",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "Nessuna parola corrisponde a queste impostazioni. Torna alle impostazioni per cambiare ambito.",
   "quiz.emptyReview": "Nessuna risposta in questa categoria.",
   "quiz.playAnswer": "Ascolta la risposta",
-  "quiz.autoTiming": "Automatico · 2 secondi"
+  "quiz.autoTiming": "Automatico · 2 secondi",
+  "quiz.settingsSaveFailed": "Impossibile salvare le impostazioni su questo dispositivo.",
+  "quiz.historySaveFailed": "Impossibile salvare questo risultato su questo dispositivo.",
+  "quiz.pinyin": "Pinyin",
+  "quiz.pronunciation": "Pronuncia",
+  "quiz.frontPronunciation": "Pronuncia del fronte",
+  "quiz.reviewAll": "Ripassa tutto",
+  "quiz.finish": "Termina",
+  "quiz.inputHint": "Invio per rispondere · Invio a vuoto per saltare"
 }

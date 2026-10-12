@@ -206,7 +206,7 @@
   "ui.calm_2_5s": "Calm · 2.5s",
   "ui.review_4_0s": "Review · 4.0s",
   "ui.wait_for_next": "Wait for Next",
-  "ui.after_answer_audio": "Front audio after answering",
+  "ui.after_answer_audio": "After-answer audio",
   "ui.hard_mode": "Hard Mode",
   "ui.on_time_limit": "On: time limit",
   "ui.time_limit": "Time limit",
@@ -715,5 +715,13 @@
   "quiz.noEligibleWords": "No words currently match these settings. Return to setup to choose another scope.",
   "quiz.emptyReview": "No answers in this category.",
   "quiz.playAnswer": "Play answer",
-  "quiz.autoTiming": "Auto · 2 seconds"
+  "quiz.autoTiming": "Auto · 2 seconds",
+  "quiz.settingsSaveFailed": "Settings could not be saved on this device.",
+  "quiz.historySaveFailed": "This result could not be saved on this device.",
+  "quiz.pinyin": "Pinyin",
+  "quiz.pronunciation": "Pronunciation",
+  "quiz.frontPronunciation": "Front pronunciation",
+  "quiz.reviewAll": "Review All",
+  "quiz.finish": "Finish",
+  "quiz.inputHint": "Enter to check · empty Enter to skip"
 }
