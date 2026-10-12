@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Riprova le saltate",
   "quiz.skipped": "Saltate",
   "quiz.reviewAnswers": "Rivedi le risposte",
-  "quiz.reviewHint": "Rivedi le risposte, poi continua con le stesse impostazioni e un ordine casuale. Le domande saltate non influiscono sulla precisione.",
+  "quiz.reviewHint": "Apri una riga per pronuncia, esempi e dettagli della parola.",
   "quiz.noEligibleWords": "Nessuna parola corrisponde a queste impostazioni. Torna alle impostazioni per cambiare ambito.",
   "quiz.emptyReview": "Nessuna risposta in questa categoria.",
   "quiz.playAnswer": "Ascolta la risposta",

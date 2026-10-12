@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Retry Skipped",
   "quiz.skipped": "Skipped",
   "quiz.reviewAnswers": "Review answers",
-  "quiz.reviewHint": "Review your answers, then continue with the same settings and a shuffled question order. Skipped questions do not affect accuracy.",
+  "quiz.reviewHint": "Open a row for pronunciation, examples and word details.",
   "quiz.noEligibleWords": "No words currently match these settings. Return to setup to choose another scope.",
   "quiz.emptyReview": "No answers in this category.",
   "quiz.playAnswer": "Play answer",

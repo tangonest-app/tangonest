@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Übersprungene wiederholen",
   "quiz.skipped": "Übersprungen",
   "quiz.reviewAnswers": "Antworten wiederholen",
-  "quiz.reviewHint": "Prüfe deine Antworten und fahre mit denselben Einstellungen und neuer Reihenfolge fort. Übersprungene Fragen zählen nicht zur Trefferquote.",
+  "quiz.reviewHint": "Öffne eine Zeile für Aussprache, Beispiele und Wortdetails.",
   "quiz.noEligibleWords": "Keine Wörter entsprechen diesen Einstellungen. Ändere die Auswahl in den Einstellungen.",
   "quiz.emptyReview": "Keine Antworten in dieser Kategorie.",
   "quiz.playAnswer": "Antwort anhören",

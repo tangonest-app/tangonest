@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "スキップした問題をもう一度",
   "quiz.skipped": "スキップ",
   "quiz.reviewAnswers": "回答を復習",
-  "quiz.reviewHint": "回答を復習した後、同じ設定で問題順をシャッフルして続けられます。スキップは正答率に含めません。",
+  "quiz.reviewHint": "行を開くと、発音・例文・単語の詳細を確認できます。",
   "quiz.noEligibleWords": "現在、この設定に該当する単語がありません。設定に戻って範囲を変更してください。",
   "quiz.emptyReview": "この分類の回答はありません。",
   "quiz.playAnswer": "正答を再生",

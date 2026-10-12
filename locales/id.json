@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Ulangi yang dilewati",
   "quiz.skipped": "Dilewati",
   "quiz.reviewAnswers": "Tinjau jawaban",
-  "quiz.reviewHint": "Tinjau jawaban, lalu lanjutkan dengan pengaturan yang sama dan urutan acak. Soal yang dilewati tidak memengaruhi akurasi.",
+  "quiz.reviewHint": "Buka baris untuk pelafalan, contoh dan detail kata.",
   "quiz.noEligibleWords": "Tidak ada kata yang cocok dengan pengaturan ini. Kembali ke pengaturan untuk mengubah cakupan.",
   "quiz.emptyReview": "Tidak ada jawaban dalam kategori ini.",
   "quiz.playAnswer": "Putar jawaban",

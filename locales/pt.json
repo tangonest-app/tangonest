@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Repetir ignoradas",
   "quiz.skipped": "Ignoradas",
   "quiz.reviewAnswers": "Rever respostas",
-  "quiz.reviewHint": "Reveja suas respostas e continue com as mesmas configurações e uma nova ordem. Perguntas ignoradas não afetam a taxa de acerto.",
+  "quiz.reviewHint": "Abra uma linha para ver pronúncia, exemplos e detalhes.",
   "quiz.noEligibleWords": "Nenhuma palavra corresponde a estas configurações. Volte às configurações para mudar o alcance.",
   "quiz.emptyReview": "Nenhuma resposta nesta categoria.",
   "quiz.playAnswer": "Ouvir resposta",

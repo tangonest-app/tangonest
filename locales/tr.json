@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Atlananları tekrar dene",
   "quiz.skipped": "Atlandı",
   "quiz.reviewAnswers": "Yanıtları gözden geçir",
-  "quiz.reviewHint": "Yanıtlarını gözden geçir, ardından aynı ayarlarla karışık sırada devam et. Atlanan sorular doğruluğu etkilemez.",
+  "quiz.reviewHint": "Telaffuz, örnekler ve kelime ayrıntıları için bir satırı açın.",
   "quiz.noEligibleWords": "Bu ayarlara uyan kelime yok. Kapsamı değiştirmek için ayarlara dön.",
   "quiz.emptyReview": "Bu kategoride yanıt yok.",
   "quiz.playAnswer": "Yanıtı dinle",

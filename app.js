@@ -1567,8 +1567,8 @@ function renderQuizSummary(){
     <div><b>${wrong}</b><span>${window.TNI18n.mark("ui.wrong",{})}</span></div>
     <div><b>${skipped}</b><span>${window.TNI18n.mark("quiz.skipped",{})}</span></div>
     <div><b>${accuracy===null?"—":accuracy+"%"}</b><span>${window.TNI18n.mark("ui.accuracy",{})}</span></div>
-    <div><b>${improved}</b><span>${window.TNI18n.mark("ui.improved",{})}</span></div>
-    <div><b>${stillWeak}</b><span>${window.TNI18n.mark("ui.still_weak",{})}</span></div>
+    <div class="quiz-summary-secondary"><b>${improved}</b><span>${window.TNI18n.mark("ui.improved",{})}</span></div>
+    <div class="quiz-summary-secondary"><b>${stillWeak}</b><span>${window.TNI18n.mark("ui.still_weak",{})}</span></div>
     <div class="wide"><span>${window.TNI18n.mark("quiz.answeredCount",{count:graded.length,total:quiz.total})}</span><strong>${esc(next)}</strong></div>`;
 }
 function endQuiz(){

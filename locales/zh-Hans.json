@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "重试跳过的题目",
   "quiz.skipped": "已跳过",
   "quiz.reviewAnswers": "复习答案",
-  "quiz.reviewHint": "复习答案后，可按相同设置打乱题目顺序继续。跳过的题目不计入正确率。",
+  "quiz.reviewHint": "展开一行可查看发音、例句和单词详情。",
   "quiz.noEligibleWords": "当前没有符合这些设置的单词。请返回设置更改范围。",
   "quiz.emptyReview": "此类别中没有答案。",
   "quiz.playAnswer": "播放正确答案",

@@ -711,7 +711,7 @@
   "quiz.retrySkipped": "Réessayer les questions passées",
   "quiz.skipped": "Passées",
   "quiz.reviewAnswers": "Revoir les réponses",
-  "quiz.reviewHint": "Revoyez vos réponses, puis continuez avec les mêmes réglages et un ordre mélangé. Les questions passées ne comptent pas dans le taux de réussite.",
+  "quiz.reviewHint": "Ouvrez une ligne pour la prononciation, les exemples et les détails.",
   "quiz.noEligibleWords": "Aucun mot ne correspond à ces réglages. Revenez aux réglages pour modifier la sélection.",
   "quiz.emptyReview": "Aucune réponse dans cette catégorie.",
   "quiz.playAnswer": "Écouter la réponse",
