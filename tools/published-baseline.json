@@ -1,10 +1,10 @@
 {
-  "release": "1.0.0-rc.19-fdg19",
+  "release": "1.0.0-rc.19-fdg20",
   "inventory": [
     {
       "file": "app-rc19-fdg1.js",
-      "bytes": 159762,
-      "sha256": "ad46ef91b03e82ae27faaa54dc1da3a3c79974004289aa98cfccffd12706c5fd"
+      "bytes": 160118,
+      "sha256": "6932f2529e0cd872561a721d079261a9e8b8a9ed85d9fba8f4deff6566076614"
     },
     {
       "file": "apple-touch-icon.png",
@@ -124,7 +124,7 @@
     {
       "file": "config-rc19-fdg1.js",
       "bytes": 255,
-      "sha256": "016921bd1cbec8d6d861302ab1bf9a43dbe5f8ad6b0d1a59abfb0a974dc8f449"
+      "sha256": "5907b661e3a3cbb065db9c9eda78940d49394d76df02bd9575923ba9e73467a3"
     },
     {
       "file": "default-playlist-rc19-fdg1.js",
@@ -149,7 +149,7 @@
     {
       "file": "index.html",
       "bytes": 62427,
-      "sha256": "52af821bb6995e9866dd892cfb39dbd3518d307cee1ad5cf7509e33324441fab"
+      "sha256": "694e3346a8258f23267cef44ebafeee7e7480c8e839dc7cb32f1ec12bc9e3051"
     },
     {
       "file": "languages.js",
@@ -254,7 +254,7 @@
     {
       "file": "release.json",
       "bytes": 139,
-      "sha256": "9ca2fc9945a2adb3a2e014f1b5c0e68524a0f3901fd7042977d78e6f69b22ddd"
+      "sha256": "d32c2ce2a609071a0a8145e8e8421c74fe3193205fbb849e4ed18d5339c79dad"
     },
     {
       "file": "style-rc19-fdg1.css",
@@ -264,7 +264,7 @@
     {
       "file": "sw.js",
       "bytes": 3783,
-      "sha256": "33160fff9c708acaa843de9221d8cf4ceea01a0d77f4169f92953013077ec91c"
+      "sha256": "cf4e1fe715788a7977e6518a4e2577e50bf98240bcbd82c24519c98e90261053"
     },
     {
       "file": "tn-learning-flow-rc19-fdg1.js",
