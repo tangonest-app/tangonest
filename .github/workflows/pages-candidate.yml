@@ -21,7 +21,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium webkit
-      - run: npx playwright test tests/e2e/runtime-loading.spec.js tests/e2e/quiz-focus.spec.js tests/e2e/quiz-session.spec.js tests/e2e/pinyin-skip.spec.js tests/e2e/accessibility.spec.js tests/e2e/progression.spec.js tests/e2e/random-front.spec.js --workers=2
+      - run: npx playwright test tests/e2e/runtime-loading.spec.js tests/e2e/quiz-focus.spec.js tests/e2e/quiz-session.spec.js tests/e2e/pinyin-skip.spec.js tests/e2e/chinese-pattern.spec.js tests/e2e/accessibility.spec.js tests/e2e/progression.spec.js tests/e2e/random-front.spec.js --workers=2
       - run: npm run package:release -- work/pages-candidate
       - uses: actions/upload-pages-artifact@v3
         with:

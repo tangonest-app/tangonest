@@ -1819,6 +1819,9 @@ function sanitizeSpeechText(text){
     .trim();
 }
 function cleanSpeechText(text){return sanitizeSpeechText(text)}
+// Normalize a derived pronunciation/speech string; never mutate word.front.
+function normalizeChinesePatternText(text){return String(text??"").replace(/[～〜~]/g," ").replace(/\s+/g," ").trim()}
+window.tnChinesePatternText = normalizeChinesePatternText;
 window.sanitizeSpeechText = sanitizeSpeechText;
 window.tnCleanSpeechText = sanitizeSpeechText;
 function inferSpeechLanguage(text,lang){
@@ -1948,6 +1951,8 @@ async function speak(text,lang,opts={}){
   if(opts.strict&&(!text||!lang||!window.TangoNestLanguages.find(lang))){opts.onerror?.("front-data-missing");toast(window.TNI18n.t("audio.frontMissing"));return false;}
   if(!text)return true;
   const finalLang=opts.strict?normalizeVoiceLang(lang):inferSpeechLanguage(text,lang);
+  if(/^zh(?:-|$)/i.test(finalLang))text=normalizeChinesePatternText(text);
+  if(!text)return true;
   const epoch=speechEpoch;
   if(!window.speechSynthesis){opts.onerror?.("synthesis-unavailable");toast(window.TNI18n.t("ui.voice_unavailable_on_this_device",{}));return false;}
   await waitForVoices();
