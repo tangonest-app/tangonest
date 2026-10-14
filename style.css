@@ -3935,3 +3935,14 @@ label,
   font-size:10px;
   font-weight:620;
 }
+
+/* Optional reading stays with the Front cell, including the stacked phone row. */
+#pageWords .tn-word-pinyin{display:block;max-width:100%;margin-top:3px;color:var(--sub);font-size:12px;font-weight:400;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.edit-pronunciation{margin:12px 0}
+.edit-pronunciation summary{color:var(--sub);font-size:13px;cursor:pointer}
+.edit-pronunciation input{margin-top:8px}
+
+/* Keep the taller edit form inside the mobile sheet, including its actions. */
+#editModal .modal{overflow-y:auto;overscroll-behavior:contain}
+
+#editModal{z-index:1401}

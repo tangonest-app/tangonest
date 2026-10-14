@@ -56,7 +56,7 @@
 
   function normalizeWord(word){
     const source=word&&typeof word==="object"?word:{};
-    const normalized=normalizeFields(source.memo,source.pronunciation||source.pron||source.reading||source.pinyin);
+    const normalized=normalizeFields(source.memo,source.pronunciation??source.pron??source.reading??source.pinyin);
     return {...source,memo:normalized.memo,pronunciation:normalized.pronunciation};
   }
 

@@ -36,7 +36,8 @@
     bulkImport:window.bulkImport,
     undoLastBulkImport:window.undoLastBulkImport,
     deleteSelected:window.deleteSelected,
-    toggleFavorite:window.toggleStar
+    toggleFavorite:window.toggleStar,
+    saveEdit:window.saveEdit
   };
 
   const $ = id => document.getElementById(id);
@@ -1604,7 +1605,8 @@
         pos:safeText($("editPOS")?.value) || null,
         gender:safeText($("editGender")?.value) || null,
         tags:safeText($("editTags")?.value) || null,
-        memo:safeText($("editMemo")?.value) || null
+        memo:safeText($("editMemo")?.value) || null,
+        pronunciation:safeText($("editPronunciation")?.value) || null
       };
       const existing=getDb().words.find(item => item.id === id);
       localUpdate=existing ? {
@@ -1617,6 +1619,7 @@
         gender:patch.gender || "",
         tags:patch.tags || "",
         memo:patch.memo || "",
+        pronunciation:patch.pronunciation || "",
         updatedAt:nowIso(),
         contentUpdatedAt:nowIso()
       } : null;
@@ -2410,6 +2413,7 @@
       if(typeof localFallbacks.bulkImport==="function")window.bulkImport=localFallbacks.bulkImport;
       if(typeof localFallbacks.undoLastBulkImport==="function")window.undoLastBulkImport=localFallbacks.undoLastBulkImport;
       if(typeof localFallbacks.deleteSelected==="function")window.deleteSelected=localFallbacks.deleteSelected;
+      if(typeof localFallbacks.saveEdit==="function")window.saveEdit=localFallbacks.saveEdit;
       if(typeof localFallbacks.toggleFavorite==="function")window.toggleStar=localFallbacks.toggleFavorite;
       showApp();
       setStartupState("READY");

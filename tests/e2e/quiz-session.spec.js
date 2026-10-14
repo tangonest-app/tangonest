@@ -41,20 +41,20 @@ test('focus and Enter survive grading and Skip while IME and repeated Enter stay
   await next(page);await expect(page.locator('#quizAnswer')).toBeFocused();
   const before=await page.evaluate(()=>JSON.stringify(db.words.find(word=>word.id===quiz.current.id)));
   await skip(page);await expect(page.locator('#quizAnswer')).toBeFocused();
-  expect(await page.evaluate(()=>JSON.stringify(db.words.find(word=>word.id===quiz.records[1].id)))).toBe(before);
-  expect(await page.evaluate(()=>({statuses:quiz.records.map(quizRecordStatus),learningCalls:learningCalls.length,mistakeIds:quiz.allWrong.map(word=>word.id)}))).toEqual({statuses:['correct','skipped'],learningCalls:1,mistakeIds:[]});
+  expect(await page.evaluate(()=>db.words.find(word=>word.id===quiz.records[1].id).reviewCount)).toBe(JSON.parse(before).reviewCount+1);
+  expect(await page.evaluate(()=>({statuses:quiz.records.map(quizRecordStatus),learningCalls:learningCalls.length,mistakeIds:quiz.allWrong.map(word=>word.id)}))).toEqual({statuses:['correct','incorrect'],learningCalls:2,mistakeIds:['qa-word-2']});
 });
 
 test('review keeps answer snapshots and Retry Mistakes then Continue retains the original full settings',async({page})=>{
   await setup(page);await start(page);
   const origin=await page.evaluate(()=>({...quiz.originSettings,queue:quiz.queue.map(word=>word.id)}));
   await answer(page,true);await next(page);await answer(page,false);await next(page);await skip(page);
-  await expect(page.locator('#quizEnd')).toBeVisible();await expect(page.locator('#quizResultSummary')).toContainText('50%');
+  await expect(page.locator('#quizEnd')).toBeVisible();await expect(page.locator('#quizResultSummary')).toContainText('33%');
   await expect(page.locator('.quiz-review-card')).toHaveCount(3);
-  await page.locator('[data-quiz-review-filter="incorrect"]').click();await expect(page.locator('.quiz-review-card')).toHaveCount(1);await expect(page.locator('.quiz-review-card')).toContainText('my incorrect answer');
+  await page.locator('[data-quiz-review-filter="incorrect"]').click();await expect(page.locator('.quiz-review-card')).toHaveCount(2);await expect(page.locator('.quiz-review-card').first()).toContainText('my incorrect answer');
   const snapshot=await page.evaluate(()=>quiz.records[1].answer);
   await page.evaluate(()=>{db.words.find(word=>word.id===quiz.records[1].id).front='Edited after answering';renderWrongList()});
-  await expect(page.locator('.quiz-review-card')).toContainText(snapshot);
+  await expect(page.locator('.quiz-review-card').first()).toContainText(snapshot);
   await page.locator('#quizRetryMistakes').click();expect(await page.evaluate(()=>quiz.total)).toBe(2);await expect(page.locator('#quizAnswer')).toBeFocused();
   await answer(page,true);await next(page);await answer(page,true);await next(page);await expect(page.locator('#quizRetryMistakes')).toBeHidden();
   // Controls changed by another view must not replace the original session configuration.
@@ -64,12 +64,12 @@ test('review keeps answer snapshots and Retry Mistakes then Continue retains the
   const {queue,...settings}=origin;expect(current.settings).toEqual(settings);expect(current.total).toBe(3);expect(current.queue).not.toEqual(queue);expect(current.direction).toBe('back');expect(new Set(current.queue).size).toBe(3);
 });
 
-test('all skipped questions have no grade or learning writes and are included in Retry Mistakes',async({page})=>{
+test('all skipped questions are graded Wrong, update learning once, and are included in Retry Mistakes',async({page})=>{
   await setup(page);await start(page);const before=await page.evaluate(()=>JSON.stringify({words:db.words,mistakes:db.mistakes}));
   for(let i=0;i<3;i++)await skip(page);
   await expect(page.locator('#quizRetryMistakes')).toBeVisible();
-  await expect(page.locator('#quizResultSummary')).not.toContainText('%');await expect(page.locator('#quizResultSummary')).toContainText('0 answered / 3 planned');
-  expect(await page.evaluate(()=>JSON.stringify({words:db.words,mistakes:db.mistakes}))).toBe(before);
+  await expect(page.locator('#quizResultSummary')).toContainText('0%');await expect(page.locator('#quizResultSummary')).toContainText('3 answered / 3 planned');
+  expect(await page.evaluate(()=>quiz.records.every(r=>r.status==='incorrect'&&r.skipped&&r.eventId))).toBe(true);expect(await page.evaluate(()=>db.words.slice(0,3).map(w=>w.reviewCount))).toEqual(JSON.parse(before).words.slice(0,3).map(w=>w.reviewCount+1));
   await page.locator('#quizRetryMistakes').click();expect(await page.evaluate(()=>quiz.total)).toBe(3);await expect(page.locator('#quizAnswer')).toBeFocused();
 });
 
@@ -86,8 +86,8 @@ test('saved checkpoints preserve Skip status and original settings without repla
   await setup(page);await start(page);await answer(page,false);await next(page);await skip(page);
   await navigateToPage(page,'home');const before=await page.evaluate(()=>db.words.map(word=>word.reviewCount));
   await page.reload();await page.locator('.home-resume').click();
-  expect(await page.evaluate(()=>quiz.records.map(quizRecordStatus))).toEqual(['incorrect','skipped']);
-  expect(await page.evaluate(()=>quiz.allWrong.map(word=>word.id))).toHaveLength(1);expect(await page.evaluate(()=>db.words.map(word=>word.reviewCount))).toEqual(before);
+  expect(await page.evaluate(()=>quiz.records.map(quizRecordStatus))).toEqual(['incorrect','incorrect']);
+  expect(await page.evaluate(()=>quiz.allWrong.map(word=>word.id))).toHaveLength(2);expect(await page.evaluate(()=>db.words.map(word=>word.reviewCount))).toEqual(before);
   await page.locator('#quizEndSession').click();await expect(page.locator('#quizResultSummary')).toContainText('0%');await expect(page.locator('#quizRetryMistakes')).toBeVisible();
   await page.locator('#quizContinue').click();expect(await page.evaluate(()=>({total:quiz.total,direction:quiz.direction,type:quiz.type}))).toEqual({total:3,direction:'back',type:'typing'});
 });

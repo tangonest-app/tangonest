@@ -6,6 +6,7 @@
   const DEFAULT_PLAYLIST_NAME = "New Playlist";
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const pronunciation = word => typeof window.wordPronunciation === "function" ? window.wordPronunciation(word) : String(word?.pronunciation??word?.pron??word?.reading??word?.pinyin??"").trim();
   const engine = () => window.TangoNestLearningEngine || null;
   const presentation = () => window.TangoNestLearningPresentation || null;
   let activeView = localStorage.getItem("tangonest_library_view_v1") || "words";
@@ -251,7 +252,7 @@
           <article class="tn82-word-card tn-word-row tn-word-list-row" data-word-id="${esc(word.id)}">
             <input type="checkbox" class="tn-word-select" data-select-word="${esc(word.id)}" ${selectedWordIds.has(word.id)?"checked":""} aria-label="${esc(word.front)}">
             <button type="button" class="tn82-word-main tn-word-list-main" data-open-word="${esc(word.id)}" aria-label="${esc(window.TNI18n.t('ui.word_details'))}: ${esc(word.front)}">
-              <span class="tn82-front" dir="auto" data-user-content>${esc(word.front)}</span>
+              <span class="tn82-front" dir="auto" data-user-content>${esc(word.front)}${/^zh(?:-|$)/i.test(word.frontLang||"")&&pronunciation(word)?`<small class="tn-word-pinyin" lang="${esc(word.frontLang)}">${esc(pronunciation(word))}</small>`:""}</span>
               <span class="tn82-back" dir="auto" data-user-content>${esc(word.back)}</span>
               <span class="tn-word-list-pos">${word.pos ? esc(word.pos) : "-"}</span>
               <span class="tn-word-list-chevron" aria-hidden="true">›</span>
@@ -598,7 +599,7 @@
         <div class="tn-detail-kicker">${esc(languageLabel(word.frontLang))} -> ${esc(languageLabel(word.backLang))}</div>
         <h2 id="tnWordDetailTitle" dir="auto" data-user-content>${esc(word.front)}</h2>
         <p class="tn-detail-meaning" dir="auto" data-user-content>${esc(word.back)}</p>
-        ${word.pronunciation?`<p class="tn-detail-pronunciation"><span>${window.TNI18n.mark("ui.pronunciation",{})}</span> ${esc(word.pronunciation)}</p>`:""}
+        ${pronunciation(word)?`<p class="tn-detail-pronunciation"><span>${window.TNI18n.mark("ui.pronunciation",{})}</span> ${esc(pronunciation(word))}</p>`:""}
         <div class="tn-detail-actions">
           <button type="button" data-detail-audio="${esc(word.id)}">${window.TNI18n.mark("ui.value_audio",{p6:iconAudio()})}</button>
           <button type="button" data-detail-fav="${esc(word.id)}">${word.saved ? window.TNI18n.t("ui.saved") : window.TNI18n.t("ui.save")}</button>

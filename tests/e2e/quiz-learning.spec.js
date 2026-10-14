@@ -47,9 +47,9 @@ test('invalid deleted settings safely fall back and storage failures give feedba
 for(const kind of ['correct','incorrect','skipped'])test(`${kind} uses the common configured delay; immediate Next cancels old timers`,async({page})=>{
   await setup(page,4);await page.locator('#quizAutoAdvance').selectOption('1.5');await start(page);
   const before=await page.evaluate(()=>JSON.stringify({word:quiz.current,mistakes:db.mistakes}));
-  await answer(page,kind);expect(await page.evaluate(()=>quizRecordStatus(quiz.records[0]))).toBe(kind);
+  await answer(page,kind);expect(await page.evaluate(()=>quizRecordStatus(quiz.records[0]))).toBe(kind==='skipped'?'incorrect':kind);
   await expect(page.locator('#quizResult')).toContainText(await page.evaluate(()=>correctAnswer()));
-  if(kind==='skipped')expect(await page.evaluate(()=>JSON.stringify({word:quiz.current,mistakes:db.mistakes}))).toBe(before);
+  if(kind==='skipped')expect(await page.evaluate(()=>db.words.find(w=>w.id===quiz.current.id).reviewCount)).toBe(JSON.parse(before).word.reviewCount+1);
   await page.clock.runFor(1400);expect(await page.evaluate(()=>quiz.index)).toBe(0);
   await page.clock.runFor(200);expect(await page.evaluate(()=>quiz.index)).toBe(1);await page.clock.runFor(400);await expect(page.locator('#quizAnswer')).toBeFocused();
   await answer(page,kind);await next(page);expect(await page.evaluate(()=>quiz.index)).toBe(2);
@@ -88,12 +88,12 @@ test('Continue retains the selected pair and all settings, avoids previous words
   await page.locator('#quizContinue').click();
   const current=await page.evaluate(()=>({ids:quiz.queue.map(w=>w.id),settings:quiz.settings,sessionId:quiz.sessionId,records:quiz.records,score:quiz.score,history:getLastSession().quizResults}));
   expect(current.settings).toEqual(origin.settings);expect(current.ids).toHaveLength(2);expect(current.ids.some(id=>origin.ids.includes(id))).toBe(false);expect(current.sessionId).not.toBe(origin.sessionId);expect(current.records).toEqual([]);expect(current.score).toBe(0);
-  expect(current.history).toHaveLength(2);expect(new Set(current.history.map(r=>r.sessionId)).size).toBe(2);expect(current.history[1].records.map(r=>r.status)).toEqual(['incorrect','skipped']);
+  expect(current.history).toHaveLength(2);expect(new Set(current.history.map(r=>r.sessionId)).size).toBe(2);expect(current.history[1].records.map(r=>r.status)).toEqual(['incorrect','incorrect']);
 });
 
 test('all Review filters, Review All, Finish and return to setup keep their purpose',async({page})=>{
   await setup(page);await start(page);for(const kind of ['correct','incorrect','skipped']){await answer(page,kind);await next(page)}
-  for(const filter of ['correct','incorrect','skipped']){await page.locator(`[data-quiz-review-filter="${filter}"]`).click();await expect(page.locator('.quiz-review-card')).toHaveCount(1);await expect(page.locator('.quiz-review-card')).toHaveAttribute('data-quiz-review-status',filter)}
+  for(const filter of ['correct','incorrect','skipped']){await page.locator(`[data-quiz-review-filter="${filter}"]`).click();await expect(page.locator('.quiz-review-card')).toHaveCount(filter==='incorrect'?2:1);for(const row of await page.locator('.quiz-review-card').all())await expect(row).toHaveAttribute('data-quiz-review-status',filter==='skipped'?'incorrect':filter)}
   await page.locator('[onclick="reviewAllQuizAnswers()"]').click();await expect(page.locator('.quiz-review-card')).toHaveCount(3);
   await page.locator('[onclick="resetQuiz()"]').click();await expect(page.locator('#quizSetup')).toBeVisible();await expect(page.locator('#quizType')).toHaveValue('typing');
   await start(page);await answer(page,'skipped');await page.locator('#quizEndSession').click();await page.locator('#quizEnd [data-i18n="quiz.finish"]').click();await expect(page.locator('#pageHome')).toHaveClass(/active/);

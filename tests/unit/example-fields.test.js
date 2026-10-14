@@ -25,3 +25,6 @@ assert.deepEqual(
 );
 
 console.log("example field tests passed");
+
+assert.equal(fields.normalizeWord({memo:"A sentence.",pronunciation:"",pinyin:"legacy"}).pronunciation,"","explicit empty pronunciation does not revive a legacy alias");
+assert.equal(fields.normalizeWord({memo:"A sentence.",pinyin:"shǒudū"}).pronunciation,"shǒudū","missing canonical field retains legacy Pinyin");

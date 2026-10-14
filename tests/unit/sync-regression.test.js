@@ -403,7 +403,7 @@ function createContext({session, playlists = [], words = [], playlistStore = nul
     "tn80LogoutBtn","tn80PendingMutations","tn80RealtimeStatus","tn80UserId",
     "newList","renameListSelect","renameListInput","front","back","frontLang",
     "backLang","addList","pos","gender","tags","memo","bulkList","bulkFrontLang",
-    "editId","editFront","editBack","editFrontLang","editBackLang","editList","editPOS","editGender","editTags","editMemo",
+    "editId","editFront","editBack","editFrontLang","editBackLang","editList","editPOS","editGender","editTags","editMemo","editPronunciation",
     "bulkBackLang","bulkText","bulkPreview","bulkDuplicatePanel","toast","syncDataBox"
   ];
   ids.forEach(id => elements.set(id,makeElement(id)));
@@ -821,11 +821,18 @@ async function waitUntil(predicate,message){
   unfiledApp.elements.get("editFrontLang").value="en-US";
   unfiledApp.elements.get("editBackLang").value="ja-JP";
   unfiledApp.elements.get("editList").value="";
+  unfiledApp.elements.get("editPronunciation").value="shǒudū";
   unfiledApp.state.failNextWordUpsert=true;
   await unfiledApp.window.saveEdit();
   assert.strictEqual(unfiledApp.window.db.words[0].front,"edited offline","offline edit remains visible locally");
   await unfiledApp.window.tnSyncNow();
   assert.strictEqual(unfiledApp.state.words[0].front,"edited offline","offline edit reaches cloud after recovery");
+  assert.strictEqual(unfiledApp.state.words[0].pronunciation,"shǒudū","tone marks survive queued cloud edit");
+  assert.strictEqual(unfiledApp.window.db.words[0].pronunciation,"shǒudū","cloud reload preserves pronunciation");
+  unfiledApp.elements.get("editPronunciation").value="";
+  await unfiledApp.window.saveEdit();
+  assert.strictEqual(unfiledApp.state.words[0].pronunciation,null,"an intentional clear reaches the cloud");
+  assert.strictEqual(unfiledApp.window.db.words[0].pronunciation,"","cleared pronunciation remains empty");
 
   unfiledApp.state.words[0].front="newer remote";
   unfiledApp.state.words[0].content_updated_at="2999-01-01T00:00:00.000Z";
