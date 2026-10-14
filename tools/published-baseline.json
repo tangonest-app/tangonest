@@ -1,10 +1,10 @@
 {
-  "release": "1.0.0-rc.19-fdg18",
+  "release": "1.0.0-rc.19-fdg19",
   "inventory": [
     {
       "file": "app-rc19-fdg1.js",
-      "bytes": 158625,
-      "sha256": "c89af06e8b742f856f11b6ce05f784943e850eb80f9df1c21496de2ee4fe303d"
+      "bytes": 159762,
+      "sha256": "ad46ef91b03e82ae27faaa54dc1da3a3c79974004289aa98cfccffd12706c5fd"
     },
     {
       "file": "apple-touch-icon.png",
@@ -124,7 +124,7 @@
     {
       "file": "config-rc19-fdg1.js",
       "bytes": 255,
-      "sha256": "86d37a89aeaeec9b3268229e1b108715f61300b02407579cb23759f802453feb"
+      "sha256": "016921bd1cbec8d6d861302ab1bf9a43dbe5f8ad6b0d1a59abfb0a974dc8f449"
     },
     {
       "file": "default-playlist-rc19-fdg1.js",
@@ -134,7 +134,7 @@
     {
       "file": "example-fields-rc19-fdg1.js",
       "bytes": 2229,
-      "sha256": "e6b2c418cadda9c5254fd157701b51a01f86eff6d999c294cf47c0136e05cb9f"
+      "sha256": "9962ec46c38c934b7d06a2b69b863ab850f9e4f2b493e581ba9e53023982a65f"
     },
     {
       "file": "favicon.ico",
@@ -148,8 +148,8 @@
     },
     {
       "file": "index.html",
-      "bytes": 61926,
-      "sha256": "1663e4a013f6625e16daed74912ac282f959d6729a015c29e6b7fdc023d16590"
+      "bytes": 62427,
+      "sha256": "52af821bb6995e9866dd892cfb39dbd3518d307cee1ad5cf7509e33324441fab"
     },
     {
       "file": "languages.js",
@@ -254,17 +254,17 @@
     {
       "file": "release.json",
       "bytes": 139,
-      "sha256": "71f1d3523bf736dd4dca9dac5723e5a7d567dc2702db7a9ea7249a51ca050e69"
+      "sha256": "9ca2fc9945a2adb3a2e014f1b5c0e68524a0f3901fd7042977d78e6f69b22ddd"
     },
     {
       "file": "style-rc19-fdg1.css",
-      "bytes": 84694,
-      "sha256": "da1986ff923eb3dbfeb6982761217a4b79df809fa909d4de903a11f5bbd5b5fa"
+      "bytes": 85279,
+      "sha256": "f944fc5d6f255a131459fa9362fe6b038d8510bca95a8c6b1c0fda84c67cef41"
     },
     {
       "file": "sw.js",
       "bytes": 3783,
-      "sha256": "5357539c8216bbd27243326687ef804dd5a2dcdeac0e5fa740ad419fa3f75bc2"
+      "sha256": "33160fff9c708acaa843de9221d8cf4ceea01a0d77f4169f92953013077ec91c"
     },
     {
       "file": "tn-learning-flow-rc19-fdg1.js",
@@ -273,13 +273,13 @@
     },
     {
       "file": "tn-library-management-rc19-fdg1.js",
-      "bytes": 55863,
-      "sha256": "6be7918f65cee2adb6715473cd3bbf56c66ed4bebda34c943f29641e27d599a0"
+      "bytes": 56223,
+      "sha256": "bd7a54a447817dab2ef3ebbae4bf2ed09ed7b56a98a7fdccf3c1dbf3dbb70ca1"
     },
     {
       "file": "tn-supabase-sync-rc19-fdg1.js",
-      "bytes": 106859,
-      "sha256": "0324d1f39cb7d92f076a0ce5f2f5a664be25e3d4508b13768743d004c8e49964"
+      "bytes": 107103,
+      "sha256": "ce403a37035ba13acf7c365888e7e12be745f394f463d6e6400f65e121cc31b3"
     },
     {
       "file": "ui/forest-desk-glass-rc19-fdg1.css",

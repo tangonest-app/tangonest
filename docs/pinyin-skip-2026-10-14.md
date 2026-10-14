@@ -1,5 +1,7 @@
 # TangoNest：ピンイン・Quiz Skip改善
 
+公開状況：2026-10-14にユーザー承認を受け、FDG19を本番公開・検証済み。[公開確認報告](deploy-pinyin-skip-2026-10-14.md)を参照。以下は公開前の実装・検証記録。
+
 2026-10-14。正式な開発元 `TangoNest_GitHub_DEPLOY_FDG10` の作業ブランチ `fix/pinyin-and-quiz-skip` に実装。配布候補は `1.0.0-rc.19-fdg19`。本番へのデプロイ、mainへの統合、クラウド実データの更新はしていない。
 
 ## 実装内容
